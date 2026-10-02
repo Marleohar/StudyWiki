@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Simpel Databas</title>
+  <title>Simpel Databas - Compendium Engine</title>
 
   <!-- Firebase SDK Compat -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -38,7 +38,7 @@
       min-height: 100vh;
     }
 
-    /* Minimalistisk toppmeny - INGEN SIDOMENY */
+    /* Minimalistisk toppmeny */
     header {
       background-color: #ffffff;
       border-bottom: 1px solid var(--db-border-light);
@@ -141,7 +141,7 @@
       box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     }
 
-    /* TOPPZON: ITEM & MULTIPLA KLASSER */
+    /* TOPPZON */
     .item-top-zone {
       margin-bottom: 20px;
       border-bottom: 1px solid var(--db-border);
@@ -238,21 +238,21 @@
       white-space: pre-wrap;
     }
 
-    /* NESTED BOXES */
+    /* COMPENDIUM & DYNAMIC BOXES */
     .boxes-container {
       display: flex;
       flex-direction: column;
       gap: 20px;
     }
 
-    .class-outer-box {
+    .compendium-box {
       border: 2px solid var(--db-border);
       border-radius: 4px;
       background: #ffffff;
       padding: 16px;
     }
 
-    .class-outer-header {
+    .compendium-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -261,14 +261,14 @@
       border-bottom: 1px solid var(--db-border-light);
     }
 
-    .class-outer-title {
+    .compendium-title {
       font-size: 17px;
       font-weight: bold;
       color: var(--db-text);
       text-decoration: none;
       cursor: pointer;
     }
-    .class-outer-title:hover { color: var(--db-link); text-decoration: underline; }
+    .compendium-title:hover { color: var(--db-link); text-decoration: underline; }
 
     .subbox-list {
       display: flex;
@@ -277,28 +277,28 @@
       margin-top: 12px;
     }
 
-    .class-subbox {
+    .compendium-subbox {
       border: 1px solid var(--db-border);
       border-radius: 4px;
       background: var(--db-subbox-bg);
       padding: 12px 14px;
     }
 
-    .class-subbox-header {
+    .compendium-subbox-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 8px;
     }
 
-    .class-subbox-title {
+    .compendium-subbox-title {
       font-size: 13px;
       font-weight: bold;
       color: var(--db-muted);
       text-decoration: none;
       cursor: pointer;
     }
-    .class-subbox-title:hover { color: var(--db-link); text-decoration: underline; }
+    .compendium-subbox-title:hover { color: var(--db-link); text-decoration: underline; }
 
     /* ITEMS / TAGGAR */
     .items-row {
@@ -328,23 +328,15 @@
     }
     .item-pill a:hover { text-decoration: underline; }
 
-    .item-pill .remove-item-btn {
-      color: var(--db-muted);
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: bold;
-      margin-left: 2px;
-    }
-    .item-pill .remove-item-btn:hover { color: #d32f2f; }
-
     .inline-item-add {
       display: inline-flex;
       gap: 4px;
       align-items: center;
+      margin-top: 6px;
     }
 
     .inline-item-add input {
-      width: 140px;
+      width: 170px;
       padding: 3px 8px;
       font-size: 12px;
       border-radius: 12px;
@@ -364,28 +356,6 @@
       border: 1px dashed var(--db-border);
       border-radius: 4px;
     }
-
-    /* REVERSE REFERENCES (SRD) */
-    .references-zone {
-      margin-top: 32px;
-      padding-top: 16px;
-      border-top: 1px solid var(--db-border-light);
-    }
-
-    .references-zone h3 {
-      font-size: 13px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--db-muted);
-      margin-bottom: 8px;
-    }
-
-    .reference-list {
-      list-style: square;
-      margin-left: 20px;
-      font-size: 13px;
-    }
-    .reference-list li { margin-bottom: 4px; }
 
     /* Modal / Dialog */
     .dialog-backdrop {
@@ -413,7 +383,6 @@
 </head>
 <body>
 
-  <!-- Minimal Header (Ingen sidomeny) -->
   <header>
     <div class="header-left">
       <a class="brand" onclick="dbApp.navigateTo('overview')">
@@ -434,7 +403,6 @@
     </div>
   </header>
 
-  <!-- Centrerad arbetsyta utan sidopanel -->
   <div class="viewport-container">
     <main id="mainContent"></main>
   </div>
@@ -445,7 +413,7 @@
       <h2 style="font-size: 18px; margin-bottom: 12px;" id="modalHeading">Skapa nytt objekt</h2>
       <div class="form-group">
         <label id="lblModalTitle">Namn / Titel</label>
-        <input type="text" id="modalTitle" placeholder="t.ex. Cheese, Fridge, Dragon...">
+        <input type="text" id="modalTitle" placeholder="t.ex. Hold Portal, Detect Magic...">
       </div>
       <div class="form-group">
         <label id="lblModalType">Typ</label>
@@ -460,7 +428,7 @@
         </select>
       </div>
       <div class="form-group">
-        <label id="lblModalText">Fritext / Anteckningar</label>
+        <label id="lblModalText">Fritext / Beskrivning</label>
         <textarea id="modalFreeText" rows="3"></textarea>
       </div>
       <div class="dialog-actions">
@@ -472,7 +440,7 @@
 
   <script>
     /* =========================================================================
-       1. FIREBASE SETUP (ort-wiki)
+       1. FIREBASE SETUP
        ========================================================================= */
     const firebaseConfig = {
       apiKey: "AIzaSyDX3KFiW_nScowsEyNoveIC7u-u2WY2NCc",
@@ -484,7 +452,7 @@
     };
 
     /* =========================================================================
-       2. STRÖMLINJEFORMAD TVÅSPRÅKIGHET (SV / EN)
+       2. SPRÅK- OCH ROLLSPELSTEXTER
        ========================================================================= */
     const I18N = {
       sv: {
@@ -496,7 +464,7 @@
         cloudSynced: "☁️ Synkad",
         cloudLocal: "☁️ Lokal",
         overview: "Översikt",
-        overviewSubtitle: "Simpel Databas / SRD Engine",
+        overviewSubtitle: "Simpel Databas / SRD Rollspelsmotor",
         classes: "Klasser",
         objects: "Objekt",
         noClasses: "Inga klasser registrerade",
@@ -513,25 +481,26 @@
         freeTextEmpty: "Tom fritextzon. Klicka för att skriva...",
         saveText: "Spara text",
         cancel: "Avbryt",
-        addClassBox: "+ Lägg till klassbox:",
-        selectExistingClass: "-- Välj existerande klass --",
+        compendiumTitle: "Katalog & Medlemmar",
+        generalBoxTitle: "Alla {name}",
+        createInClassPlaceholder: "+ Skapa ny {name}...",
+        addClassBox: "+ Lägg till klassbox / kategori:",
+        selectExistingClass: "-- Välj bland relevanta klasser --",
+        optgroupRelevant: "★ Relevanta för denna sida",
+        optgroupOther: "Övriga klasser i databasen",
         orWord: "eller",
-        newClassPlaceholder: "Skriv ny klass (t.ex. Food, Attacks)...",
+        newClassPlaceholder: "Skriv ny underkategori (t.ex. Level 1, Melee)...",
         addBoxBtn: "Skapa / Lägg till box",
         inheritanceNoticeMonster: "Denna box sparas på klassen {name} och blir standardlayout för alla dess objekt.",
         inheritanceNoticeGeneral: "Denna box sparas på detta objekt.",
         deleteBox: "Ta bort box",
-        referencesTitle: "Referenser & Förekomster",
-        appearsIn: "Förekommer i",
-        underText: "under",
         modalCreateHeading: "Skapa nytt objekt",
         modalNameLbl: "Namn / Titel",
         modalTypeLbl: "Typ",
         modalClassesLbl: "Tillhör Klasser (håll Ctrl/Cmd för flera)",
         modalTextLbl: "Fritext / Anteckningar",
         modalCancelBtn: "Avbryt",
-        modalCreateBtn: "Skapa",
-        newItemInBox: "Nytt item..."
+        modalCreateBtn: "Skapa"
       },
       en: {
         appTitle: "Simple Database",
@@ -542,7 +511,7 @@
         cloudSynced: "☁️ Synced",
         cloudLocal: "☁️ Local",
         overview: "Overview",
-        overviewSubtitle: "Simple Database / SRD Engine",
+        overviewSubtitle: "Simple Database / SRD Rulebook Engine",
         classes: "Classes",
         objects: "Objects",
         noClasses: "No classes registered",
@@ -559,74 +528,210 @@
         freeTextEmpty: "Empty free text zone. Click to write...",
         saveText: "Save Text",
         cancel: "Cancel",
-        addClassBox: "+ Add Class Box:",
-        selectExistingClass: "-- Select existing class --",
+        compendiumTitle: "Compendium Catalog",
+        generalBoxTitle: "All {name}",
+        createInClassPlaceholder: "+ Create new {name}...",
+        addClassBox: "+ Add Class Box / Category:",
+        selectExistingClass: "-- Select relevant class --",
+        optgroupRelevant: "★ Relevant for this page",
+        optgroupOther: "Other database classes",
         orWord: "or",
-        newClassPlaceholder: "Type new class (e.g. Food, Attacks)...",
+        newClassPlaceholder: "Type new sub-category (e.g. Level 1, Melee)...",
         addBoxBtn: "Create / Add Box",
         inheritanceNoticeMonster: "This box is saved on class {name} and becomes the default layout for all its objects.",
         inheritanceNoticeGeneral: "This box is saved on this object.",
         deleteBox: "Remove box",
-        referencesTitle: "References & Occurrences",
-        appearsIn: "Appears in",
-        underText: "under",
         modalCreateHeading: "Create New Object",
         modalNameLbl: "Name / Title",
         modalTypeLbl: "Type",
         modalClassesLbl: "Assigned Classes (hold Ctrl/Cmd for multiple)",
         modalTextLbl: "Free Text / Notes",
         modalCancelBtn: "Cancel",
-        modalCreateBtn: "Create",
-        newItemInBox: "New item..."
+        modalCreateBtn: "Create"
       }
     };
 
     /* =========================================================================
-       3. GRUNDUPPSÄTTNING MED MULTIPLA KLASSER
+       3. GRUNDDATA MED TVÅSPRÅKIG TEXT (BILINGUAL FREE TEXT)
        ========================================================================= */
     const INITIAL_DATASET = [
       // Klasser
-      { id: "class-rpg-class",        title: "Class",           is_class: true,  assigned_classes: [], free_text: "Rollspelsklass (t.ex. Ranger, Wizard).", template_boxes: [] },
-      { id: "class-spell",            title: "Spell",           is_class: true,  assigned_classes: [], free_text: "Magiska formler och trollformler.", template_boxes: [] },
-      { id: "class-monster",          title: "Monster",         is_class: true,  assigned_classes: [], free_text: "Varelser och bestar.", template_boxes: [] },
-      { id: "class-undead",           title: "Undead",          is_class: true,  assigned_classes: ["class-monster"], free_text: "Odöda varelser.", template_boxes: [] },
-      { id: "class-dragon",           title: "Dragon",          is_class: true,  assigned_classes: ["class-monster"], free_text: "Drakar och drakarter.", template_boxes: [] },
-      { id: "class-weapon",           title: "Weapon",          is_class: true,  assigned_classes: [], free_text: "Vapen och stridsredskap.", template_boxes: [] },
-      { id: "class-protective-item",  title: "Protective Item", is_class: true,  assigned_classes: [], free_text: "Sköldar, rustningar och skydd.", template_boxes: [] },
-      { id: "class-food",             title: "Food",            is_class: true,  assigned_classes: [], free_text: "Matvaror och ingredienser.", template_boxes: [] },
-      { id: "class-animalia",         title: "Animalia",        is_class: true,  assigned_classes: [], free_text: "Djurriket och animaliska produkter.", template_boxes: [] },
-      { id: "class-toys",             title: "Toys",            is_class: true,  assigned_classes: [], free_text: "Leksaker.", template_boxes: [] },
-      { id: "class-fridge",           title: "Fridge",          is_class: true,  assigned_classes: [], free_text: "Kylskåp och kyla.", template_boxes: ["class-food"] },
-      { id: "class-spice",            title: "Spice",           is_class: true,  assigned_classes: [], free_text: "Kryddor.", template_boxes: [] },
+      { 
+        id: "class-rpg-class", 
+        title: "Class", 
+        is_class: true, 
+        assigned_classes: [], 
+        free_text: { sv: "Rollspelsklass (t.ex. Ranger, Wizard, Knight, Cleric).", en: "Character classes and vocations in the roleplaying system." }, 
+        template_boxes: [] 
+      },
+      { 
+        id: "class-spell", 
+        title: "Spell", 
+        is_class: true, 
+        assigned_classes: [], 
+        free_text: { sv: "Magiska formler och besvärjelser som kastas av magiker och präster.", en: "Magical spells, incantations, and rituals cast by casters." }, 
+        template_boxes: [] 
+      },
+      { 
+        id: "class-monster", 
+        title: "Monster", 
+        is_class: true, 
+        assigned_classes: [], 
+        free_text: { sv: "Varelser, odjur och bestar.", en: "Creatures, adversaries, and monsters inhabiting the realm." }, 
+        template_boxes: [] 
+      },
+      { 
+        id: "class-undead", 
+        title: "Undead", 
+        is_class: true, 
+        assigned_classes: ["class-monster"], 
+        free_text: { sv: "Odöda varelser som väckts till liv genom nekromanti.", en: "Undead entities reanimated through dark necromantic arts." }, 
+        template_boxes: [] 
+      },
+      { 
+        id: "class-dragon", 
+        title: "Dragon", 
+        is_class: true, 
+        assigned_classes: ["class-monster"], 
+        free_text: { sv: "Urgamla bevingade reptiler med fruktansvärda andedräkter.", en: "Ancient winged reptiles of tremendous power and breath weapons." }, 
+        template_boxes: [] 
+      },
+      { 
+        id: "class-weapon", 
+        title: "Weapon", 
+        is_class: true, 
+        assigned_classes: [], 
+        free_text: { sv: "Vapen och stridsredskap för närstrid och avstånd.", en: "Martial weapons, blades, and implements of combat." }, 
+        template_boxes: [] 
+      },
+      { 
+        id: "class-protective-item", 
+        title: "Protective Item", 
+        is_class: true, 
+        assigned_classes: [], 
+        free_text: { sv: "Sköldar, rustningar och skyddande utrustning.", en: "Shields, armor suits, and defensive warding gear." }, 
+        template_boxes: [] 
+      },
+      { 
+        id: "class-food", 
+        title: "Food", 
+        is_class: true, 
+        assigned_classes: [], 
+        free_text: { sv: "Matvaror, proviant och ingredienser.", en: "Edible provisions, foodstuffs, and cooking components." }, 
+        template_boxes: [] 
+      },
+      { 
+        id: "class-animalia", 
+        title: "Animalia", 
+        is_class: true, 
+        assigned_classes: [], 
+        free_text: { sv: "Djurriket och animaliska produkter.", en: "Animal kingdom and animal-derived products." }, 
+        template_boxes: [] 
+      },
+      { 
+        id: "class-toys", 
+        title: "Toys", 
+        is_class: true, 
+        assigned_classes: [], 
+        free_text: { sv: "Leksaker och prylar.", en: "Playthings and novelty items." }, 
+        template_boxes: [] 
+      },
+      { 
+        id: "class-fridge", 
+        title: "Fridge", 
+        is_class: true, 
+        assigned_classes: [], 
+        free_text: { sv: "Kylskåp för matförvaring.", en: "Refrigerated cabinet for cold food storage." }, 
+        template_boxes: ["class-food"] 
+      },
+      { 
+        id: "class-spice", 
+        title: "Spice", 
+        is_class: true, 
+        assigned_classes: [], 
+        free_text: { sv: "Kryddor och smaksättare.", en: "Culinary seasonings and herbs." }, 
+        template_boxes: [] 
+      },
 
-      // Simpla objekt: D&D & Mat & Hus
-      { id: "obj-ghoul",        title: "Ghoul",        is_class: false, assigned_classes: ["class-undead"], free_text: "A ravenous undead creature.", template_boxes: [] },
-      { id: "obj-skeleton",     title: "Skeleton",     is_class: false, assigned_classes: ["class-undead"], free_text: "Animated skeletal warrior.", template_boxes: [] },
-      { id: "obj-owlbear",      title: "Owlbear",      is_class: false, assigned_classes: ["class-monster"], free_text: "Monstrous creature with bear body and owl head.", template_boxes: [] },
-      { id: "obj-green-dragon", title: "Green Dragon", is_class: false, assigned_classes: ["class-dragon"], free_text: "Cunning, treacherous dragon with poison breath.", template_boxes: [] },
-      { id: "obj-sword",        title: "Sword",        is_class: false, assigned_classes: ["class-weapon"], free_text: "En mångsidig klinga.", template_boxes: [] },
-      { id: "obj-shield",       title: "Shield",       is_class: false, assigned_classes: ["class-protective-item"], free_text: "Skydd mot fysiska anfall.", template_boxes: [] },
-      { id: "obj-battle-axe",   title: "Battle Axe",   is_class: false, assigned_classes: ["class-weapon"], free_text: "Tvåhandad eller enhandad stridsyxa.", template_boxes: [] },
-      { id: "obj-ranger",       title: "Ranger",       is_class: false, assigned_classes: ["class-rpg-class"], free_text: "Vildmarksjägare och spårare.", template_boxes: [] },
-      { id: "obj-knight",       title: "Knight",       is_class: false, assigned_classes: ["class-rpg-class"], free_text: "Bepansrad krigare och riddare.", template_boxes: [] },
-      { id: "obj-wizard",       title: "Wizard",       is_class: false, assigned_classes: ["class-rpg-class"], free_text: "Magiker med formelbok.", template_boxes: [] },
-      { id: "obj-cleric",       title: "Cleric",       is_class: false, assigned_classes: ["class-rpg-class"], free_text: "Gudomlig kämpe och helare.", template_boxes: [] },
-      { id: "obj-cure-minor",   title: "Cure Minor Wounds", is_class: false, assigned_classes: ["class-spell"], free_text: "Återställer en liten mängd hälsa.", template_boxes: [] },
-      { id: "obj-lightning-bolt", title: "Lightning Bolt", is_class: false, assigned_classes: ["class-spell"], free_text: "Skjuter en kraftig blixtlinje.", template_boxes: [] },
-      { id: "obj-fire-ball",    title: "Fire Ball",    is_class: false, assigned_classes: ["class-spell"], free_text: "Exploderande eldklot som orsakar massiv skada.", template_boxes: [] },
+      // Spells
+      { 
+        id: "obj-cure-minor", 
+        title: "Cure Minor Wounds", 
+        is_class: false, 
+        assigned_classes: ["class-spell"], 
+        free_text: { sv: "Återställer en liten mängd hälsa hos målet.", en: "Restores a small amount of vitality and binds light cuts." }, 
+        template_boxes: [] 
+      },
+      { 
+        id: "obj-lightning-bolt", 
+        title: "Lightning Bolt", 
+        is_class: false, 
+        assigned_classes: ["class-spell"], 
+        free_text: { sv: "Skjuter en kraftig blixtlinje genom fienderna.", en: "Releases a straight stroke of electrical power piercing all foes in its line." }, 
+        template_boxes: [] 
+      },
+      { 
+        id: "obj-fire-ball", 
+        title: "Fire Ball", 
+        is_class: false, 
+        assigned_classes: ["class-spell"], 
+        free_text: { sv: "Exploderande eldklot som förbränner allt i radien.", en: "A bright streak that detonates into a roaring blast of flame." }, 
+        template_boxes: [] 
+      },
 
-      // Franks exempel: Cheese med dubbla klasser (Food & Animalia)
-      { id: "obj-cheese",       title: "Cheese",       is_class: false, assigned_classes: ["class-food", "class-animalia"], free_text: "Lagrad ost gjord på mjölk.", template_boxes: [] },
+      // Monster
+      { 
+        id: "obj-ghoul", 
+        title: "Ghoul", 
+        is_class: false, 
+        assigned_classes: ["class-undead"], 
+        free_text: { sv: "Ett glupskt odött monster vars beröring paralyserar.", en: "A ravenous undead scavenger whose touch causes paralysis." }, 
+        template_boxes: [] 
+      },
+      { 
+        id: "obj-skeleton", 
+        title: "Skeleton", 
+        is_class: false, 
+        assigned_classes: ["class-undead"], 
+        free_text: { sv: "Benrangel beväpnad med svärd.", en: "Animated animated skeletal remains of a warrior." }, 
+        template_boxes: [] 
+      },
+      { 
+        id: "obj-owlbear", 
+        title: "Owlbear", 
+        is_class: false, 
+        assigned_classes: ["class-monster"], 
+        free_text: { sv: "Aggressiv korsning mellan björn och uggla.", en: "Monstrous cross between a great owl and a feral grizzly bear." }, 
+        template_boxes: [] 
+      },
+      { 
+        id: "obj-green-dragon", 
+        title: "Green Dragon", 
+        is_class: false, 
+        assigned_classes: ["class-dragon"], 
+        free_text: { sv: "Lömsk och giftig drake som bor i djupa skogar.", en: "Cunning, treacherous dragon with a deadly poisonous chlorine gas breath." }, 
+        template_boxes: [] 
+      },
 
-      // Grundobjekt
-      { id: "obj-kitchen",      title: "Kitchen",      is_class: false, assigned_classes: [], free_text: "", template_boxes: [] },
-      { id: "obj-table",        title: "Table",        is_class: false, assigned_classes: [], free_text: "", template_boxes: [] },
-      { id: "obj-freezer",      title: "Freezer",      is_class: false, assigned_classes: [], free_text: "", template_boxes: [] },
-      { id: "obj-cinnamon",     title: "Cinnamon",     is_class: false, assigned_classes: ["class-spice"], free_text: "", template_boxes: [] }
+      // Övriga D&D
+      { id: "obj-sword", title: "Sword", is_class: false, assigned_classes: ["class-weapon"], free_text: { sv: "Ett pålitligt stålsvärd.", en: "A well-balanced steel blade." }, template_boxes: [] },
+      { id: "obj-shield", title: "Shield", is_class: false, assigned_classes: ["class-protective-item"], free_text: { sv: "Rund sköld av trä och metall.", en: "Round shield bound in iron." }, template_boxes: [] },
+      { id: "obj-battle-axe", title: "Battle Axe", is_class: false, assigned_classes: ["class-weapon"], free_text: { sv: "Tung stridsyxa.", en: "Heavy battle axe with a sharp crescent blade." }, template_boxes: [] },
+      { id: "obj-ranger", title: "Ranger", is_class: false, assigned_classes: ["class-rpg-class"], free_text: { sv: "Jägare och spårare.", en: "Wilderness hunter and scout." }, template_boxes: [] },
+      { id: "obj-knight", title: "Knight", is_class: false, assigned_classes: ["class-rpg-class"], free_text: { sv: "Tungt rustad riddare.", en: "Heavy-armored champion." }, template_boxes: [] },
+      { id: "obj-wizard", title: "Wizard", is_class: false, assigned_classes: ["class-rpg-class"], free_text: { sv: "Magins mästare.", en: "Master of arcane sorcery." }, template_boxes: [] },
+      { id: "obj-cleric", title: "Cleric", is_class: false, assigned_classes: ["class-rpg-class"], free_text: { sv: "Helig förkämpe.", en: "Devoted holy warrior and healer." }, template_boxes: [] },
+
+      // Mat & Hus
+      { id: "obj-cheese", title: "Cheese", is_class: false, assigned_classes: ["class-food", "class-animalia"], free_text: { sv: "Lagrad ost gjord på mjölk.", en: "A rich dairy cheese produced from milk." }, template_boxes: [] },
+      { id: "obj-kitchen", title: "Kitchen", is_class: false, assigned_classes: [], free_text: { sv: "Ett kök.", en: "A room equipped for preparing food." }, template_boxes: [] },
+      { id: "obj-table", title: "Table", is_class: false, assigned_classes: [], free_text: { sv: "Ett träbord.", en: "A wooden table." }, template_boxes: [] },
+      { id: "obj-freezer", title: "Freezer", is_class: false, assigned_classes: [], free_text: { sv: "Frys för långtidsförvaring.", en: "Deep freezer for preserved goods." }, template_boxes: [] },
+      { id: "obj-cinnamon", title: "Cinnamon", is_class: false, assigned_classes: ["class-spice"], free_text: { sv: "Aromatisk kanel.", en: "Aromatic ground cinnamon spice." }, template_boxes: [] }
     ];
 
     /* =========================================================================
-       4. DATABASMOTOR MED HISTORIK, RELATIONSSKANNING & KLASSARV
+       4. DATABASMOTOR
        ========================================================================= */
     class SimpleDatabaseApp {
       constructor() {
@@ -644,13 +749,18 @@
         return I18N[this.lang][key] || key;
       }
 
+      getFreeText(item) {
+        if (!item || !item.free_text) return '';
+        if (typeof item.free_text === 'string') return item.free_text;
+        return item.free_text[this.lang] || item.free_text['sv'] || item.free_text['en'] || '';
+      }
+
       applyLanguage() {
         document.getElementById('headerAppTitle').innerText = this.t('appTitle');
         document.getElementById('btnNewObject').innerText = this.t('newObject');
         document.getElementById('searchInput').placeholder = this.t('searchPlaceholder');
         document.getElementById('btnSearchGo').innerText = this.t('searchGo');
 
-        // Modaltexter
         document.getElementById('modalHeading').innerText = this.t('modalCreateHeading');
         document.getElementById('lblModalTitle').innerText = this.t('modalNameLbl');
         document.getElementById('lblModalType').innerText = this.t('modalTypeLbl');
@@ -688,7 +798,6 @@
         }
       }
 
-      /* Webbläsarnavigering (Routing & Back/Forward knappar) */
       initHistoryRouter() {
         window.addEventListener('popstate', () => {
           this.routeFromHash();
@@ -713,13 +822,12 @@
         }
       }
 
-      /* Firebase Init */
       initFirebase() {
         try {
           firebase.initializeApp(firebaseConfig);
           this.db = firebase.firestore();
 
-          this.db.collection('simple_db').doc('global_relations_v2').onSnapshot(doc => {
+          this.db.collection('simple_db').doc('compendium_v3').onSnapshot(doc => {
             this.updateCloudBadge('online');
 
             if (doc.exists) {
@@ -744,7 +852,7 @@
       }
 
       fallbackLocal() {
-        const raw = localStorage.getItem('simpeldb_tags_multi');
+        const raw = localStorage.getItem('simpeldb_compendium_v3');
         this.tags = raw ? JSON.parse(raw) : INITIAL_DATASET;
         this.routeFromHash();
       }
@@ -752,16 +860,16 @@
       async sync() {
         if (this.db) {
           try {
-            await this.db.collection('simple_db').doc('global_relations_v2').set({
+            await this.db.collection('simple_db').doc('compendium_v3').set({
               tags: this.tags,
               updatedAt: Date.now()
             });
           } catch (e) {
             console.warn("Kunde inte spara till Firestore, sparar lokalt:", e);
-            localStorage.setItem('simpeldb_tags_multi', JSON.stringify(this.tags));
+            localStorage.setItem('simpeldb_compendium_v3', JSON.stringify(this.tags));
           }
         } else {
-          localStorage.setItem('simpeldb_tags_multi', JSON.stringify(this.tags));
+          localStorage.setItem('simpeldb_compendium_v3', JSON.stringify(this.tags));
         }
       }
 
@@ -779,101 +887,46 @@
         return this.tags.filter(t => t.is_class);
       }
 
-      /* Hämta layout-boxar för ett objekt (arv från överordnade klasser) */
-      getEffectiveBoxClassIds(item) {
-        const boxIds = new Set();
-
-        // 1. Boxar direkt på objektet/klassen själv
-        (item.template_boxes || []).forEach(b => boxIds.add(b));
-
-        // 2. Boxar ärvda från dess klasser
-        (item.assigned_classes || []).forEach(cid => {
-          const parentClass = this.getTag(cid);
-          if (parentClass && parentClass.template_boxes) {
-            parentClass.template_boxes.forEach(b => boxIds.add(b));
-          }
-        });
-
-        return Array.from(boxIds);
+      /* Hitta objekt som tillhör en viss klass */
+      getItemsOfClass(classId) {
+        return this.tags.filter(t => 
+          !t.is_class && t.assigned_classes && t.assigned_classes.includes(classId)
+        );
       }
 
-      /* GLOBAL RELATIONSSKANNING & AUTOMATISK NESTING (Franks Kärnlogik) */
-      resolveBoxHierarchy(pageItem, boxClassIds) {
-        // Hitta alla objekt som har respektive box-klass
-        // boxMap: { [boxClassId]: [itemObj, itemObj, ...] }
-        const resultBoxes = [];
+      /* Kontextbaserad filtrering av klasser i rullgardinen */
+      getContextualClasses(currentPageItem) {
+        const allClasses = this.getClasses().filter(c => c.id !== currentPageItem.id);
+        const relevant = [];
+        const other = [];
 
-        // Håll koll på vilka objekt som redan placerats i en tidigare box för att förhindra dubbletter
-        const placedItemIds = new Set();
-
-        boxClassIds.forEach((boxClassId, index) => {
-          const boxClass = this.getTag(boxClassId);
-          if (!boxClass) return;
-
-          // Hitta alla kandidater i hela databasen som har denna klass
-          let candidateItems = this.tags.filter(t => 
-            t.assigned_classes && t.assigned_classes.includes(boxClassId)
-          );
-
-          // Om sidan representerar en specifik klass (t.ex. Toys eller Fridge):
-          // Enligt Franks regel: "om de också delar samma klass som sidans titel"
-          // ELLER om sidan tillåter objektet via en annan etablerad box (som Fridge har Food)
-          if (pageItem.is_class) {
-            candidateItems = candidateItems.filter(item => {
-              // 1. Delar den klass med sidans titel?
-              if (item.assigned_classes.includes(pageItem.id)) return true;
-              
-              // 2. Delar den en klass som redan finns som box på denna sida? (t.ex. Food på Fridge)
-              const sharesOtherBoxClass = boxClassIds.some(otherBoxId => 
-                otherBoxId !== boxClassId && item.assigned_classes.includes(otherBoxId)
-              );
-              return sharesOtherBoxClass;
-            });
-          }
-
-          // Undersök om några av dessa items ocksa matchar en TIDIGARE box (Nesting-regeln!)
-          // "Systemet ordnar så boxen Animalia blir en underbox till Food för boxen Food var där först och placerad överst."
-          const directItems = [];
-          const subboxGroups = {}; // { [subBoxClassId]: [item, item] }
-
-          candidateItems.forEach(item => {
-            // Kontrollera om objektet har en klass som motsvarar en box placerad HÖGRE upp
-            const earlierBoxMatch = boxClassIds.slice(0, index).find(earlierId => 
-              item.assigned_classes.includes(earlierId)
-            );
-
-            if (earlierBoxMatch) {
-              // Det här objektet hör hemma som en subbox inuti den tidigare boxen!
-              const targetParentBox = resultBoxes.find(b => b.classId === earlierBoxMatch);
-              if (targetParentBox) {
-                if (!targetParentBox.subboxes[boxClassId]) {
-                  targetParentBox.subboxes[boxClassId] = [];
-                }
-                if (!targetParentBox.subboxes[boxClassId].some(i => i.id === item.id)) {
-                  targetParentBox.subboxes[boxClassId].push(item);
-                }
-                placedItemIds.add(item.id);
-                return;
-              }
-            }
-
-            // Annars är det ett direkt item i denna box
-            directItems.push(item);
-            placedItemIds.add(item.id);
-          });
-
-          resultBoxes.push({
-            classId: boxClassId,
-            boxClass: boxClass,
-            directItems: directItems,
-            subboxes: subboxGroups // fylls eventuellt på av senare boxar
+        // Kontextuella indikatorer
+        const memberItems = this.getItemsOfClass(currentPageItem.id);
+        const memberClassesSet = new Set();
+        memberItems.forEach(it => {
+          (it.assigned_classes || []).forEach(cid => {
+            if (cid !== currentPageItem.id) memberClassesSet.add(cid);
           });
         });
 
-        return resultBoxes;
+        allClasses.forEach(c => {
+          // 1. Är det en underklass till den aktuella sidan?
+          const isChild = (c.assigned_classes || []).includes(currentPageItem.id);
+          // 2. Är den aktuella sidan en underklass till c?
+          const isParent = (currentPageItem.assigned_classes || []).includes(c.id);
+          // 3. Används den av medlemmar på denna sida? (t.ex. Level 1 på Spells)
+          const isUsedByMembers = memberClassesSet.has(c.id);
+
+          if (isChild || isParent || isUsedByMembers) {
+            relevant.push(c);
+          } else {
+            other.push(c);
+          }
+        });
+
+        return { relevant, other };
       }
 
-      /* Växla mellan klass och simpelt objekt */
       toggleIsClass(tagId) {
         const tag = this.getTag(tagId);
         if (!tag) return;
@@ -883,10 +936,8 @@
         this.renderItemPage(tag.id);
       }
 
-      /* Lägg till / Ta bort klass på ett objekt */
       promptAddClassToObject(tagId) {
-        const available = this.getClasses().filter(c => c.id !== tagId);
-        const name = prompt(this.lang === 'sv' ? "Skriv namn på klassen du vill lägga till:" : "Enter name of class to assign:");
+        const name = prompt(this.lang === 'sv' ? "Skriv namn på klassen du vill tilldela:" : "Enter name of class to assign:");
         if (!name || !name.trim()) return;
 
         let cls = this.getTagByTitle(name.trim());
@@ -896,7 +947,7 @@
             title: name.trim(),
             is_class: true,
             assigned_classes: [],
-            free_text: "",
+            free_text: { sv: "", en: "" },
             template_boxes: []
           };
           this.tags.push(cls);
@@ -920,25 +971,6 @@
         item.assigned_classes = item.assigned_classes.filter(c => c !== classId);
         this.sync();
         this.renderItemPage(item.id);
-      }
-
-      /* Reverse References (SRD) */
-      findReferences(targetId) {
-        const target = this.getTag(targetId);
-        if (!target) return [];
-        const refs = [];
-
-        // 1. Objekt som har target som klass
-        this.tags.forEach(t => {
-          if (t.assigned_classes && t.assigned_classes.includes(targetId)) {
-            refs.push({
-              sourceItem: t,
-              relationDesc: this.lang === 'sv' ? `har klassen ${target.title}` : `has class ${target.title}`
-            });
-          }
-        });
-
-        return refs;
       }
 
       /* =========================================================================
@@ -1011,15 +1043,16 @@
           `;
         }).filter(Boolean).join('');
 
-        // Fritext-zon
+        // Fritext-zon (Tvåspråkig)
+        const currentText = this.getFreeText(item);
         let freeTextZone = '';
         if (isEditingText) {
           freeTextZone = `
             <div class="free-text-frame">
               <div class="free-text-label">
-                <span>${this.t('freeTextTag')}</span>
+                <span>${this.t('freeTextTag')} (${this.lang.toUpperCase()})</span>
               </div>
-              <textarea id="freeTextEditor" style="width:100%; min-height:80px; margin-bottom:8px;">${item.free_text || ''}</textarea>
+              <textarea id="freeTextEditor" style="width:100%; min-height:80px; margin-bottom:8px;">${currentText}</textarea>
               <div style="display:flex; gap:6px;">
                 <button class="primary" onclick="dbApp.saveFreeText('${item.id}')">${this.t('saveText')}</button>
                 <button onclick="dbApp.renderItemPage('${item.id}', false)">${this.t('cancel')}</button>
@@ -1033,42 +1066,41 @@
                 <span>${this.t('freeTextTag')}</span>
                 <span style="font-size:10px; text-decoration:underline;">${this.t('clickToEdit')}</span>
               </div>
-              <div class="free-text-content">${item.free_text ? item.free_text : `<span style="color:var(--db-muted); font-style:italic;">${this.t('freeTextEmpty')}</span>`}</div>
+              <div class="free-text-content">${currentText ? currentText : `<span style="color:var(--db-muted); font-style:italic;">${this.t('freeTextEmpty')}</span>`}</div>
             </div>
           `;
         }
 
-        // Hämta effektiva boxar och kör Franks hierarkiska nesting
-        const boxClassIds = this.getEffectiveBoxClassIds(item);
-        const resolvedBoxes = this.resolveBoxHierarchy(item, boxClassIds);
-
-        // Rendera de genererade boxarna och subboxarna
-        const boxesHtml = resolvedBoxes.map(b => this.renderGeneratedBox(item, b)).join('');
-
-        // Referenser (SRD)
-        const references = this.findReferences(item.id);
-        let referencesHtml = '';
-        if (references.length > 0) {
-          referencesHtml = `
-            <div class="references-zone">
-              <h3>${this.t('referencesTitle')} (${references.length})</h3>
-              <ul class="reference-list">
-                ${references.map(r => `
-                  <li>
-                    ${this.t('appearsIn')} <strong><a onclick="dbApp.navigateTo('${r.sourceItem.id}')">${r.sourceItem.title}</a></strong> (${r.relationDesc})
-                  </li>
-                `).join('')}
-              </ul>
-            </div>
-          `;
+        // Huvudinnehåll: Om detta är en KLASS (t.ex. Spells) eller ett OBJEKT (t.ex. Owlbear)
+        let mainBoxesHtml = '';
+        if (item.is_class) {
+          mainBoxesHtml = this.renderClassCompendiumView(item);
+        } else {
+          mainBoxesHtml = this.renderObjectBoxesView(item);
         }
 
-        const availableClasses = this.getClasses().filter(c => c.id !== item.id);
+        // Kontextbaserad dropdown för box-skaparen
+        const { relevant, other } = this.getContextualClasses(item);
+        let optionsHtml = `<option value="">${this.t('selectExistingClass')}</option>`;
+        if (relevant.length > 0) {
+          optionsHtml += `<optgroup label="${this.t('optgroupRelevant')}">`;
+          relevant.forEach(c => {
+            optionsHtml += `<option value="${c.id}">${c.title}</option>`;
+          });
+          optionsHtml += `</optgroup>`;
+        }
+        if (other.length > 0) {
+          optionsHtml += `<optgroup label="${this.t('optgroupOther')}">`;
+          other.forEach(c => {
+            optionsHtml += `<option value="${c.id}">${c.title}</option>`;
+          });
+          optionsHtml += `</optgroup>`;
+        }
 
         main.innerHTML = `
           <div class="item-card">
             
-            <!-- TOPP: ITEM + MULTIPLA KLASSER -->
+            <!-- TOPP: ITEM + KLASSER -->
             <div class="item-top-zone">
               <div>
                 <h1 class="item-name">${item.title}</h1>
@@ -1093,54 +1125,121 @@
             <!-- FREE TEXT ZONE -->
             ${freeTextZone}
 
-            <!-- DYNAMISKA BOXAR & SUBBOXAR (SKANNADE FRÅN DATABASEN) -->
+            <!-- ROLLSPELSBOK / COMPENDIUM BOXAR -->
             <div class="boxes-container">
-              ${boxesHtml}
+              ${mainBoxesHtml}
             </div>
 
-            <!-- SKAPA NY BOX ZONE -->
+            <!-- SKAPA NY BOX ZONE MED KONTEXTFILTER -->
             <div class="add-box-zone">
               <div style="font-weight: bold; margin-bottom: 6px;">${this.t('addClassBox')}</div>
               <div style="display:flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                 <select id="selectNewBoxClass">
-                  <option value="">${this.t('selectExistingClass')}</option>
-                  ${availableClasses.map(c => `<option value="${c.id}">${c.title}</option>`).join('')}
+                  ${optionsHtml}
                 </select>
                 <span>${this.t('orWord')}</span>
-                <input type="text" id="inputNewClassName" placeholder="${this.t('newClassPlaceholder')}" style="width: 220px;">
+                <input type="text" id="inputNewClassName" placeholder="${this.t('newClassPlaceholder')}" style="width: 250px;">
                 <button class="primary" onclick="dbApp.handleCreateBox('${item.id}')">${this.t('addBoxBtn')}</button>
               </div>
               <div style="font-size: 11px; color: var(--db-muted); margin-top: 6px;">
-                ${item.assigned_classes && item.assigned_classes.length > 0
-                  ? `💡 ${this.t('inheritanceNoticeMonster').replace('{name}', this.getTag(item.assigned_classes[0])?.title || '')}`
-                  : `💡 ${this.t('inheritanceNoticeGeneral')}`}
+                ${item.is_class 
+                  ? `💡 Denna box/kategori läggs till på katalogen för <strong>${item.title}</strong>.` 
+                  : (item.assigned_classes && item.assigned_classes.length > 0 
+                      ? `💡 ${this.t('inheritanceNoticeMonster').replace('{name}', this.getTag(item.assigned_classes[0])?.title || '')}`
+                      : `💡 ${this.t('inheritanceNoticeGeneral')}`)}
               </div>
             </div>
-
-            <!-- SRD REFERENSER -->
-            ${referencesHtml}
 
           </div>
         `;
       }
 
-      /* Rendera en yttre box och dess dynamiska underboxar */
-      renderGeneratedBox(currentItem, boxData) {
-        const { classId, boxClass, directItems, subboxes } = boxData;
+      /* ROLLSPELSKATALOG FÖR KLASSER (Spells, Monsters, Weapons etc.) */
+      renderClassCompendiumView(classItem) {
+        const memberItems = this.getItemsOfClass(classItem.id);
+        const subboxClassIds = classItem.template_boxes || [];
 
-        // Subboxar (t.ex. Animalia som nästlas inuti Food för Cheese)
-        const subboxesHtml = Object.keys(subboxes).map(subClassId => {
-          const subClass = this.getTag(subClassId);
-          const subItems = subboxes[subClassId] || [];
-
+        // Om klassen saknar sub-boxar: Visa ALLA medlemmar i en allmän huvudbox
+        if (subboxClassIds.length === 0) {
+          const generalTitle = this.t('generalBoxTitle').replace('{name}', classItem.title);
           return `
-            <div class="class-subbox">
-              <div class="class-subbox-header">
-                <a class="class-subbox-title" onclick="dbApp.navigateTo('${subClass.id}')"># ${subClass ? subClass.title : subClassId}</a>
-                <span style="font-size:11px; color:var(--db-muted);">(${subItems.length})</span>
+            <div class="compendium-box">
+              <div class="compendium-header">
+                <div>
+                  <span class="compendium-title"># ${generalTitle}</span>
+                  <span style="font-size: 12px; color: var(--db-muted); margin-left: 6px;">(${memberItems.length})</span>
+                </div>
+              </div>
+
+              <!-- Lista av alla objekt inom klassen -->
+              <div class="items-row">
+                ${memberItems.map(it => `
+                  <span class="item-pill">
+                    <a onclick="dbApp.navigateTo('${it.id}')">${it.title}</a>
+                  </span>
+                `).join('')}
+              </div>
+
+              <!-- INLINE CREATION: Skapa ny spell direkt inuti klassen -->
+              <div class="inline-item-add" style="margin-top: 12px; border-top: 1px dashed var(--db-border-light); padding-top: 8px;">
+                <input type="text" id="inlineClassCreate" placeholder="${this.t('createInClassPlaceholder').replace('{name}', classItem.title)}" onkeydown="if(event.key==='Enter') dbApp.handleCreateItemInsideClass('${classItem.id}')">
+                <button class="primary" onclick="dbApp.handleCreateItemInsideClass('${classItem.id}')">+</button>
+              </div>
+            </div>
+          `;
+        }
+
+        // Om det finns definierade sub-boxar (t.ex. Level 1 Spells, Level 2 Spells)
+        let subboxesHtml = '';
+        const placedIds = new Set();
+
+        subboxClassIds.forEach(subClassId => {
+          const subClass = this.getTag(subClassId);
+          if (!subClass) return;
+
+          // Hitta medlemmar som också har denna sub-klass
+          const subMembers = memberItems.filter(m => (m.assigned_classes || []).includes(subClassId));
+          subMembers.forEach(m => placedIds.add(m.id));
+
+          subboxesHtml += `
+            <div class="compendium-subbox">
+              <div class="compendium-subbox-header">
+                <div>
+                  <a class="compendium-subbox-title" onclick="dbApp.navigateTo('${subClass.id}')"># ${subClass.title}</a>
+                  <span style="font-size: 11px; color: var(--db-muted); margin-left: 6px;">(${subMembers.length})</span>
+                </div>
+                <button style="font-size: 11px; padding: 2px 6px;" onclick="dbApp.removeSubboxFromClass('${classItem.id}', '${subClass.id}')">${this.t('deleteBox')}</button>
+              </div>
+
+              <div class="items-row">
+                ${subMembers.map(it => `
+                  <span class="item-pill">
+                    <a onclick="dbApp.navigateTo('${it.id}')">${it.title}</a>
+                  </span>
+                `).join('')}
+              </div>
+
+              <!-- Inline creation med både huvudklass och subklass tilldelad -->
+              <div class="inline-item-add">
+                <input type="text" id="inlineSub-${subClassId}" placeholder="${this.t('createInClassPlaceholder').replace('{name}', subClass.title)}" onkeydown="if(event.key==='Enter') dbApp.handleCreateItemInsideSubbox('${classItem.id}', '${subClassId}')">
+                <button onclick="dbApp.handleCreateItemInsideSubbox('${classItem.id}', '${subClassId}')">+</button>
+              </div>
+            </div>
+          `;
+        });
+
+        // Osorterade / Allmänna objekt som saknar sub-box
+        const unplaced = memberItems.filter(m => !placedIds.has(m.id));
+        let unplacedHtml = '';
+        if (unplaced.length > 0) {
+          unplacedHtml = `
+            <div class="compendium-subbox" style="background:#fff;">
+              <div class="compendium-subbox-header">
+                <span class="compendium-subbox-title"># Övriga ${classItem.title}</span>
+                <span style="font-size: 11px; color: var(--db-muted);">(${unplaced.length})</span>
               </div>
               <div class="items-row">
-                ${subItems.map(it => `
+                ${unplaced.map(it => `
                   <span class="item-pill">
                     <a onclick="dbApp.navigateTo('${it.id}')">${it.title}</a>
                   </span>
@@ -1148,40 +1247,134 @@
               </div>
             </div>
           `;
-        }).join('');
+        }
 
         return `
-          <div class="class-outer-box">
-            <div class="class-outer-header">
+          <div class="compendium-box">
+            <div class="compendium-header">
               <div>
-                <a class="class-outer-title" onclick="dbApp.navigateTo('${boxClass.id}')"># ${boxClass.title}</a>
-                <span style="font-size:12px; color:var(--db-muted); margin-left:6px;">(${directItems.length})</span>
-              </div>
-              <button style="font-size:11px; padding:2px 6px;" onclick="dbApp.removeBoxFromLayout('${currentItem.id}', '${classId}')">${this.t('deleteBox')}</button>
-            </div>
-
-            <!-- Direkta taggar i boxen -->
-            <div class="items-row">
-              ${directItems.map(it => `
-                <span class="item-pill">
-                  <a onclick="dbApp.navigateTo('${it.id}')">${it.title}</a>
-                </span>
-              `).join('')}
-
-              <!-- Inline-skapa nytt objekt direkt i boxens klass -->
-              <div class="inline-item-add">
-                <input type="text" id="inline-${classId}" placeholder="${this.t('newItemInBox')}" onkeydown="if(event.key==='Enter') dbApp.handleInlineCreate('${classId}')">
-                <button onclick="dbApp.handleInlineCreate('${classId}')">+</button>
+                <span class="compendium-title"># ${classItem.title} (${memberItems.length})</span>
               </div>
             </div>
-
-            <!-- Eventuella underboxar (Nesting) -->
-            ${subboxesHtml ? `<div class="subbox-list">${subboxesHtml}</div>` : ''}
+            <div class="subbox-list">
+              ${subboxesHtml}
+              ${unplacedHtml}
+            </div>
+            <div class="inline-item-add" style="margin-top: 12px; border-top: 1px dashed var(--db-border-light); padding-top: 8px;">
+              <input type="text" id="inlineClassCreate" placeholder="${this.t('createInClassPlaceholder').replace('{name}', classItem.title)}" onkeydown="if(event.key==='Enter') dbApp.handleCreateItemInsideClass('${classItem.id}')">
+              <button class="primary" onclick="dbApp.handleCreateItemInsideClass('${classItem.id}')">+</button>
+            </div>
           </div>
         `;
       }
 
-      /* Lägg till ny box i mallen */
+      /* VY FÖR INDIVIDUELLA OBJEKT (Owlbear, Green Dragon, etc.) */
+      renderObjectBoxesView(item) {
+        const boxClassIds = new Set();
+        (item.template_boxes || []).forEach(b => boxClassIds.add(b));
+        (item.assigned_classes || []).forEach(cid => {
+          const parentClass = this.getTag(cid);
+          if (parentClass && parentClass.template_boxes) {
+            parentClass.template_boxes.forEach(b => boxClassIds.add(b));
+          }
+        });
+
+        if (boxClassIds.size === 0) return '';
+
+        return Array.from(boxClassIds).map(boxClassId => {
+          const boxClass = this.getTag(boxClassId);
+          if (!boxClass) return '';
+
+          // Hitta objekt som har denna klass och delar relationer
+          const items = this.tags.filter(t => 
+            !t.is_class && t.assigned_classes && t.assigned_classes.includes(boxClassId)
+          );
+
+          return `
+            <div class="compendium-box">
+              <div class="compendium-header">
+                <div>
+                  <a class="compendium-title" onclick="dbApp.navigateTo('${boxClass.id}')"># ${boxClass.title}</a>
+                  <span style="font-size: 12px; color: var(--db-muted); margin-left: 6px;">(${items.length})</span>
+                </div>
+                <button style="font-size: 11px; padding: 2px 6px;" onclick="dbApp.removeBoxFromLayout('${item.id}', '${boxClassId}')">${this.t('deleteBox')}</button>
+              </div>
+
+              <div class="items-row">
+                ${items.map(it => `
+                  <span class="item-pill">
+                    <a onclick="dbApp.navigateTo('${it.id}')">${it.title}</a>
+                  </span>
+                `).join('')}
+
+                <div class="inline-item-add">
+                  <input type="text" id="inlineObj-${boxClassId}" placeholder="${this.t('createInClassPlaceholder').replace('{name}', boxClass.title)}" onkeydown="if(event.key==='Enter') dbApp.handleCreateItemInsideClass('${boxClassId}')">
+                  <button onclick="dbApp.handleCreateItemInsideClass('${boxClassId}')">+</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      /* Skapa nytt objekt direkt i vald klass */
+      handleCreateItemInsideClass(classId) {
+        const input = document.getElementById('inlineClassCreate') || document.getElementById(`inlineObj-${classId}`);
+        if (!input) return;
+        const name = input.value.trim();
+        if (!name) return;
+
+        let obj = this.getTagByTitle(name);
+        if (!obj) {
+          obj = {
+            id: 'obj-' + Math.random().toString(36).substr(2, 9),
+            title: name,
+            is_class: false,
+            assigned_classes: [classId],
+            free_text: { sv: "", en: "" },
+            template_boxes: []
+          };
+          this.tags.push(obj);
+        } else {
+          if (!obj.assigned_classes) obj.assigned_classes = [];
+          if (!obj.assigned_classes.includes(classId)) {
+            obj.assigned_classes.push(classId);
+          }
+        }
+
+        this.sync();
+        this.renderItemPage(this.activeTagId);
+      }
+
+      /* Skapa nytt objekt inuti en sub-box (tilldelas både klass och subklass) */
+      handleCreateItemInsideSubbox(mainClassId, subClassId) {
+        const input = document.getElementById(`inlineSub-${subClassId}`);
+        if (!input) return;
+        const name = input.value.trim();
+        if (!name) return;
+
+        let obj = this.getTagByTitle(name);
+        if (!obj) {
+          obj = {
+            id: 'obj-' + Math.random().toString(36).substr(2, 9),
+            title: name,
+            is_class: false,
+            assigned_classes: [mainClassId, subClassId],
+            free_text: { sv: "", en: "" },
+            template_boxes: []
+          };
+          this.tags.push(obj);
+        } else {
+          if (!obj.assigned_classes) obj.assigned_classes = [];
+          if (!obj.assigned_classes.includes(mainClassId)) obj.assigned_classes.push(mainClassId);
+          if (!obj.assigned_classes.includes(subClassId)) obj.assigned_classes.push(subClassId);
+        }
+
+        this.sync();
+        this.renderItemPage(this.activeTagId);
+      }
+
+      /* Lägg till ny box / kategori */
       handleCreateBox(itemId) {
         const select = document.getElementById('selectNewBoxClass');
         const customInput = document.getElementById('inputNewClassName');
@@ -1196,7 +1389,7 @@
               title: newClassName,
               is_class: true,
               assigned_classes: [],
-              free_text: "",
+              free_text: { sv: "", en: "" },
               template_boxes: []
             };
             this.tags.push(existingClass);
@@ -1207,16 +1400,15 @@
         }
 
         if (!classId) {
-          alert(this.lang === 'sv' ? "Välj eller skriv en klass." : "Select or type a class.");
+          alert(this.lang === 'sv' ? "Välj eller skriv ett namn." : "Select or type a name.");
           return;
         }
 
         const item = this.getTag(itemId);
         if (!item) return;
 
-        // Om objektet tillhör en klass -> spara boxen på primära klassen (klassbaserat arv!)
-        const targetEntity = (item.assigned_classes && item.assigned_classes.length > 0) 
-          ? this.getTag(item.assigned_classes[0]) 
+        const targetEntity = (!item.is_class && item.assigned_classes && item.assigned_classes.length > 0)
+          ? this.getTag(item.assigned_classes[0])
           : item;
 
         if (!targetEntity.template_boxes) targetEntity.template_boxes = [];
@@ -1228,12 +1420,21 @@
         this.renderItemPage(itemId);
       }
 
+      removeSubboxFromClass(classId, subClassId) {
+        const cls = this.getTag(classId);
+        if (cls && cls.template_boxes) {
+          cls.template_boxes = cls.template_boxes.filter(id => id !== subClassId);
+          this.sync();
+          this.renderItemPage(classId);
+        }
+      }
+
       removeBoxFromLayout(itemId, boxClassId) {
         const item = this.getTag(itemId);
         if (!item) return;
 
-        const targetEntity = (item.assigned_classes && item.assigned_classes.length > 0) 
-          ? this.getTag(item.assigned_classes[0]) 
+        const targetEntity = (!item.is_class && item.assigned_classes && item.assigned_classes.length > 0)
+          ? this.getTag(item.assigned_classes[0])
           : item;
 
         if (targetEntity.template_boxes) {
@@ -1243,41 +1444,14 @@
         }
       }
 
-      /* Inline tillägg: Skapar ett nytt objekt med denna klass tilldelad */
-      handleInlineCreate(targetClassId) {
-        const input = document.getElementById(`inline-${targetClassId}`);
-        const name = input.value.trim();
-        if (!name) return;
-
-        let obj = this.getTagByTitle(name);
-        if (!obj) {
-          obj = {
-            id: 'obj-' + Math.random().toString(36).substr(2, 9),
-            title: name,
-            is_class: false,
-            assigned_classes: [targetClassId],
-            free_text: "",
-            template_boxes: []
-          };
-          this.tags.push(obj);
-        } else {
-          if (!obj.assigned_classes) obj.assigned_classes = [];
-          if (!obj.assigned_classes.includes(targetClassId)) {
-            obj.assigned_classes.push(targetClassId);
-          }
-        }
-
-        this.sync();
-        if (this.activeTagId) {
-          this.renderItemPage(this.activeTagId);
-        }
-      }
-
       saveFreeText(itemId) {
         const item = this.getTag(itemId);
         const editor = document.getElementById('freeTextEditor');
         if (item && editor) {
-          item.free_text = editor.value;
+          if (typeof item.free_text !== 'object' || item.free_text === null) {
+            item.free_text = { sv: item.free_text || '', en: item.free_text || '' };
+          }
+          item.free_text[this.lang] = editor.value;
           this.sync();
           this.renderItemPage(itemId, false);
         }
@@ -1296,7 +1470,7 @@
               title: q,
               is_class: false,
               assigned_classes: [],
-              free_text: "",
+              free_text: { sv: "", en: "" },
               template_boxes: []
             };
             this.tags.push(newObj);
@@ -1336,7 +1510,7 @@
           title: title,
           is_class: isClass,
           assigned_classes: selectedClasses,
-          free_text: freeText,
+          free_text: { sv: freeText, en: freeText },
           template_boxes: []
         };
 
