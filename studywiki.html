@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Studywiki</title>
+  
+  <!-- GOOGLE FIREBASE SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #202122;
+      --text-muted: #54595d;
+      --link: #0645ad;
+      --link-hover: #0b0080;
+      --border-wiki: #a2a9b1;
+      --border-subtle: #eaecf0;
+      --accent-gold: #c27803;
+      --danger: #d33;
+    }
+
+    html, body {
+      overflow-x: hidden !important;
+      width: 100% !important;
+      max-width: 100vw !important;
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Liberation Sans", Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header.wiki-header {
+      background: #ffffff;
+      border-bottom: 1px solid var(--border-wiki);
+      padding: 8px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      min-height: 52px;
+    }
+    .header-logo {
+      font-size: 20px;
+      font-weight: 700;
+      font-family: "Linux Libertine", Georgia, Times, serif;
+      color: var(--text);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-icon-trigger {
+      background: #f8f9fa;
+      border: 1px solid var(--border-wiki);
+      border-radius: 3px;
+      padding: 4px 9px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      cursor: pointer;
+    }
+    .btn-icon-trigger:hover { background: #ffffff; }
+
+    main.wiki-container {
+      max-width: 840px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 16px 14px 60px 14px;
+      flex-grow: 1;
+    }
+
+    h1.wiki-title {
+      font-family: "Linux Libertine", Georgia, Times, serif;
+      font-size: 26px;
+      font-weight: 400;
+      margin-bottom: 2px;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      word-break: break-word;
+    }
+    .wiki-subtitle {
+      font-family: "Linux Libertine", Georgia, Times, serif;
+      font-size: 15px;
+      font-style: italic;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+    h2.wiki-section {
+      font-family: "Linux Libertine", Georgia, Times, serif;
+      font-size: 18px;
+      font-weight: 700;
+      margin: 16px 0 6px 0;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-wiki);
+      padding-bottom: 4px;
+    }
+    hr.wiki-divider {
+      border: none;
+      border-top: 1px solid var(--border-wiki);
+      margin: 8px 0 12px 0;
+    }
+
+    .wiki-action-link {
+      font-size: 13px;
+      color: var(--link);
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .wiki-action-link:hover { text-decoration: underline; }
+
+    .wiki-paragraph {
+      margin-bottom: 12px;
+      color: #000000;
+      white-space: pre-wrap;
+    }
+
+    a.wiki-link {
+      color: var(--link);
+      text-decoration: none;
+    }
+    a.wiki-link:hover {
+      text-decoration: underline;
+      color: var(--link-hover);
+    }
+
+    /* DYNAMIC CLASS BOXES */
+    .class-box {
+      border: 1px solid var(--border-wiki);
+      border-radius: 4px;
+      background: #fdfdfd;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .class-box-header {
+      background: #f0f3f5;
+      padding: 8px 12px;
+      font-weight: 700;
+      font-size: 15px;
+      border-bottom: 1px solid var(--border-wiki);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .class-box-body {
+      padding: 10px 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 12px;
+    }
+    .class-box-footer {
+      padding: 6px 12px;
+      background: #f8f9fa;
+      border-top: 1px solid var(--border-subtle);
+      font-size: 13px;
+    }
+
+    /* MODALS */
+    .popup-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      justify-content: center;
+      align-items: flex-start !important;
+      padding: 12px 10px;
+      z-index: 1000;
+      overflow-y: auto;
+    }
+    .popup-box {
+      background: #ffffff;
+      border: 1px solid var(--border-wiki);
+      border-radius: 4px;
+      max-width: 500px;
+      width: 100%;
+      max-height: 86vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+      margin-top: 4px;
+    }
+    .popup-header {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 700;
+      font-size: 15px;
+    }
+    .popup-body {
+      padding: 12px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    input[type="text"], select, textarea {
+      width: 100%;
+      background: #ffffff;
+      border: 1px solid var(--border-wiki);
+      border-radius: 2px;
+      padding: 6px 8px;
+      color: #000;
+      font-size: 15px;
+      font-family: inherit;
+    }
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--link);
+      outline: none;
+    }
+
+    button.wiki-btn {
+      background: #f8f9fa;
+      color: #202122;
+      border: 1px solid var(--border-wiki);
+      border-radius: 2px;
+      padding: 5px 12px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    button.wiki-btn:hover { background: #ffffff; border-color: #72777d; }
+    button.wiki-btn.primary { background: #36c; border-color: #36c; color: #fff; font-weight: 700; }
+    button.wiki-btn.primary:hover { background: #447ff5; }
+
+    .suggest-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: #ffffff;
+      border: 1px solid var(--border-wiki);
+      border-top: none;
+      max-height: 220px;
+      overflow-y: auto;
+      z-index: 200;
+      display: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .suggest-item {
+      padding: 7px 10px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border-subtle);
+      font-size: 14px;
+    }
+    .suggest-item:hover { background: #eaecf0; }
+
+    footer.wiki-footer {
+      border-top: 1px solid var(--border-subtle);
+      padding: 14px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="wiki-header">
+    <div style="display:flex; align-items:center; gap:8px;">
+      <a href="#index" class="header-logo" onclick="navigateTo('index')">
+        <span>📖</span> <span>Studywiki</span>
+      </a>
+      <button class="btn-icon-trigger" onclick="openHeaderSearch()" title="Search all tags">🔍</button>
+    </div>
+
+    <!-- GLOBAL SEARCH -->
+    <div id="header-search-bar" style="display:none; flex-grow:1; position:relative; margin-right:8px;">
+      <div style="display:flex; align-items:center; gap:4px;">
+        <input type="text" id="global-search-input" placeholder="Search tag..." autocomplete="off" oninput="handleGlobalSearch(this.value)">
+        <button class="wiki-btn" style="padding:4px 8px;" onclick="closeHeaderSearch()">✕</button>
+      </div>
+      <div class="suggest-dropdown" id="global-search-dropdown"></div>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:8px;">
+      <span id="cloud-status-indicator" style="font-size:12px; color:var(--text-muted);" title="Cloud Status">☁️</span>
+      <button class="btn-icon-trigger" onclick="openMenuModal()">☰ Menu</button>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="wiki-container" id="wiki-app"></main>
+
+  <!-- FOOTER -->
+  <footer class="wiki-footer">
+    <span>Studywiki Cloud Database (Google Firestore)</span> • 
+    <a class="wiki-action-link" onclick="downloadBackup()">Export JSON</a> • 
+    <a class="wiki-action-link" onclick="document.getElementById('import-input').click()">Import JSON</a>
+    <input type="file" id="import-input" style="display:none;" accept=".json" onchange="importBackup(event)">
+  </footer>
+
+  <!-- MENU MODAL -->
+  <div class="popup-overlay" id="popup-menu" onclick="closeOnOverlayClick(event, 'popup-menu')">
+    <div class="popup-box" style="max-width:300px; margin:10px auto;">
+      <div class="popup-header">
+        <span>Menu</span>
+        <button class="wiki-btn" style="padding:1px 6px;" onclick="closePopup()">✕</button>
+      </div>
+      <div class="popup-body" style="gap:6px;">
+        <a class="wiki-link" style="font-weight:700; padding:4px 0;" onclick="menuNavigate('index')">📖 Global Index (A–Z)</a>
+        <a class="wiki-link" style="font-weight:700; padding:4px 0;" onclick="promptCreateTag()">➕ Create New Tag</a>
+        <a class="wiki-link" style="font-weight:700; color:var(--danger); padding:4px 0;" onclick="menuNavigate('trash')">🗑 Trash Bin</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDITOR MODAL -->
+  <div class="popup-overlay" id="popup-editor" onclick="closeOnOverlayClick(event, 'popup-editor')">
+    <div class="popup-box">
+      <div class="popup-header">
+        <span>Edit Free Text (Markdown)</span>
+        <button class="wiki-btn" style="padding:1px 6px;" onclick="closePopup()">✕</button>
+      </div>
+      <div class="popup-body">
+        <textarea id="editor-textarea" rows="10" placeholder="Write markdown here..."></textarea>
+        <div style="display:flex; justify-content:flex-end; gap:8px;">
+          <button class="wiki-btn primary" onclick="saveTagFreeText()">Save</button>
+          <button class="wiki-btn" onclick="closePopup()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+// ==================== FIREBASE & CONFIG ====================
+const firebaseConfig = {
+  apiKey: "AIzaSyDX3KFiW_nScowsEyNoveIC7u-u2WY2NCc",
+  authDomain: "ort-wiki.firebaseapp.com",
+  projectId: "ort-wiki",
+  storageBucket: "ort-wiki.firebasestorage.app",
+  messagingSenderId: "517699154864",
+  appId: "1:517699154864:web:bdfd53a4c6e7c520029c75"
+};
+
+let firestoreDb = null;
+let isCloudReady = false;
+let cloudSaveTimeout = null;
+
+try {
+  firebase.initializeApp(firebaseConfig);
+  firestoreDb = firebase.firestore();
+} catch(e) {}
+
+function updateCloudIndicator(status) {
+  const ind = document.getElementById("cloud-status-indicator");
+  if (ind) ind.innerText = status;
+}
+
+// ==================== UNIFIED TAG DATABASE MODEL ====================
+const STORAGE_KEY = "studywiki_master_db";
+
+let db = {
+  tags: [
+    // Core Classes (Phase A & B)
+    { id: "class_element", title_singular: "Element", title_plural: "Elements", assigned_class_id: null, free_text: "Fundamental building blocks of nature." },
+    { id: "class_tool", title_singular: "Tool", title_plural: "Tools", assigned_class_id: null, free_text: "Instruments used to perform work." },
+    { id: "class_material", title_singular: "Material", title_plural: "Materials", assigned_class_id: null, free_text: "Substances used to craft items." },
+    { id: "class_herb", title_singular: "Herb", title_plural: "Herbs", assigned_class_id: null, free_text: "Plants valued for medicinal or sensory properties." },
+    
+    // Sample Objects
+    { id: "obj_fire", title_singular: "Fire", title_plural: "Fires", assigned_class_id: "class_element", free_text: "Hot and radiant energy." },
+    { id: "obj_pickaxe", title_singular: "Diamond Pickaxe", title_plural: "Diamond Pickaxes", assigned_class_id: "class_tool", free_text: "A durable mining tool." },
+    { id: "obj_diamond", title_singular: "Diamond", title_plural: "Diamonds", assigned_class_id: "class_material", free_text: "An extremely hard gemstone." },
+    { id: "obj_stick", title_singular: "Stick", title_plural: "Sticks", assigned_class_id: "class_material", free_text: "A wooden rod." }
+  ],
+  relations: [
+    // Bidirectional links (store A <-> B)
+    { tag_a: "obj_pickaxe", tag_b: "obj_diamond" },
+    { tag_a: "obj_pickaxe", tag_b: "obj_stick" },
+    { tag_a: "obj_fire", tag_b: "class_element" }
+  ],
+  trash: []
+};
+
+function loadDB() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && Array.isArray(parsed.tags)) db = parsed;
+    }
+  } catch(e) {}
+  ensureStructure();
+}
+loadDB();
+
+function ensureStructure() {
+  if (!db.tags) db.tags = [];
+  if (!db.relations) db.relations = [];
+  if (!db.trash) db.trash = [];
+}
+
+function persist() {
+  ensureStructure();
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); } catch(e) {}
+  if (firestoreDb && isCloudReady) {
+    updateCloudIndicator("☁️⏳");
+    clearTimeout(cloudSaveTimeout);
+    cloudSaveTimeout = setTimeout(() => {
+      firestoreDb.collection("studywiki_database").doc("master_library").set(JSON.parse(JSON.stringify(db)))
+        .then(() => updateCloudIndicator("☁️"))
+        .catch(() => updateCloudIndicator("⚠️"));
+    }, 400);
+  }
+}
+
+function initFirestoreSync() {
+  if (!firestoreDb) return;
+  const ref = firestoreDb.collection("studywiki_database").doc("master_library");
+  ref.onSnapshot((doc) => {
+    isCloudReady = true;
+    if (doc.exists) {
+      const data = doc.data();
+      if (data && Array.isArray(data.tags)) {
+        db = data;
+        ensureStructure();
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); } catch(e) {}
+        updateCloudIndicator("☁️");
+        handleRouting();
+      }
+    } else {
+      ref.set(JSON.parse(JSON.stringify(db))).then(() => updateCloudIndicator("☁️"));
+    }
+  }, () => updateCloudIndicator("⚠️"));
+}
+
+// ==================== RELATION ENGINE (BIDIRECTIONAL) ====================
+function getLinkedTagIds(tagId) {
+  const ids = new Set();
+  db.relations.forEach(r => {
+    if (r.tag_a === tagId) ids.add(r.tag_b);
+    if (r.tag_b === tagId) ids.add(r.tag_a);
+  });
+  return Array.from(ids);
+}
+
+function linkTags(tagId1, tagId2) {
+  if (tagId1 === tagId2) return;
+  const exists = db.relations.some(r => (r.tag_a === tagId1 && r.tag_b === tagId2) || (r.tag_a === tagId2 && r.tag_b === tagId1));
+  if (!exists) {
+    db.relations.push({ tag_a: tagId1, tag_b: tagId2 });
+    persist();
+  }
+}
+
+function unlinkTags(tagId1, tagId2) {
+  db.relations = db.relations.filter(r => !((r.tag_a === tagId1 && r.tag_b === tagId2) || (r.tag_a === tagId2 && r.tag_b === tagId1)));
+  persist();
+}
+
+// ==================== ROUTING ====================
+window.addEventListener("hashchange", handleRouting);
+window.addEventListener("DOMContentLoaded", () => {
+  initFirestoreSync();
+  if (!window.location.hash) window.location.hash = "#index";
+  handleRouting();
+});
+
+function navigateTo(route) { window.location.hash = `#${route}`; handleRouting(); }
+function openMenuModal() { document.getElementById("popup-menu").style.display = "flex"; }
+function menuNavigate(r) { closePopup(); navigateTo(r); }
+function closePopup() { document.querySelectorAll(".popup-overlay").forEach(el => el.style.display = "none"); }
+function closeOnOverlayClick(e, id) { if (e.target.id === id) closePopup(); }
+
+function handleRouting() {
+  const hash = window.location.hash.slice(1) || "index";
+  const [route, id] = hash.split("/");
+  window.scrollTo(0, 0);
+
+  if (route === "tag" && id) {
+    renderTagPage(decodeURIComponent(id));
+  } else if (route === "trash") {
+    renderTrashPage();
+  } else {
+    renderIndexPage();
+  }
+}
+
+// ==================== GLOBAL SEARCH ====================
+function openHeaderSearch() {
+  document.getElementById("header-search-bar").style.display = "block";
+  document.getElementById("global-search-input").focus();
+}
+function closeHeaderSearch() {
+  document.getElementById("header-search-bar").style.display = "none";
+  document.getElementById("global-search-dropdown").style.display = "none";
+}
+function handleGlobalSearch(q) {
+  const dd = document.getElementById("global-search-dropdown");
+  const query = q.trim().toLowerCase();
+  if (!query) { dd.style.display = "none"; dd.innerHTML = ""; return; }
+
+  const matches = db.tags.filter(t => t.title_singular.toLowerCase().includes(query) || t.title_plural.toLowerCase().includes(query));
+  if (matches.length === 0) {
+    dd.innerHTML = `<div class="suggest-item" style="color:var(--text-muted);"><i>No matching tags found.</i></div>`;
+    dd.style.display = "block";
+    return;
+  }
+
+  dd.innerHTML = matches.slice(0, 8).map(m => `
+    <div class="suggest-item" onclick="selectSearchMatch('${m.id}')">
+      <b>${m.title_singular}</b> <span style="font-size:11px; color:var(--text-muted);">[${m.title_plural}]</span>
+    </div>
+  `).join("");
+  dd.style.display = "block";
+}
+function selectSearchMatch(id) {
+  closeHeaderSearch();
+  window.location.hash = `#tag/${id}`;
+}
+
+// ==================== VIEWS ====================
+
+// 1. GLOBAL INDEX (A–Z)
+function renderIndexPage() {
+  const app = document.getElementById("wiki-app");
+  const sorted = [...db.tags].sort((a,b) => a.title_singular.localeCompare(b.title_singular));
+
+  let listHtml = sorted.map(t => {
+    const cls = db.tags.find(c => c.id === t.assigned_class_id);
+    const clsBadge = cls ? ` <span style="font-size:12px; color:var(--text-muted);">(${cls.title_singular})</span>` : '';
+    return `<li><a href="#tag/${t.id}" class="wiki-link" style="font-weight:700;">${t.title_singular}</a>${clsBadge}</li>`;
+  }).join("");
+
+  app.innerHTML = `
+    <h1 class="wiki-title">
+      <span>Global Index (A–Z)</span>
+      <a class="wiki-action-link" onclick="promptCreateTag()">[+ New Tag]</a>
+    </h1>
+    <div class="wiki-paragraph">All registered tags, classes, and objects in Studywiki.</div>
+    <ul class="wiki-list" style="margin-top:14px;">${listHtml || '<li><i>No tags created yet.</i></li>'}</ul>
+  `;
+}
+
+// 2. TAG PAGE (Dynamic Boxes + Free Text Zone)
+let activeTagIdForEdit = "";
+
+function renderTagPage(tagId) {
+  const app = document.getElementById("wiki-app");
+  const tag = db.tags.find(t => t.id === tagId);
+  if (!tag) { app.innerHTML = `<h2>Tag not found.</h2><a href="#index" class="wiki-link">Back to Index</a>`; return; }
+
+  const assignedClass = db.tags.find(c => c.id === tag.assigned_class_id);
+  const linkedIds = getLinkedTagIds(tag.id);
+  const linkedTags = linkedIds.map(id => db.tags.find(t => t.id === id)).filter(Boolean);
+
+  // Group linked tags by their assigned class (One Box Per Class rule)
+  const groupedByClass = {};
+  const unclassed = [];
+
+  linkedTags.forEach(lt => {
+    if (lt.assigned_class_id) {
+      if (!groupedByClass[lt.assigned_class_id]) groupedByClass[lt.assigned_class_id] = [];
+      groupedByClass[lt.assigned_class_id].push(lt);
+    } else {
+      unclassed.push(lt);
+    }
+  });
+
+  let boxesHtml = "";
+
+  // Render boxes for classes that have linked items
+  Object.keys(groupedByClass).forEach(classId => {
+    const cls = db.tags.find(c => c.id === classId);
+    const items = groupedByClass[classId];
+    if (!cls) return;
+
+    const itemsHtml = items.map(item => `
+      <span>
+        <a href="#tag/${item.id}" class="wiki-link" style="font-weight:700;">${item.title_singular}</a>
+        <a class="wiki-action-link" style="color:var(--danger); margin-left:4px; font-size:11px;" onclick="unlinkAndRefresh('${tag.id}', '${item.id}')" title="Remove link">[✕]</a>
+      </span>
+    `).join(", ");
+
+    boxesHtml += `
+      <div class="class-box">
+        <div class="class-box-header">
+          <a href="#tag/${cls.id}" class="wiki-link" style="color:inherit;">${cls.title_plural}</a>
+          <span style="font-size:12px; font-weight:400; color:var(--text-muted);">${items.length} items</span>
+        </div>
+        <div class="class-box-body">${itemsHtml}</div>
+        <div class="class-box-footer">
+          <a class="wiki-action-link" onclick="openAddRelationModal('${tag.id}', '${cls.id}')">+ Add ${cls.title_singular}</a>
+        </div>
+      </div>
+    `;
+  });
+
+  // Render unclassed / object box if any
+  if (unclassed.length > 0) {
+    const unclassedHtml = unclassed.map(item => `
+      <span>
+        <a href="#tag/${item.id}" class="wiki-link" style="font-weight:700;">${item.title_singular}</a>
+        <a class="wiki-action-link" style="color:var(--danger); margin-left:4px; font-size:11px;" onclick="unlinkAndRefresh('${tag.id}', '${item.id}')">[✕]</a>
+      </span>
+    `).join(", ");
+
+    boxesHtml += `
+      <div class="class-box">
+        <div class="class-box-header">
+          <span>Objects & Relations</span>
+          <span style="font-size:12px; font-weight:400; color:var(--text-muted);">${unclassed.length} items</span>
+        </div>
+        <div class="class-box-body">${unclassedHtml}</div>
+      </div>
+    `;
+  }
+
+  app.innerHTML = `
+    <!-- TITLE & SUBHEADING LINK -->
+    <h1 class="wiki-title">
+      <span>${tag.title_singular}</span>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <a class="wiki-action-link" onclick="promptEditTagTitle('${tag.id}')" title="Edit title">🖋</a>
+        <a class="wiki-action-link" style="color:var(--danger);" onclick="deleteTag('${tag.id}')">[delete]</a>
+      </div>
+    </h1>
+
+    <div class="wiki-subtitle">
+      ${assignedClass ? `<a href="#tag/${assignedClass.id}" class="wiki-link">(${assignedClass.title_singular})</a>` : '(Unclassed Object)'}
+    </div>
+    <hr class="wiki-divider">
+
+    <!-- FREE TEXT TOP ZONE -->
+    <div class="wiki-paragraph" style="background:#fafafa; border:1px solid var(--border-subtle); padding:10px; border-radius:3px; position:relative;">
+      <span style="float:right;"><a class="wiki-action-link" onclick="openEditor('${tag.id}')">🖋 Edit</a></span>
+      <div>${tag.free_text ? formatMarkdown(tag.free_text) : '<i>No description written yet. Click Edit to add markdown.</i>'}</div>
+    </div>
+    <hr class="wiki-divider">
+
+    <!-- DYNAMIC CLASS BOXES -->
+    <h2 class="wiki-section"><span>Linked Classes & Relations</span></h2>
+    <div style="margin-top:10px;">
+      ${boxesHtml || '<i>No relations linked yet.</i>'}
+    </div>
+    
+    <div style="margin-top:16px;">
+      <button class="wiki-btn primary" onclick="openAddRelationModal('${tag.id}')">+ Link another tag</button>
+    </div>
+  `;
+}
+
+// Markdown helper for free text
+function formatMarkdown(text) {
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
+}
+
+function openEditor(tagId) {
+  activeTagIdForEdit = tagId;
+  const tag = db.tags.find(t => t.id === tagId);
+  document.getElementById("editor-textarea").value = tag ? tag.free_text || "" : "";
+  document.getElementById("popup-editor").style.display = "flex";
+}
+
+function saveTagFreeText() {
+  const val = document.getElementById("editor-textarea").value.trim();
+  const tag = db.tags.find(t => t.id === activeTagIdForEdit);
+  if (tag) {
+    tag.free_text = val;
+    persist();
+  }
+  closePopup();
+  renderTagPage(activeTagIdForEdit);
+}
+
+function promptEditTagTitle(id) {
+  const tag = db.tags.find(t => t.id === id);
+  if (!tag) return;
+  const newName = prompt("Enter new singular title:", tag.title_singular);
+  if (!newName || !newName.trim()) return;
+  tag.title_singular = newName.trim();
+  tag.title_plural = tag.title_singular + "s"; // Auto plural default
+  persist();
+  renderTagPage(id);
+}
+
+function unlinkAndRefresh(tagId1, tagId2) {
+  if (!confirm("Remove this relation?")) return;
+  unlinkTags(tagId1, tagId2);
+  renderTagPage(tagId1);
+}
+
+function deleteTag(id) {
+  const tag = db.tags.find(t => t.id === id);
+  if (!tag) return;
+  if (!confirm(`Move tag "${tag.title_singular}" to trash?`)) return;
+
+  db.trash.push({ type: "tag", data: tag, deletedAt: new Date().toISOString() });
+  db.tags = db.tags.filter(t => t.id !== id);
+  db.relations = db.relations.filter(r => r.tag_a !== id && r.tag_b !== id);
+  persist();
+  window.location.hash = "#index";
+}
+
+// ==================== INLINE CREATION & LINKING ====================
+function promptCreateTag() {
+  const name = prompt("Enter new tag title (singular):");
+  if (!name || !name.trim()) return;
+  const clean = name.trim();
+
+  if (db.tags.some(t => t.title_singular.toLowerCase() === clean.toLowerCase())) {
+    alert("A tag with that title already exists.");
+    return;
+  }
+
+  const id = "tag_" + Date.now();
+  db.tags.push({
+    id,
+    title_singular: clean,
+    title_plural: clean + "s",
+    assigned_class_id: null,
+    free_text: ""
+  });
+  persist();
+  window.location.hash = `#tag/${id}`;
+}
+
+function openAddRelationModal(currentTagId, targetClassId = null) {
+  const available = db.tags.filter(t => t.id !== currentTagId && !getLinkedTagIds(currentTagId).includes(t.id));
+  if (available.length === 0) {
+    alert("No other tags available to link.");
+    return;
+  }
+
+  let promptStr = "Choose tag to link (enter number):\n" + available.map((t, i) => `${i+1}. ${t.title_singular}`).join("\n");
+  const choice = prompt(promptStr);
+  if (!choice) return;
+  const idx = parseInt(choice) - 1;
+
+  if (available[idx]) {
+    linkTags(currentTagId, available[idx].id);
+    renderTagPage(currentTagId);
+  }
+}
+
+// ==================== TRASH BIN ====================
+function renderTrashPage() {
+  const app = document.getElementById("wiki-app");
+  const trashItems = db.trash || [];
+
+  let listHtml = trashItems.length === 0 ? `<i>Trash bin is empty.</i>` : trashItems.map((item, idx) => `
+    <li style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid #eee;">
+      <div><b>${item.data.title_singular}</b> <span style="font-size:12px; color:var(--text-muted);">[Tag]</span></div>
+      <div style="display:flex; gap:8px;">
+        <a class="wiki-action-link" onclick="restoreTrash(${idx})">[Restore]</a>
+        <a class="wiki-action-link" style="color:var(--danger);" onclick="deleteTrashPerm(${idx})">[Delete Permanently]</a>
+      </div>
+    </li>
+  `).join("");
+
+  app.innerHTML = `
+    <h1 class="wiki-title"><span>Trash Bin</span></h1>
+    <hr class="wiki-divider">
+    <ul class="wiki-list">${listHtml}</ul>
+  `;
+}
+
+function restoreTrash(idx) {
+  const item = db.trash[idx];
+  if (!item) return;
+  db.tags.push(item.data);
+  db.trash.splice(idx, 1);
+  persist();
+  renderTrashPage();
+}
+
+function deleteTrashPerm(idx) {
+  if (!confirm("Delete permanently?")) return;
+  db.trash.splice(idx, 1);
+  persist();
+  renderTrashPage();
+}
+
+// ==================== BACKUP / IMPORT ====================
+function downloadBackup() {
+  const str = JSON.stringify(db, null, 2);
+  const blob = new Blob([str], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `studywiki-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importBackup(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    try {
+      const parsed = JSON.parse(event.target.result);
+      if (parsed && Array.isArray(parsed.tags)) {
+        db = parsed;
+        ensureStructure();
+        persist();
+        alert("Studywiki library imported successfully!");
+        handleRouting();
+      }
+    } catch(err) {
+      alert("Error reading file.");
+    }
+  };
+  reader.readAsText(file);
+}
+</script>
+
+</body>
+</html>
