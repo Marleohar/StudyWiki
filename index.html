@@ -1,833 +1,992 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sv">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Studywiki</title>
-  
-  <!-- GOOGLE FIREBASE SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudyWiki</title>
   <style>
     :root {
-      --bg: #ffffff;
-      --text: #202122;
-      --text-muted: #54595d;
-      --link: #0645ad;
-      --link-hover: #0b0080;
-      --border-wiki: #a2a9b1;
-      --border-subtle: #eaecf0;
-      --accent-gold: #c27803;
-      --danger: #d33;
+      --wiki-bg: #f6f7f8;
+      --wiki-content-bg: #ffffff;
+      --wiki-border: #a2a9b1;
+      --wiki-border-light: #c8ccd1;
+      --wiki-header-bg: #eaecf0;
+      --wiki-link: #3366cc;
+      --wiki-link-hover: #447ff5;
+      --wiki-text: #202122;
+      --wiki-muted: #54595d;
     }
 
-    html, body {
-      overflow-x: hidden !important;
-      width: 100% !important;
-      max-width: 100vw !important;
+    * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
 
-    * { box-sizing: border-box; }
-
     body {
-      background-color: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Liberation Sans", Arial, sans-serif;
-      font-size: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Liberation Sans', sans-serif;
+      font-size: 14px;
       line-height: 1.6;
+      color: var(--wiki-text);
+      background-color: var(--wiki-bg);
+      display: flex;
+      flex-direction: column;
       min-height: 100vh;
+    }
+
+    /* Toppmeny & Sökfält */
+    header {
+      background-color: #ffffff;
+      border-bottom: 1px solid var(--wiki-border-light);
+      padding: 8px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--wiki-text);
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .brand-logo {
+      width: 32px;
+      height: 32px;
+      background: #000;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Times New Roman', serif;
+      font-size: 22px;
+      border-radius: 4px;
+    }
+
+    .search-bar {
+      display: flex;
+      gap: 8px;
+      flex-grow: 1;
+      max-width: 460px;
+    }
+
+    input[type="text"], textarea, select {
+      width: 100%;
+      padding: 6px 10px;
+      font-size: 13px;
+      border: 1px solid var(--wiki-border);
+      border-radius: 2px;
+      background: #fff;
+      color: var(--wiki-text);
+    }
+
+    input[type="text"]:focus, textarea:focus {
+      outline: 2px solid var(--wiki-link);
+    }
+
+    button {
+      background: var(--wiki-header-bg);
+      border: 1px solid var(--wiki-border);
+      border-radius: 2px;
+      padding: 6px 14px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    button:hover {
+      background: #dadde3;
+    }
+
+    button.primary {
+      background: var(--wiki-link);
+      color: #fff;
+      border-color: #2a4b8d;
+    }
+
+    button.primary:hover {
+      background: var(--wiki-link-hover);
+    }
+
+    button.danger {
+      background: #d33;
+      color: #fff;
+      border-color: #a00;
+    }
+
+    /* Huvudlayout */
+    .wiki-container {
+      display: flex;
+      flex-grow: 1;
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 16px 20px;
+      gap: 24px;
+    }
+
+    /* Vänster Sidonavigering */
+    aside {
+      width: 200px;
+      flex-shrink: 0;
+      font-size: 13px;
+    }
+
+    .sidebar-section {
+      margin-bottom: 24px;
+    }
+
+    .sidebar-section h3 {
+      font-size: 12px;
+      text-transform: uppercase;
+      color: var(--wiki-muted);
+      border-bottom: 1px solid var(--wiki-border-light);
+      padding-bottom: 4px;
+      margin-bottom: 8px;
+      letter-spacing: 0.5px;
+    }
+
+    .sidebar-section ul {
+      list-style: none;
+    }
+
+    .sidebar-section li {
+      margin-bottom: 4px;
+    }
+
+    .sidebar-section a {
+      color: var(--wiki-link);
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .sidebar-section a:hover {
+      text-decoration: underline;
+    }
+
+    /* Artikelyta */
+    main {
+      flex-grow: 1;
+      background: var(--wiki-content-bg);
+      border: 1px solid var(--wiki-border-light);
+      padding: 24px 32px;
+      min-height: 600px;
       display: flex;
       flex-direction: column;
     }
 
-    header.wiki-header {
-      background: #ffffff;
-      border-bottom: 1px solid var(--border-wiki);
-      padding: 8px 14px;
+    /* Flikar & Rubrik */
+    .article-header {
+      border-bottom: 1px solid var(--wiki-border);
+      padding-bottom: 8px;
+      margin-bottom: 12px;
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      min-height: 52px;
+      align-items: flex-end;
     }
-    .header-logo {
-      font-size: 20px;
-      font-weight: 700;
-      font-family: "Linux Libertine", Georgia, Times, serif;
-      color: var(--text);
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .btn-icon-trigger {
-      background: #f8f9fa;
-      border: 1px solid var(--border-wiki);
-      border-radius: 3px;
-      padding: 4px 9px;
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--text);
-      cursor: pointer;
-    }
-    .btn-icon-trigger:hover { background: #ffffff; }
 
-    main.wiki-container {
-      max-width: 840px;
-      width: 100%;
-      margin: 0 auto;
-      padding: 16px 14px 60px 14px;
+    .article-title-area h1 {
+      font-family: 'Linux Libertine', 'Georgia', Times, serif;
+      font-size: 28px;
+      font-weight: normal;
+      line-height: 1.2;
+    }
+
+    .article-subtitle {
+      font-size: 12px;
+      color: var(--wiki-muted);
+      margin-top: 4px;
+    }
+
+    .article-subtitle a {
+      color: var(--wiki-link);
+      text-decoration: none;
+    }
+
+    .article-tabs {
+      display: flex;
+      gap: 4px;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      border-bottom: none;
+      padding: 6px 12px;
+      font-size: 13px;
+    }
+
+    .tab-btn.active {
+      background: var(--wiki-content-bg);
+      border-color: var(--wiki-border);
+      border-bottom: 2px solid var(--wiki-content-bg);
+      margin-bottom: -9px;
+      font-weight: bold;
+    }
+
+    /* Innehållsblock */
+    .wiki-body {
       flex-grow: 1;
     }
 
-    h1.wiki-title {
-      font-family: "Linux Libertine", Georgia, Times, serif;
-      font-size: 26px;
-      font-weight: 400;
-      margin-bottom: 2px;
+    .free-text-zone {
+      margin-bottom: 24px;
+      line-height: 1.7;
+    }
+
+    .empty-state {
+      padding: 40px;
+      text-align: center;
+      background: var(--wiki-bg);
+      border: 1px dashed var(--wiki-border);
+      color: var(--wiki-muted);
+      margin-bottom: 20px;
+    }
+
+    /* Dynamiska Klassboxar / Navboxar */
+    .boxes-container {
       display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      gap: 8px;
-      word-break: break-word;
-    }
-    .wiki-subtitle {
-      font-family: "Linux Libertine", Georgia, Times, serif;
-      font-size: 15px;
-      font-style: italic;
-      color: var(--text-muted);
-      margin-bottom: 10px;
-    }
-    h2.wiki-section {
-      font-family: "Linux Libertine", Georgia, Times, serif;
-      font-size: 18px;
-      font-weight: 700;
-      margin: 16px 0 6px 0;
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      border-bottom: 1px solid var(--border-wiki);
-      padding-bottom: 4px;
-    }
-    hr.wiki-divider {
-      border: none;
-      border-top: 1px solid var(--border-wiki);
-      margin: 8px 0 12px 0;
+      flex-direction: column;
+      gap: 16px;
+      margin-top: 24px;
     }
 
-    .wiki-action-link {
-      font-size: 13px;
-      color: var(--link);
-      text-decoration: none;
-      cursor: pointer;
-    }
-    .wiki-action-link:hover { text-decoration: underline; }
-
-    .wiki-paragraph {
-      margin-bottom: 12px;
-      color: #000000;
-      white-space: pre-wrap;
-    }
-
-    a.wiki-link {
-      color: var(--link);
-      text-decoration: none;
-    }
-    a.wiki-link:hover {
-      text-decoration: underline;
-      color: var(--link-hover);
-    }
-
-    /* DYNAMIC CLASS BOXES */
     .class-box {
-      border: 1px solid var(--border-wiki);
-      border-radius: 4px;
-      background: #fdfdfd;
-      margin-bottom: 16px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      border: 1px solid var(--wiki-border-light);
+      background: #ffffff;
+      border-radius: 2px;
+      overflow: hidden;
     }
+
     .class-box-header {
-      background: #f0f3f5;
-      padding: 8px 12px;
-      font-weight: 700;
-      font-size: 15px;
-      border-bottom: 1px solid var(--border-wiki);
+      background-color: var(--wiki-header-bg);
+      padding: 6px 12px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      border-bottom: 1px solid var(--wiki-border-light);
     }
-    .class-box-body {
-      padding: 10px 12px;
+
+    .class-box-header-title {
+      font-weight: bold;
+      color: var(--wiki-text);
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .class-box-header-title:hover {
+      text-decoration: underline;
+    }
+
+    .class-box-tools {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .class-box-content {
+      padding: 12px;
       display: flex;
       flex-wrap: wrap;
-      gap: 6px 12px;
-    }
-    .class-box-footer {
-      padding: 6px 12px;
-      background: #f8f9fa;
-      border-top: 1px solid var(--border-subtle);
-      font-size: 13px;
-    }
-
-    /* MODALS */
-    .popup-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.5);
-      display: none;
-      justify-content: center;
-      align-items: flex-start !important;
-      padding: 12px 10px;
-      z-index: 1000;
-      overflow-y: auto;
-    }
-    .popup-box {
-      background: #ffffff;
-      border: 1px solid var(--border-wiki);
-      border-radius: 4px;
-      max-width: 500px;
-      width: 100%;
-      max-height: 86vh;
-      display: flex;
-      flex-direction: column;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
-      margin-top: 4px;
-    }
-    .popup-header {
-      padding: 8px 12px;
-      border-bottom: 1px solid var(--border-subtle);
-      display: flex;
-      justify-content: space-between;
+      gap: 8px;
       align-items: center;
-      font-weight: 700;
-      font-size: 15px;
-    }
-    .popup-body {
-      padding: 12px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
     }
 
-    input[type="text"], select, textarea {
-      width: 100%;
-      background: #ffffff;
-      border: 1px solid var(--border-wiki);
+    .tag-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 8px;
+      background: var(--wiki-bg);
+      border: 1px solid var(--wiki-border-light);
       border-radius: 2px;
-      padding: 6px 8px;
-      color: #000;
-      font-size: 15px;
-      font-family: inherit;
-    }
-    input:focus, textarea:focus, select:focus {
-      border-color: var(--link);
-      outline: none;
-    }
-
-    button.wiki-btn {
-      background: #f8f9fa;
-      color: #202122;
-      border: 1px solid var(--border-wiki);
-      border-radius: 2px;
-      padding: 5px 12px;
-      font-size: 14px;
+      color: var(--wiki-link);
       cursor: pointer;
+      text-decoration: none;
     }
-    button.wiki-btn:hover { background: #ffffff; border-color: #72777d; }
-    button.wiki-btn.primary { background: #36c; border-color: #36c; color: #fff; font-weight: 700; }
-    button.wiki-btn.primary:hover { background: #447ff5; }
 
-    .suggest-dropdown {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      background: #ffffff;
-      border: 1px solid var(--border-wiki);
-      border-top: none;
-      max-height: 220px;
-      overflow-y: auto;
-      z-index: 200;
+    .tag-badge:hover {
+      background: #eaecee;
+      text-decoration: underline;
+    }
+
+    .tag-badge .remove-btn {
+      color: var(--wiki-muted);
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .tag-badge .remove-btn:hover {
+      color: #b00;
+    }
+
+    .inline-tag-form {
+      display: inline-flex;
+      gap: 4px;
+    }
+
+    .inline-tag-form input {
+      width: 140px;
+      padding: 3px 6px;
+      font-size: 12px;
+    }
+
+    .inline-tag-form button {
+      padding: 3px 8px;
+      font-size: 12px;
+    }
+
+    /* Modal / Skapa-ruta */
+    .dialog-backdrop {
       display: none;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
     }
-    .suggest-item {
-      padding: 7px 10px;
-      cursor: pointer;
-      border-bottom: 1px solid var(--border-subtle);
-      font-size: 14px;
-    }
-    .suggest-item:hover { background: #eaecf0; }
 
-    footer.wiki-footer {
-      border-top: 1px solid var(--border-subtle);
-      padding: 14px;
-      text-align: center;
-      font-size: 13px;
-      color: var(--text-muted);
-      margin-top: auto;
+    .dialog {
+      background: #fff;
+      border: 1px solid var(--wiki-border);
+      width: 480px;
+      max-width: 95%;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .dialog h2 {
+      margin-bottom: 16px;
+      font-size: 18px;
+      border-bottom: 1px solid var(--wiki-border-light);
+      padding-bottom: 6px;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 4px;
+      font-size: 12px;
+    }
+
+    .dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 16px;
     }
   </style>
 </head>
 <body>
 
-  <!-- HEADER -->
-  <header class="wiki-header">
-    <div style="display:flex; align-items:center; gap:8px;">
-      <a href="#index" class="header-logo" onclick="navigateTo('index')">
-        <span>📖</span> <span>Studywiki</span>
-      </a>
-      <button class="btn-icon-trigger" onclick="openHeaderSearch()" title="Search all tags">🔍</button>
+  <header>
+    <a class="brand" href="#" onclick="wiki.renderIndex()">
+      <div class="brand-logo">W</div>
+      <span>StudyWiki</span>
+    </a>
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="Sök eller skapa sida..." onkeydown="if(event.key==='Enter') wiki.handleSearch()">
+      <button onclick="wiki.handleSearch()">Gå till</button>
+      <button class="primary" onclick="wiki.openCreateDialog()">+ Ny Sida</button>
     </div>
-
-    <!-- GLOBAL SEARCH -->
-    <div id="header-search-bar" style="display:none; flex-grow:1; position:relative; margin-right:8px;">
-      <div style="display:flex; align-items:center; gap:4px;">
-        <input type="text" id="global-search-input" placeholder="Search tag..." autocomplete="off" oninput="handleGlobalSearch(this.value)">
-        <button class="wiki-btn" style="padding:4px 8px;" onclick="closeHeaderSearch()">✕</button>
-      </div>
-      <div class="suggest-dropdown" id="global-search-dropdown"></div>
-    </div>
-
-    <div style="display:flex; align-items:center; gap:8px;">
-      <span id="cloud-status-indicator" style="font-size:12px; color:var(--text-muted);" title="Cloud Status">☁️</span>
-      <button class="btn-icon-trigger" onclick="openMenuModal()">☰ Menu</button>
+    <div>
+      <button class="danger" style="font-size: 11px;" onclick="wiki.purgeDatabase()">Töm Databas</button>
     </div>
   </header>
 
-  <!-- MAIN CONTAINER -->
-  <main class="wiki-container" id="wiki-app"></main>
-
-  <!-- FOOTER -->
-  <footer class="wiki-footer">
-    <span>Studywiki Cloud Database (Google Firestore)</span> • 
-    <a class="wiki-action-link" onclick="downloadBackup()">Export JSON</a> • 
-    <a class="wiki-action-link" onclick="document.getElementById('import-input').click()">Import JSON</a>
-    <input type="file" id="import-input" style="display:none;" accept=".json" onchange="importBackup(event)">
-  </footer>
-
-  <!-- MENU MODAL -->
-  <div class="popup-overlay" id="popup-menu" onclick="closeOnOverlayClick(event, 'popup-menu')">
-    <div class="popup-box" style="max-width:300px; margin:10px auto;">
-      <div class="popup-header">
-        <span>Menu</span>
-        <button class="wiki-btn" style="padding:1px 6px;" onclick="closePopup()">✕</button>
+  <div class="wiki-container">
+    <aside>
+      <div class="sidebar-section">
+        <h3>Navigering</h3>
+        <ul>
+          <li><a onclick="wiki.renderIndex()">Huvudsida</a></li>
+          <li><a onclick="wiki.renderAllPages()">Alla sidor</a></li>
+          <li><a onclick="wiki.renderAllClasses()">Klasser & Typer</a></li>
+        </ul>
       </div>
-      <div class="popup-body" style="gap:6px;">
-        <a class="wiki-link" style="font-weight:700; padding:4px 0;" onclick="menuNavigate('index')">📖 Global Index (A–Z)</a>
-        <a class="wiki-link" style="font-weight:700; padding:4px 0;" onclick="promptCreateTag()">➕ Create New Tag</a>
-        <a class="wiki-link" style="font-weight:700; color:var(--danger); padding:4px 0;" onclick="menuNavigate('trash')">🗑 Trash Bin</a>
+
+      <div class="sidebar-section">
+        <h3>Aktiva Klasser</h3>
+        <ul id="sidebarClassesList">
+          <li style="color: var(--wiki-muted); font-style: italic;">Inga klasser skapade</li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>System</h3>
+        <span style="font-size: 11px; color: var(--wiki-muted);">
+          Strikt dubbelriktade taggar. Inga fördefinierade mock-data.
+        </span>
+      </div>
+    </aside>
+
+    <main id="mainArticle">
+      <!-- Dynamiskt renderat innehåll -->
+    </main>
+  </div>
+
+  <!-- Skapa Sida / Tagg Modal -->
+  <div class="dialog-backdrop" id="createDialog">
+    <div class="dialog">
+      <h2>Skapa ny sida</h2>
+      <div class="form-group">
+        <label>Titel (Singular, t.ex. "Element", "Spadblad", "Skada")</label>
+        <input type="text" id="modalTitleSingular" placeholder="Singular form...">
+      </div>
+      <div class="form-group">
+        <label>Pluralform (Används i grupperade boxar, t.ex. "Elements", "Skador")</label>
+        <input type="text" id="modalTitlePlural" placeholder="Plural form...">
+      </div>
+      <div class="form-group">
+        <label>Tillhör Klass (Valfritt - lämna tomt om detta är en överordnad klass)</label>
+        <select id="modalAssignedClass">
+          <option value="">-- Ingen (Är självständig klass/tagg) --</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Beskrivning / Fri text (Markdown/Text)</label>
+        <textarea id="modalFreeText" rows="4" placeholder="Skriv artikeltexten här..."></textarea>
+      </div>
+      <div class="dialog-actions">
+        <button onclick="wiki.closeCreateDialog()">Avbryt</button>
+        <button class="primary" onclick="wiki.saveNewTag()">Skapa sida</button>
       </div>
     </div>
   </div>
 
-  <!-- EDITOR MODAL -->
-  <div class="popup-overlay" id="popup-editor" onclick="closeOnOverlayClick(event, 'popup-editor')">
-    <div class="popup-box">
-      <div class="popup-header">
-        <span>Edit Free Text (Markdown)</span>
-        <button class="wiki-btn" style="padding:1px 6px;" onclick="closePopup()">✕</button>
-      </div>
-      <div class="popup-body">
-        <textarea id="editor-textarea" rows="10" placeholder="Write markdown here..."></textarea>
-        <div style="display:flex; justify-content:flex-end; gap:8px;">
-          <button class="wiki-btn primary" onclick="saveTagFreeText()">Save</button>
-          <button class="wiki-btn" onclick="closePopup()">Cancel</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-<script>
-// ==================== FIREBASE & CONFIG ====================
-const firebaseConfig = {
-  apiKey: "AIzaSyDX3KFiW_nScowsEyNoveIC7u-u2WY2NCc",
-  authDomain: "ort-wiki.firebaseapp.com",
-  projectId: "ort-wiki",
-  storageBucket: "ort-wiki.firebasestorage.app",
-  messagingSenderId: "517699154864",
-  appId: "1:517699154864:web:bdfd53a4c6e7c520029c75"
-};
-
-let firestoreDb = null;
-let isCloudReady = false;
-let cloudSaveTimeout = null;
-
-try {
-  firebase.initializeApp(firebaseConfig);
-  firestoreDb = firebase.firestore();
-} catch(e) {}
-
-function updateCloudIndicator(status) {
-  const ind = document.getElementById("cloud-status-indicator");
-  if (ind) ind.innerText = status;
-}
-
-// ==================== UNIFIED TAG DATABASE MODEL ====================
-const STORAGE_KEY = "studywiki_master_db";
-
-let db = {
-  tags: [
-    // Core Classes (Phase A & B)
-    { id: "class_element", title_singular: "Element", title_plural: "Elements", assigned_class_id: null, free_text: "Fundamental building blocks of nature." },
-    { id: "class_tool", title_singular: "Tool", title_plural: "Tools", assigned_class_id: null, free_text: "Instruments used to perform work." },
-    { id: "class_material", title_singular: "Material", title_plural: "Materials", assigned_class_id: null, free_text: "Substances used to craft items." },
-    { id: "class_herb", title_singular: "Herb", title_plural: "Herbs", assigned_class_id: null, free_text: "Plants valued for medicinal or sensory properties." },
-    
-    // Sample Objects
-    { id: "obj_fire", title_singular: "Fire", title_plural: "Fires", assigned_class_id: "class_element", free_text: "Hot and radiant energy." },
-    { id: "obj_pickaxe", title_singular: "Diamond Pickaxe", title_plural: "Diamond Pickaxes", assigned_class_id: "class_tool", free_text: "A durable mining tool." },
-    { id: "obj_diamond", title_singular: "Diamond", title_plural: "Diamonds", assigned_class_id: "class_material", free_text: "An extremely hard gemstone." },
-    { id: "obj_stick", title_singular: "Stick", title_plural: "Sticks", assigned_class_id: "class_material", free_text: "A wooden rod." }
-  ],
-  relations: [
-    // Bidirectional links (store A <-> B)
-    { tag_a: "obj_pickaxe", tag_b: "obj_diamond" },
-    { tag_a: "obj_pickaxe", tag_b: "obj_stick" },
-    { tag_a: "obj_fire", tag_b: "class_element" }
-  ],
-  trash: []
-};
-
-function loadDB() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (parsed && Array.isArray(parsed.tags)) db = parsed;
-    }
-  } catch(e) {}
-  ensureStructure();
-}
-loadDB();
-
-function ensureStructure() {
-  if (!db.tags) db.tags = [];
-  if (!db.relations) db.relations = [];
-  if (!db.trash) db.trash = [];
-}
-
-function persist() {
-  ensureStructure();
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); } catch(e) {}
-  if (firestoreDb && isCloudReady) {
-    updateCloudIndicator("☁️⏳");
-    clearTimeout(cloudSaveTimeout);
-    cloudSaveTimeout = setTimeout(() => {
-      firestoreDb.collection("studywiki_database").doc("master_library").set(JSON.parse(JSON.stringify(db)))
-        .then(() => updateCloudIndicator("☁️"))
-        .catch(() => updateCloudIndicator("⚠️"));
-    }, 400);
-  }
-}
-
-function initFirestoreSync() {
-  if (!firestoreDb) return;
-  const ref = firestoreDb.collection("studywiki_database").doc("master_library");
-  ref.onSnapshot((doc) => {
-    isCloudReady = true;
-    if (doc.exists) {
-      const data = doc.data();
-      if (data && Array.isArray(data.tags)) {
-        db = data;
-        ensureStructure();
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); } catch(e) {}
-        updateCloudIndicator("☁️");
-        handleRouting();
+  <script>
+    /**
+     * StudyWiki Core Architecture
+     * Flat Tag model with bidirectional relations junction.
+     */
+    class StudyWikiEngine {
+      constructor() {
+        this.tags = [];
+        this.relations = []; // { a: uuid, b: uuid }
+        this.activeTagId = null;
+        this.currentViewMode = 'read'; // 'read' | 'edit'
+        this.loadStorage();
       }
-    } else {
-      ref.set(JSON.parse(JSON.stringify(db))).then(() => updateCloudIndicator("☁️"));
-    }
-  }, () => updateCloudIndicator("⚠️"));
-}
 
-// ==================== RELATION ENGINE (BIDIRECTIONAL) ====================
-function getLinkedTagIds(tagId) {
-  const ids = new Set();
-  db.relations.forEach(r => {
-    if (r.tag_a === tagId) ids.add(r.tag_b);
-    if (r.tag_b === tagId) ids.add(r.tag_a);
-  });
-  return Array.from(ids);
-}
-
-function linkTags(tagId1, tagId2) {
-  if (tagId1 === tagId2) return;
-  const exists = db.relations.some(r => (r.tag_a === tagId1 && r.tag_b === tagId2) || (r.tag_a === tagId2 && r.tag_b === tagId1));
-  if (!exists) {
-    db.relations.push({ tag_a: tagId1, tag_b: tagId2 });
-    persist();
-  }
-}
-
-function unlinkTags(tagId1, tagId2) {
-  db.relations = db.relations.filter(r => !((r.tag_a === tagId1 && r.tag_b === tagId2) || (r.tag_a === tagId2 && r.tag_b === tagId1)));
-  persist();
-}
-
-// ==================== ROUTING ====================
-window.addEventListener("hashchange", handleRouting);
-window.addEventListener("DOMContentLoaded", () => {
-  initFirestoreSync();
-  if (!window.location.hash) window.location.hash = "#index";
-  handleRouting();
-});
-
-function navigateTo(route) { window.location.hash = `#${route}`; handleRouting(); }
-function openMenuModal() { document.getElementById("popup-menu").style.display = "flex"; }
-function menuNavigate(r) { closePopup(); navigateTo(r); }
-function closePopup() { document.querySelectorAll(".popup-overlay").forEach(el => el.style.display = "none"); }
-function closeOnOverlayClick(e, id) { if (e.target.id === id) closePopup(); }
-
-function handleRouting() {
-  const hash = window.location.hash.slice(1) || "index";
-  const [route, id] = hash.split("/");
-  window.scrollTo(0, 0);
-
-  if (route === "tag" && id) {
-    renderTagPage(decodeURIComponent(id));
-  } else if (route === "trash") {
-    renderTrashPage();
-  } else {
-    renderIndexPage();
-  }
-}
-
-// ==================== GLOBAL SEARCH ====================
-function openHeaderSearch() {
-  document.getElementById("header-search-bar").style.display = "block";
-  document.getElementById("global-search-input").focus();
-}
-function closeHeaderSearch() {
-  document.getElementById("header-search-bar").style.display = "none";
-  document.getElementById("global-search-dropdown").style.display = "none";
-}
-function handleGlobalSearch(q) {
-  const dd = document.getElementById("global-search-dropdown");
-  const query = q.trim().toLowerCase();
-  if (!query) { dd.style.display = "none"; dd.innerHTML = ""; return; }
-
-  const matches = db.tags.filter(t => t.title_singular.toLowerCase().includes(query) || t.title_plural.toLowerCase().includes(query));
-  if (matches.length === 0) {
-    dd.innerHTML = `<div class="suggest-item" style="color:var(--text-muted);"><i>No matching tags found.</i></div>`;
-    dd.style.display = "block";
-    return;
-  }
-
-  dd.innerHTML = matches.slice(0, 8).map(m => `
-    <div class="suggest-item" onclick="selectSearchMatch('${m.id}')">
-      <b>${m.title_singular}</b> <span style="font-size:11px; color:var(--text-muted);">[${m.title_plural}]</span>
-    </div>
-  `).join("");
-  dd.style.display = "block";
-}
-function selectSearchMatch(id) {
-  closeHeaderSearch();
-  window.location.hash = `#tag/${id}`;
-}
-
-// ==================== VIEWS ====================
-
-// 1. GLOBAL INDEX (A–Z)
-function renderIndexPage() {
-  const app = document.getElementById("wiki-app");
-  const sorted = [...db.tags].sort((a,b) => a.title_singular.localeCompare(b.title_singular));
-
-  let listHtml = sorted.map(t => {
-    const cls = db.tags.find(c => c.id === t.assigned_class_id);
-    const clsBadge = cls ? ` <span style="font-size:12px; color:var(--text-muted);">(${cls.title_singular})</span>` : '';
-    return `<li><a href="#tag/${t.id}" class="wiki-link" style="font-weight:700;">${t.title_singular}</a>${clsBadge}</li>`;
-  }).join("");
-
-  app.innerHTML = `
-    <h1 class="wiki-title">
-      <span>Global Index (A–Z)</span>
-      <a class="wiki-action-link" onclick="promptCreateTag()">[+ New Tag]</a>
-    </h1>
-    <div class="wiki-paragraph">All registered tags, classes, and objects in Studywiki.</div>
-    <ul class="wiki-list" style="margin-top:14px;">${listHtml || '<li><i>No tags created yet.</i></li>'}</ul>
-  `;
-}
-
-// 2. TAG PAGE (Dynamic Boxes + Free Text Zone)
-let activeTagIdForEdit = "";
-
-function renderTagPage(tagId) {
-  const app = document.getElementById("wiki-app");
-  const tag = db.tags.find(t => t.id === tagId);
-  if (!tag) { app.innerHTML = `<h2>Tag not found.</h2><a href="#index" class="wiki-link">Back to Index</a>`; return; }
-
-  const assignedClass = db.tags.find(c => c.id === tag.assigned_class_id);
-  const linkedIds = getLinkedTagIds(tag.id);
-  const linkedTags = linkedIds.map(id => db.tags.find(t => t.id === id)).filter(Boolean);
-
-  // Group linked tags by their assigned class (One Box Per Class rule)
-  const groupedByClass = {};
-  const unclassed = [];
-
-  linkedTags.forEach(lt => {
-    if (lt.assigned_class_id) {
-      if (!groupedByClass[lt.assigned_class_id]) groupedByClass[lt.assigned_class_id] = [];
-      groupedByClass[lt.assigned_class_id].push(lt);
-    } else {
-      unclassed.push(lt);
-    }
-  });
-
-  let boxesHtml = "";
-
-  // Render boxes for classes that have linked items
-  Object.keys(groupedByClass).forEach(classId => {
-    const cls = db.tags.find(c => c.id === classId);
-    const items = groupedByClass[classId];
-    if (!cls) return;
-
-    const itemsHtml = items.map(item => `
-      <span>
-        <a href="#tag/${item.id}" class="wiki-link" style="font-weight:700;">${item.title_singular}</a>
-        <a class="wiki-action-link" style="color:var(--danger); margin-left:4px; font-size:11px;" onclick="unlinkAndRefresh('${tag.id}', '${item.id}')" title="Remove link">[✕]</a>
-      </span>
-    `).join(", ");
-
-    boxesHtml += `
-      <div class="class-box">
-        <div class="class-box-header">
-          <a href="#tag/${cls.id}" class="wiki-link" style="color:inherit;">${cls.title_plural}</a>
-          <span style="font-size:12px; font-weight:400; color:var(--text-muted);">${items.length} items</span>
-        </div>
-        <div class="class-box-body">${itemsHtml}</div>
-        <div class="class-box-footer">
-          <a class="wiki-action-link" onclick="openAddRelationModal('${tag.id}', '${cls.id}')">+ Add ${cls.title_singular}</a>
-        </div>
-      </div>
-    `;
-  });
-
-  // Render unclassed / object box if any
-  if (unclassed.length > 0) {
-    const unclassedHtml = unclassed.map(item => `
-      <span>
-        <a href="#tag/${item.id}" class="wiki-link" style="font-weight:700;">${item.title_singular}</a>
-        <a class="wiki-action-link" style="color:var(--danger); margin-left:4px; font-size:11px;" onclick="unlinkAndRefresh('${tag.id}', '${item.id}')">[✕]</a>
-      </span>
-    `).join(", ");
-
-    boxesHtml += `
-      <div class="class-box">
-        <div class="class-box-header">
-          <span>Objects & Relations</span>
-          <span style="font-size:12px; font-weight:400; color:var(--text-muted);">${unclassed.length} items</span>
-        </div>
-        <div class="class-box-body">${unclassedHtml}</div>
-      </div>
-    `;
-  }
-
-  app.innerHTML = `
-    <!-- TITLE & SUBHEADING LINK -->
-    <h1 class="wiki-title">
-      <span>${tag.title_singular}</span>
-      <div style="display:flex; gap:8px; align-items:center;">
-        <a class="wiki-action-link" onclick="promptEditTagTitle('${tag.id}')" title="Edit title">🖋</a>
-        <a class="wiki-action-link" style="color:var(--danger);" onclick="deleteTag('${tag.id}')">[delete]</a>
-      </div>
-    </h1>
-
-    <div class="wiki-subtitle">
-      ${assignedClass ? `<a href="#tag/${assignedClass.id}" class="wiki-link">(${assignedClass.title_singular})</a>` : '(Unclassed Object)'}
-    </div>
-    <hr class="wiki-divider">
-
-    <!-- FREE TEXT TOP ZONE -->
-    <div class="wiki-paragraph" style="background:#fafafa; border:1px solid var(--border-subtle); padding:10px; border-radius:3px; position:relative;">
-      <span style="float:right;"><a class="wiki-action-link" onclick="openEditor('${tag.id}')">🖋 Edit</a></span>
-      <div>${tag.free_text ? formatMarkdown(tag.free_text) : '<i>No description written yet. Click Edit to add markdown.</i>'}</div>
-    </div>
-    <hr class="wiki-divider">
-
-    <!-- DYNAMIC CLASS BOXES -->
-    <h2 class="wiki-section"><span>Linked Classes & Relations</span></h2>
-    <div style="margin-top:10px;">
-      ${boxesHtml || '<i>No relations linked yet.</i>'}
-    </div>
-    
-    <div style="margin-top:16px;">
-      <button class="wiki-btn primary" onclick="openAddRelationModal('${tag.id}')">+ Link another tag</button>
-    </div>
-  `;
-}
-
-// Markdown helper for free text
-function formatMarkdown(text) {
-  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
-}
-
-function openEditor(tagId) {
-  activeTagIdForEdit = tagId;
-  const tag = db.tags.find(t => t.id === tagId);
-  document.getElementById("editor-textarea").value = tag ? tag.free_text || "" : "";
-  document.getElementById("popup-editor").style.display = "flex";
-}
-
-function saveTagFreeText() {
-  const val = document.getElementById("editor-textarea").value.trim();
-  const tag = db.tags.find(t => t.id === activeTagIdForEdit);
-  if (tag) {
-    tag.free_text = val;
-    persist();
-  }
-  closePopup();
-  renderTagPage(activeTagIdForEdit);
-}
-
-function promptEditTagTitle(id) {
-  const tag = db.tags.find(t => t.id === id);
-  if (!tag) return;
-  const newName = prompt("Enter new singular title:", tag.title_singular);
-  if (!newName || !newName.trim()) return;
-  tag.title_singular = newName.trim();
-  tag.title_plural = tag.title_singular + "s"; // Auto plural default
-  persist();
-  renderTagPage(id);
-}
-
-function unlinkAndRefresh(tagId1, tagId2) {
-  if (!confirm("Remove this relation?")) return;
-  unlinkTags(tagId1, tagId2);
-  renderTagPage(tagId1);
-}
-
-function deleteTag(id) {
-  const tag = db.tags.find(t => t.id === id);
-  if (!tag) return;
-  if (!confirm(`Move tag "${tag.title_singular}" to trash?`)) return;
-
-  db.trash.push({ type: "tag", data: tag, deletedAt: new Date().toISOString() });
-  db.tags = db.tags.filter(t => t.id !== id);
-  db.relations = db.relations.filter(r => r.tag_a !== id && r.tag_b !== id);
-  persist();
-  window.location.hash = "#index";
-}
-
-// ==================== INLINE CREATION & LINKING ====================
-function promptCreateTag() {
-  const name = prompt("Enter new tag title (singular):");
-  if (!name || !name.trim()) return;
-  const clean = name.trim();
-
-  if (db.tags.some(t => t.title_singular.toLowerCase() === clean.toLowerCase())) {
-    alert("A tag with that title already exists.");
-    return;
-  }
-
-  const id = "tag_" + Date.now();
-  db.tags.push({
-    id,
-    title_singular: clean,
-    title_plural: clean + "s",
-    assigned_class_id: null,
-    free_text: ""
-  });
-  persist();
-  window.location.hash = `#tag/${id}`;
-}
-
-function openAddRelationModal(currentTagId, targetClassId = null) {
-  const available = db.tags.filter(t => t.id !== currentTagId && !getLinkedTagIds(currentTagId).includes(t.id));
-  if (available.length === 0) {
-    alert("No other tags available to link.");
-    return;
-  }
-
-  let promptStr = "Choose tag to link (enter number):\n" + available.map((t, i) => `${i+1}. ${t.title_singular}`).join("\n");
-  const choice = prompt(promptStr);
-  if (!choice) return;
-  const idx = parseInt(choice) - 1;
-
-  if (available[idx]) {
-    linkTags(currentTagId, available[idx].id);
-    renderTagPage(currentTagId);
-  }
-}
-
-// ==================== TRASH BIN ====================
-function renderTrashPage() {
-  const app = document.getElementById("wiki-app");
-  const trashItems = db.trash || [];
-
-  let listHtml = trashItems.length === 0 ? `<i>Trash bin is empty.</i>` : trashItems.map((item, idx) => `
-    <li style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid #eee;">
-      <div><b>${item.data.title_singular}</b> <span style="font-size:12px; color:var(--text-muted);">[Tag]</span></div>
-      <div style="display:flex; gap:8px;">
-        <a class="wiki-action-link" onclick="restoreTrash(${idx})">[Restore]</a>
-        <a class="wiki-action-link" style="color:var(--danger);" onclick="deleteTrashPerm(${idx})">[Delete Permanently]</a>
-      </div>
-    </li>
-  `).join("");
-
-  app.innerHTML = `
-    <h1 class="wiki-title"><span>Trash Bin</span></h1>
-    <hr class="wiki-divider">
-    <ul class="wiki-list">${listHtml}</ul>
-  `;
-}
-
-function restoreTrash(idx) {
-  const item = db.trash[idx];
-  if (!item) return;
-  db.tags.push(item.data);
-  db.trash.splice(idx, 1);
-  persist();
-  renderTrashPage();
-}
-
-function deleteTrashPerm(idx) {
-  if (!confirm("Delete permanently?")) return;
-  db.trash.splice(idx, 1);
-  persist();
-  renderTrashPage();
-}
-
-// ==================== BACKUP / IMPORT ====================
-function downloadBackup() {
-  const str = JSON.stringify(db, null, 2);
-  const blob = new Blob([str], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `studywiki-backup-${new Date().toISOString().slice(0,10)}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-function importBackup(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (event) => {
-    try {
-      const parsed = JSON.parse(event.target.result);
-      if (parsed && Array.isArray(parsed.tags)) {
-        db = parsed;
-        ensureStructure();
-        persist();
-        alert("Studywiki library imported successfully!");
-        handleRouting();
+      // Persistens
+      saveStorage() {
+        localStorage.setItem('studywiki_tags', JSON.stringify(this.tags));
+        localStorage.setItem('studywiki_relations', JSON.stringify(this.relations));
       }
-    } catch(err) {
-      alert("Error reading file.");
-    }
-  };
-  reader.readAsText(file);
-}
-</script>
 
+      loadStorage() {
+        const rawTags = localStorage.getItem('studywiki_tags');
+        const rawRels = localStorage.getItem('studywiki_relations');
+        this.tags = rawTags ? JSON.parse(rawTags) : [];
+        this.relations = rawRels ? JSON.parse(rawRels) : [];
+      }
+
+      purgeDatabase() {
+        if (confirm("Är du säker på att du vill radera alla skapade sidor och relationer helt ur existensen?")) {
+          this.tags = [];
+          this.relations = [];
+          this.activeTagId = null;
+          this.saveStorage();
+          this.renderIndex();
+        }
+      }
+
+      // UUID Helper
+      generateId() {
+        return 'tag-' + Math.random().toString(36).substr(2, 9) + '-' + Date.now().toString(36);
+      }
+
+      // Tag Operations
+      createTag({ titleSingular, titlePlural, assignedClassId = null, freeText = "" }) {
+        const singular = titleSingular.trim();
+        const plural = titlePlural && titlePlural.trim() ? titlePlural.trim() : singular + "s";
+
+        const newTag = {
+          id: this.generateId(),
+          title_singular: singular,
+          title_plural: plural,
+          assigned_class_id: assignedClassId || null,
+          free_text: freeText,
+          layout_config: {
+            box_order: [],
+            theme_color: "#eaecf0"
+          }
+        };
+
+        this.tags.push(newTag);
+        this.saveStorage();
+        return newTag;
+      }
+
+      getTag(id) {
+        return this.tags.find(t => t.id === id);
+      }
+
+      getTagByTitle(title) {
+        const lower = title.toLowerCase().trim();
+        return this.tags.find(t => 
+          t.title_singular.toLowerCase() === lower || 
+          t.title_plural.toLowerCase() === lower
+        );
+      }
+
+      // Bidirectional Relations
+      addRelation(tagIdA, tagIdB) {
+        if (tagIdA === tagIdB) return;
+        const exists = this.relations.some(r => 
+          (r.a === tagIdA && r.b === tagIdB) || (r.a === tagIdB && r.b === tagIdA)
+        );
+        if (!exists) {
+          this.relations.push({ a: tagIdA, b: tagIdB });
+          this.saveStorage();
+        }
+      }
+
+      removeRelation(tagIdA, tagIdB) {
+        this.relations = this.relations.filter(r => 
+          !((r.a === tagIdA && r.b === tagIdB) || (r.a === tagIdB && r.b === tagIdA))
+        );
+        this.saveStorage();
+      }
+
+      getRelatedTags(tagId) {
+        const relatedIds = this.relations
+          .filter(r => r.a === tagId || r.b === tagId)
+          .map(r => r.a === tagId ? r.b : r.a);
+        
+        return this.tags.filter(t => relatedIds.includes(t.id));
+      }
+
+      // Gruppering av relaterade taggar per Klass
+      getGroupedRelations(tagId) {
+        const related = this.getRelatedTags(tagId);
+        const groups = {};
+
+        related.forEach(tag => {
+          const classId = tag.assigned_class_id || 'unassigned';
+          if (!groups[classId]) {
+            groups[classId] = [];
+          }
+          groups[classId].push(tag);
+        });
+
+        return groups;
+      }
+
+      // Rendering: Huvudsida / Index
+      renderIndex() {
+        this.activeTagId = null;
+        this.updateSidebar();
+        const main = document.getElementById('mainArticle');
+
+        if (this.tags.length === 0) {
+          main.innerHTML = `
+            <div class="article-header">
+              <div class="article-title-area">
+                <h1>Välkommen till StudyWiki</h1>
+                <div class="article-subtitle">En nollställd, tom wiki redo för struktur</div>
+              </div>
+            </div>
+            <div class="wiki-body">
+              <div class="empty-state">
+                <p><strong>Databasen är tom.</strong> Inga objekt, klasser eller relationer existerar ännu.</p>
+                <p style="margin-top: 10px;">
+                  Skapa din första sida eller överordnade klass via knappen ovan för att starta biblioteket.
+                </p>
+                <div style="margin-top: 20px;">
+                  <button class="primary" onclick="wiki.openCreateDialog()">+ Skapa första sidan</button>
+                </div>
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        main.innerHTML = `
+          <div class="article-header">
+            <div class="article-title-area">
+              <h1>Huvudsida</h1>
+              <div class="article-subtitle">Översikt över registrerade entiteter</div>
+            </div>
+          </div>
+          <div class="wiki-body">
+            <p>Denna wiki är uppbyggd med modulära taggar och dubbelriktade relationer.</p>
+            <h3 style="margin-top: 20px; border-bottom: 1px solid var(--wiki-border-light); padding-bottom: 4px;">Klasser (${this.getAllClasses().length})</h3>
+            <ul style="margin: 10px 0 20px 20px;">
+              ${this.getAllClasses().map(c => `<li><a href="#" onclick="wiki.renderTagPage('${c.id}')">${c.title_singular} (${c.title_plural})</a></li>`).join('') || '<li>Inga klasser registrerade</li>'}
+            </ul>
+            <h3 style="margin-top: 20px; border-bottom: 1px solid var(--wiki-border-light); padding-bottom: 4px;">Senaste sidor</h3>
+            <ul style="margin: 10px 0 20px 20px;">
+              ${this.tags.slice(-10).reverse().map(t => `<li><a href="#" onclick="wiki.renderTagPage('${t.id}')">${t.title_singular}</a></li>`).join('')}
+            </ul>
+          </div>
+        `;
+      }
+
+      // Rendering: Tagg / Artikelsida
+      renderTagPage(tagId, mode = 'read') {
+        const tag = this.getTag(tagId);
+        if (!tag) return this.renderIndex();
+
+        this.activeTagId = tag.id;
+        this.currentViewMode = mode;
+        this.updateSidebar();
+
+        const main = document.getElementById('mainArticle');
+        const assignedClass = tag.assigned_class_id ? this.getTag(tag.assigned_class_id) : null;
+        const classSubtitle = assignedClass 
+          ? `<a href="#" onclick="wiki.renderTagPage('${assignedClass.id}')">(${assignedClass.title_singular})</a>` 
+          : `<em>(Självständig klass / Oklassificerad)</em>`;
+
+        const grouped = this.getGroupedRelations(tag.id);
+
+        // Bestäm box-ordning från klassarv eller taggens egen layout
+        let boxClassIds = Object.keys(grouped);
+        const layoutSource = assignedClass ? assignedClass : tag;
+        if (layoutSource.layout_config && layoutSource.layout_config.box_order && layoutSource.layout_config.box_order.length > 0) {
+          boxClassIds.sort((a, b) => {
+            const indexA = layoutSource.layout_config.box_order.indexOf(a);
+            const indexB = layoutSource.layout_config.box_order.indexOf(b);
+            if (indexA === -1) return 1;
+            if (indexB === -1) return -1;
+            return indexA - indexB;
+          });
+        }
+
+        let contentHtml = '';
+
+        if (mode === 'edit') {
+          contentHtml = `
+            <div style="margin-bottom: 20px;">
+              <label style="font-weight: bold; display: block; margin-bottom: 6px;">Redigera wikitext:</label>
+              <textarea id="editTextarea" rows="12">${this.escapeHtml(tag.free_text)}</textarea>
+              <div style="margin-top: 10px; display: flex; gap: 8px;">
+                <button class="primary" onclick="wiki.savePageText('${tag.id}')">Spara ändringar</button>
+                <button onclick="wiki.renderTagPage('${tag.id}', 'read')">Avbryt</button>
+              </div>
+            </div>
+          `;
+        } else {
+          contentHtml = `
+            <div class="free-text-zone">
+              ${tag.free_text ? tag.free_text.replace(/\n/g, '<br>') : '<p style="color: var(--wiki-muted); font-style: italic;">Den här sidan saknar artikeltext än så länge. Klicka på "Redigera" för att skriva.</p>'}
+            </div>
+          `;
+        }
+
+        // Rendera boxar
+        let boxesHtml = '';
+        if (mode === 'read') {
+          boxesHtml = `
+            <div class="boxes-container">
+              ${boxClassIds.map((cid, idx) => this.renderClassBox(tag, cid, grouped[cid], idx, boxClassIds.length)).join('')}
+              
+              <!-- Snabbväljare för att länka till befintlig tagg -->
+              <div style="margin-top: 16px; padding: 12px; background: var(--wiki-bg); border: 1px solid var(--wiki-border-light);">
+                <strong>Koppla relation till existerande sida:</strong>
+                <div style="display: flex; gap: 8px; margin-top: 8px;">
+                  <select id="quickRelSelect" style="max-width: 300px;">
+                    <option value="">-- Välj sida att koppla ihop med --</option>
+                    ${this.tags.filter(t => t.id !== tag.id).map(t => `<option value="${t.id}">${t.title_singular}</option>`).join('')}
+                  </select>
+                  <button onclick="wiki.handleQuickRel('${tag.id}')">Skapa länk</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        main.innerHTML = `
+          <div class="article-header">
+            <div class="article-title-area">
+              <h1>${tag.title_singular}</h1>
+              <div class="article-subtitle">${classSubtitle}</div>
+            </div>
+            <div class="article-tabs">
+              <button class="tab-btn ${mode === 'read' ? 'active' : ''}" onclick="wiki.renderTagPage('${tag.id}', 'read')">Läs</button>
+              <button class="tab-btn ${mode === 'edit' ? 'active' : ''}" onclick="wiki.renderTagPage('${tag.id}', 'edit')">Redigera</button>
+            </div>
+          </div>
+          <div class="wiki-body">
+            ${contentHtml}
+            ${boxesHtml}
+          </div>
+        `;
+      }
+
+      // Rendera en specifik dynamisk klassbox
+      renderClassBox(currentTag, classId, items, index, totalBoxes) {
+        const classObj = classId !== 'unassigned' ? this.getTag(classId) : null;
+        const boxTitle = classObj ? classObj.title_plural : "Relaterade entiteter";
+        const boxColor = classObj?.layout_config?.theme_color || "#eaecf0";
+
+        return `
+          <div class="class-box" id="box-${classId}">
+            <div class="class-box-header" style="background-color: ${boxColor};">
+              <div>
+                ${classObj ? `<a class="class-box-header-title" onclick="wiki.renderTagPage('${classObj.id}')">${boxTitle}</a>` : `<strong>${boxTitle}</strong>`}
+                <span style="font-size: 11px; color: var(--wiki-muted); margin-left: 6px;">(${items.length})</span>
+              </div>
+              <div class="class-box-tools">
+                ${classObj ? `
+                  <input type="color" value="${boxColor}" title="Ändra färg för alla ${boxTitle}-boxar" onchange="wiki.updateClassColor('${classObj.id}', this.value)" style="width: 24px; height: 20px; padding: 0; border: none; cursor: pointer;">
+                ` : ''}
+                ${index > 0 ? `<button onclick="wiki.moveBox('${currentTag.id}', '${classId}', -1)" title="Flytta upp">▲</button>` : ''}
+                ${index < totalBoxes - 1 ? `<button onclick="wiki.moveBox('${currentTag.id}', '${classId}', 1)" title="Flytta ned">▼</button>` : ''}
+              </div>
+            </div>
+            <div class="class-box-content">
+              ${items.map(item => `
+                <span class="tag-badge">
+                  <a onclick="wiki.renderTagPage('${item.id}')">${item.title_singular}</a>
+                  <span class="remove-btn" onclick="wiki.unlinkTags('${currentTag.id}', '${item.id}')" title="Koppla bort">×</span>
+                </span>
+              `).join('')}
+
+              <!-- Inline creation & auto-assign -->
+              <div class="inline-tag-form">
+                <input type="text" id="inlineInput-${classId}" placeholder="+ Ny i ${boxTitle}..." onkeydown="if(event.key==='Enter') wiki.handleInlineCreate('${currentTag.id}', '${classId}')">
+                <button onclick="wiki.handleInlineCreate('${currentTag.id}', '${classId}')">+</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // Inline skapande och automatisk klassificering
+      handleInlineCreate(currentTagId, targetClassId) {
+        const input = document.getElementById(`inlineInput-${targetClassId}`);
+        const name = input.value.trim();
+        if (!name) return;
+
+        let tag = this.getTagByTitle(name);
+        const resolvedClassId = targetClassId !== 'unassigned' ? targetClassId : null;
+
+        if (!tag) {
+          // Skapa ny och auto-klassa
+          tag = this.createTag({
+            titleSingular: name,
+            titlePlural: name + "s",
+            assignedClassId: resolvedClassId,
+            freeText: ""
+          });
+        }
+
+        // Länka dubbelriktat
+        this.addRelation(currentTagId, tag.id);
+        this.renderTagPage(currentTagId);
+      }
+
+      handleQuickRel(currentTagId) {
+        const sel = document.getElementById('quickRelSelect');
+        if (sel.value) {
+          this.addRelation(currentTagId, sel.value);
+          this.renderTagPage(currentTagId);
+        }
+      }
+
+      unlinkTags(idA, idB) {
+        this.removeRelation(idA, idB);
+        this.renderTagPage(this.activeTagId);
+      }
+
+      // Arv & Layoutordning
+      moveBox(currentTagId, classId, direction) {
+        const currentTag = this.getTag(currentTagId);
+        const classObj = currentTag.assigned_class_id ? this.getTag(currentTag.assigned_class_id) : currentTag;
+        
+        const grouped = this.getGroupedRelations(currentTag.id);
+        let order = classObj.layout_config?.box_order ? [...classObj.layout_config.box_order] : Object.keys(grouped);
+
+        // Säkerställ att alla aktiva finns i ordern
+        Object.keys(grouped).forEach(k => {
+          if (!order.includes(k)) order.push(k);
+        });
+
+        const curIdx = order.indexOf(classId);
+        if (curIdx === -1) return;
+
+        const targetIdx = curIdx + direction;
+        if (targetIdx >= 0 && targetIdx < order.length) {
+          const temp = order[curIdx];
+          order[curIdx] = order[targetIdx];
+          order[targetIdx] = temp;
+
+          classObj.layout_config.box_order = order;
+          this.saveStorage();
+          this.renderTagPage(currentTagId);
+        }
+      }
+
+      updateClassColor(classId, newHex) {
+        const classObj = this.getTag(classId);
+        if (classObj) {
+          classObj.layout_config.theme_color = newHex;
+          this.saveStorage();
+          this.renderTagPage(this.activeTagId);
+        }
+      }
+
+      savePageText(tagId) {
+        const tag = this.getTag(tagId);
+        const textarea = document.getElementById('editTextarea');
+        if (tag && textarea) {
+          tag.free_text = textarea.value;
+          this.saveStorage();
+          this.renderTagPage(tagId, 'read');
+        }
+      }
+
+      // Sök och navigering
+      handleSearch() {
+        const q = document.getElementById('searchInput').value.trim();
+        if (!q) return;
+
+        const found = this.getTagByTitle(q);
+        if (found) {
+          this.renderTagPage(found.id);
+        } else {
+          if (confirm(`Sidan "${q}" existerar inte. Vill du skapa den nu?`)) {
+            const newTag = this.createTag({
+              titleSingular: q,
+              titlePlural: q + "s"
+            });
+            this.renderTagPage(newTag.id, 'edit');
+          }
+        }
+      }
+
+      getAllClasses() {
+        // En klass är en tagg som antingen är tilldelad som assigned_class_id hos någon annan tagg,
+        // eller skapad utan överordnad klass
+        const classIdsInUse = new Set(this.tags.map(t => t.assigned_class_id).filter(Boolean));
+        return this.tags.filter(t => classIdsInUse.has(t.id) || !t.assigned_class_id);
+      }
+
+      updateSidebar() {
+        const list = document.getElementById('sidebarClassesList');
+        const classes = this.getAllClasses();
+        if (classes.length === 0) {
+          list.innerHTML = `<li style="color: var(--wiki-muted); font-style: italic;">Inga klasser</li>`;
+        } else {
+          list.innerHTML = classes.map(c => `
+            <li><a onclick="wiki.renderTagPage('${c.id}')">${c.title_singular}</a></li>
+          `).join('');
+        }
+      }
+
+      renderAllPages() {
+        this.activeTagId = null;
+        const main = document.getElementById('mainArticle');
+        main.innerHTML = `
+          <div class="article-header">
+            <div class="article-title-area">
+              <h1>Alla sidor</h1>
+              <div class="article-subtitle">Totalt ${this.tags.length} artiklar i databasen</div>
+            </div>
+          </div>
+          <div class="wiki-body">
+            ${this.tags.length === 0 ? '<p>Inga sidor finns registrerade.</p>' : `
+              <ul style="column-count: 2; margin-left: 20px;">
+                ${this.tags.sort((a,b) => a.title_singular.localeCompare(b.title_singular)).map(t => `
+                  <li style="margin-bottom: 6px;">
+                    <a href="#" onclick="wiki.renderTagPage('${t.id}')">${t.title_singular}</a>
+                    ${t.assigned_class_id ? `<span style="color: var(--wiki-muted); font-size: 11px;">(${this.getTag(t.assigned_class_id)?.title_singular || ''})</span>` : ''}
+                  </li>
+                `).join('')}
+              </ul>
+            `}
+          </div>
+        `;
+      }
+
+      renderAllClasses() {
+        this.activeTagId = null;
+        const main = document.getElementById('mainArticle');
+        const classes = this.getAllClasses();
+        main.innerHTML = `
+          <div class="article-header">
+            <div class="article-title-area">
+              <h1>Klasser & Typer</h1>
+              <div class="article-subtitle">Övergripande kategorier</div>
+            </div>
+          </div>
+          <div class="wiki-body">
+            ${classes.length === 0 ? '<p>Inga klasser skapade ännu.</p>' : `
+              <ul style="margin-left: 20px;">
+                ${classes.map(c => `
+                  <li style="margin-bottom: 8px;">
+                    <a href="#" onclick="wiki.renderTagPage('${c.id}')"><strong>${c.title_singular}</strong> (Plural: ${c.title_plural})</a>
+                  </li>
+                `).join('')}
+              </ul>
+            `}
+          </div>
+        `;
+      }
+
+      // Dialoger
+      openCreateDialog() {
+        const sel = document.getElementById('modalAssignedClass');
+        sel.innerHTML = '<option value="">-- Ingen (Är självständig klass/tagg) --</option>';
+        this.getAllClasses().forEach(c => {
+          sel.innerHTML += `<option value="${c.id}">${c.title_singular}</option>`;
+        });
+
+        document.getElementById('modalTitleSingular').value = '';
+        document.getElementById('modalTitlePlural').value = '';
+        document.getElementById('modalFreeText').value = '';
+        document.getElementById('createDialog').style.display = 'flex';
+      }
+
+      closeCreateDialog() {
+        document.getElementById('createDialog').style.display = 'none';
+      }
+
+      saveNewTag() {
+        const titleSingular = document.getElementById('modalTitleSingular').value.trim();
+        const titlePlural = document.getElementById('modalTitlePlural').value.trim();
+        const assignedClassId = document.getElementById('modalAssignedClass').value;
+        const freeText = document.getElementById('modalFreeText').value;
+
+        if (!titleSingular) {
+          alert('Titel (singular) är obligatorisk.');
+          return;
+        }
+
+        const tag = this.createTag({
+          titleSingular,
+          titlePlural,
+          assignedClassId,
+          freeText
+        });
+
+        this.closeCreateDialog();
+        this.renderTagPage(tag.id);
+      }
+
+      escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      }
+    }
+
+    const wiki = new StudyWikiEngine();
+    wiki.renderIndex();
+  </script>
 </body>
 </html>
