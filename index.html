@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Simpel Databas</title>
-  
+
   <!-- Firebase SDK Compat -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -16,6 +16,7 @@
       --db-border: #a2a9b1;
       --db-border-light: #c8ccd1;
       --db-header-bg: #eaecf0;
+      --db-subbox-bg: #f8f9fa;
       --db-link: #3366cc;
       --db-link-hover: #447ff5;
       --db-text: #202122;
@@ -37,7 +38,7 @@
       min-height: 100vh;
     }
 
-    /* Toppmeny */
+    /* Minimalistisk toppmeny - INGEN SIDOMENY */
     header {
       background-color: #ffffff;
       border-bottom: 1px solid var(--db-border-light);
@@ -48,19 +49,26 @@
       gap: 16px;
     }
 
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
     .brand {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       text-decoration: none;
       color: var(--db-text);
       font-size: 17px;
       font-weight: bold;
+      cursor: pointer;
     }
 
     .brand-logo {
-      width: 28px;
-      height: 28px;
+      width: 26px;
+      height: 26px;
       background: #202122;
       color: #fff;
       display: flex;
@@ -69,13 +77,12 @@
       font-size: 12px;
       font-weight: bold;
       border-radius: 3px;
-      letter-spacing: 0.5px;
     }
 
     .header-actions {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
 
     .search-bar {
@@ -109,162 +116,248 @@
       font-size: 11px;
       padding: 3px 8px;
       border-radius: 12px;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
       font-weight: 500;
     }
     .status-badge.online { background: #e8f5e9; color: var(--status-online); border: 1px solid #c8e6c9; }
     .status-badge.offline { background: #fff3e0; color: var(--status-offline); border: 1px solid #ffe0b2; }
     .status-badge.connecting { background: #e3f2fd; color: var(--status-connecting); border: 1px solid #bbdefb; }
 
-    /* Layout */
-    .db-container {
-      display: flex;
-      flex-grow: 1;
-      max-width: 1400px;
+    /* Huvudyta (centrerat ark utan sidomeny) */
+    .viewport-container {
+      max-width: 860px;
       width: 100%;
-      margin: 0 auto;
-      padding: 16px 20px;
-      gap: 24px;
+      margin: 24px auto;
+      padding: 0 16px;
+      flex-grow: 1;
     }
 
-    aside {
-      width: 210px;
-      flex-shrink: 0;
-      font-size: 13px;
+    .item-card {
+      background: var(--db-content-bg);
+      border: 1px solid var(--db-border-light);
+      padding: 32px 36px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     }
 
-    .sidebar-section {
-      margin-bottom: 24px;
+    /* ITEM & CLASS 1 (Header enligt skiss) */
+    .item-top-zone {
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--db-border);
+      padding-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
     }
 
-    .sidebar-section h3 {
-      font-size: 11px;
-      text-transform: uppercase;
-      color: var(--db-muted);
-      border-bottom: 1px solid var(--db-border-light);
-      padding-bottom: 4px;
-      margin-bottom: 8px;
+    .item-name {
+      font-family: 'Linux Libertine', 'Georgia', Times, serif;
+      font-size: 32px;
+      font-weight: normal;
+      line-height: 1.1;
       letter-spacing: 0.5px;
     }
 
-    .sidebar-section ul { list-style: none; }
-    .sidebar-section li { margin-bottom: 5px; }
-    .sidebar-section a { color: var(--db-link); text-decoration: none; cursor: pointer; }
-    .sidebar-section a:hover { text-decoration: underline; }
-
-    main {
-      flex-grow: 1;
-      background: var(--db-content-bg);
-      border: 1px solid var(--db-border-light);
-      padding: 24px 32px;
-      min-height: 600px;
-    }
-
-    .entry-header {
-      border-bottom: 1px solid var(--db-border);
-      padding-bottom: 8px;
-      margin-bottom: 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-    }
-
-    .entry-title-area h1 {
-      font-family: 'Linux Libertine', 'Georgia', Times, serif;
-      font-size: 28px;
-      font-weight: normal;
-      line-height: 1.2;
-    }
-
-    .entry-subtitle {
-      font-size: 12px;
+    .item-class-subtitle {
+      font-size: 14px;
       color: var(--db-muted);
       margin-top: 4px;
     }
 
-    .entry-subtitle a { color: var(--db-link); text-decoration: none; }
-
-    .entry-tabs { display: flex; gap: 4px; }
-    .tab-btn {
-      background: transparent;
-      border: 1px solid transparent;
-      border-bottom: none;
-      padding: 6px 12px;
-      font-size: 13px;
+    .item-class-subtitle a {
+      color: var(--db-link);
+      text-decoration: none;
+      font-weight: 500;
+      cursor: pointer;
     }
-    .tab-btn.active {
-      background: var(--db-content-bg);
-      border-color: var(--db-border);
-      border-bottom: 2px solid var(--db-content-bg);
-      margin-bottom: -9px;
-      font-weight: bold;
+    .item-class-subtitle a:hover { text-decoration: underline; }
+
+    .type-switcher {
+      display: flex;
+      gap: 8px;
+      align-items: center;
     }
 
-    /* Strukturerade klassboxar */
+    .type-badge {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 3px;
+      border: 1px solid var(--db-border-light);
+      background: var(--db-bg);
+      font-weight: 600;
+    }
+    .type-badge.class-type {
+      background: #eef2fa;
+      color: var(--db-link);
+      border-color: #cbd5e1;
+    }
+
+    /* FREE TEXT ZONE [ free text ] */
+    .free-text-frame {
+      border: 1px solid var(--db-border-light);
+      border-radius: 3px;
+      padding: 12px 16px;
+      background: #fafafa;
+      margin-bottom: 24px;
+      position: relative;
+    }
+
+    .free-text-frame .free-text-label {
+      font-size: 11px;
+      color: var(--db-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .free-text-content {
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 24px;
+      white-space: pre-wrap;
+    }
+
+    /* NESTED BOXES SYSTEM (Klassboxar -> Underboxar -> Items) */
     .boxes-container {
       display: flex;
       flex-direction: column;
-      gap: 16px;
-      margin-top: 24px;
+      gap: 20px;
     }
 
-    .class-box {
-      border: 1px solid var(--db-border-light);
+    /* Yttre box (# Class 2 Box) */
+    .class-outer-box {
+      border: 2px solid var(--db-border);
+      border-radius: 4px;
       background: #ffffff;
-      border-radius: 2px;
+      padding: 16px;
     }
 
-    .class-box-header {
-      background-color: var(--db-header-bg);
-      padding: 6px 12px;
+    .class-outer-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      margin-bottom: 14px;
+      padding-bottom: 6px;
       border-bottom: 1px solid var(--db-border-light);
     }
 
-    .class-box-header a {
+    .class-outer-title {
+      font-size: 17px;
       font-weight: bold;
       color: var(--db-text);
       text-decoration: none;
       cursor: pointer;
     }
+    .class-outer-title:hover { color: var(--db-link); text-decoration: underline; }
 
-    .class-box-content {
-      padding: 12px;
+    /* Inre sub-box (# Class subbox 1) */
+    .subbox-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .class-subbox {
+      border: 1px solid var(--db-border);
+      border-radius: 4px;
+      background: var(--db-subbox-bg);
+      padding: 12px 14px;
+    }
+
+    .class-subbox-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .class-subbox-title {
+      font-size: 13px;
+      font-weight: bold;
+      color: var(--db-muted);
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .class-subbox-title:hover { color: var(--db-link); text-decoration: underline; }
+
+    /* Taggar / Items [ item ] [ item ] */
+    .items-row {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
       align-items: center;
     }
 
-    .item-badge {
+    .item-pill {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 3px 8px;
-      background: var(--db-bg);
-      border: 1px solid var(--db-border-light);
-      border-radius: 2px;
+      padding: 4px 10px;
+      background: #ffffff;
+      border: 1px solid var(--db-border);
+      border-radius: 14px;
+      font-size: 13px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
     }
 
-    .item-badge a {
+    .item-pill a {
       color: var(--db-link);
       text-decoration: none;
+      font-weight: 500;
       cursor: pointer;
     }
+    .item-pill a:hover { text-decoration: underline; }
 
-    .item-badge .remove-btn {
-      cursor: pointer;
+    .item-pill .remove-item-btn {
       color: var(--db-muted);
+      cursor: pointer;
+      font-size: 14px;
       font-weight: bold;
+      margin-left: 2px;
+    }
+    .item-pill .remove-item-btn:hover { color: #d32f2f; }
+
+    .inline-item-add {
+      display: inline-flex;
+      gap: 4px;
+      align-items: center;
     }
 
-    .item-badge .remove-btn:hover { color: #c00; }
+    .inline-item-add input {
+      width: 140px;
+      padding: 3px 8px;
+      font-size: 12px;
+      border-radius: 12px;
+    }
 
-    /* Dialog */
+    .inline-item-add button {
+      padding: 3px 8px;
+      font-size: 11px;
+      border-radius: 10px;
+    }
+
+    /* Hantera boxar kontroller */
+    .box-footer-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+      padding-top: 8px;
+    }
+
+    .add-box-zone {
+      margin-top: 24px;
+      padding: 16px;
+      background: #fafafa;
+      border: 1px dashed var(--db-border);
+      border-radius: 4px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Dialoger */
     .dialog-backdrop {
       display: none;
       position: fixed;
@@ -277,9 +370,10 @@
     .dialog {
       background: #fff;
       border: 1px solid var(--db-border);
-      width: 480px;
+      width: 460px;
       padding: 20px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+      border-radius: 3px;
     }
 
     .form-group { margin-bottom: 12px; }
@@ -289,16 +383,19 @@
 </head>
 <body>
 
+  <!-- Minimal Header (ingen sidomeny) -->
   <header>
-    <a class="brand" href="#" onclick="dbApp.renderOverview()">
-      <div class="brand-logo">DB</div>
-      <span id="appMainTitle">Simpel Databas</span>
-    </a>
+    <div class="header-left">
+      <a class="brand" onclick="dbApp.renderOverview()">
+        <div class="brand-logo">DB</div>
+        <span id="appMainTitle">Simpel Databas</span>
+      </a>
+      <button onclick="dbApp.openCreateDialog()" class="primary">+ Nytt Objekt</button>
+    </div>
 
     <div class="search-bar">
       <input type="text" id="searchInput" placeholder="Sök objekt..." onkeydown="if(event.key==='Enter') dbApp.handleSearch()">
-      <button onclick="dbApp.handleSearch()" data-i18n="searchBtn">Gå till</button>
-      <button class="primary" onclick="dbApp.openCreateDialog()" data-i18n="newEntryBtn">+ Nytt Objekt</button>
+      <button onclick="dbApp.handleSearch()">Gå till</button>
     </div>
 
     <div class="header-actions">
@@ -307,66 +404,46 @@
     </div>
   </header>
 
-  <div class="db-container">
-    <aside>
-      <div class="sidebar-section">
-        <h3 data-i18n="navTitle">Navigering</h3>
-        <ul>
-          <li><a onclick="dbApp.renderOverview()" data-i18n="overview">Översikt</a></li>
-          <li><a onclick="dbApp.renderAllEntries()" data-i18n="allEntries">Alla Objekt</a></li>
-          <li><a onclick="dbApp.renderAllClasses()" data-i18n="classes">Klasser</a></li>
-        </ul>
-      </div>
-
-      <div class="sidebar-section">
-        <h3 data-i18n="classesTitle">Klasser</h3>
-        <ul id="sidebarClassesList"></ul>
-      </div>
-
-      <div class="sidebar-section">
-        <h3 data-i18n="storageTitle">Databas</h3>
-        <div style="font-size: 11px; color: var(--db-muted); line-height: 1.4;">
-          Projekt: <code>ort-wiki</code><br>
-          Realtidssynk aktiv via Firestore.
-        </div>
-      </div>
-    </aside>
-
+  <!-- Centrerad arbetsyta utan sidopanel -->
+  <div class="viewport-container">
     <main id="mainContent"></main>
   </div>
 
   <!-- Skapa-dialog -->
   <div class="dialog-backdrop" id="createDialog">
     <div class="dialog">
-      <h2 style="font-size: 18px; margin-bottom: 12px;" data-i18n="modalTitle">Skapa nytt objekt</h2>
+      <h2 style="font-size: 18px; margin-bottom: 12px;" id="modalHeading">Skapa nytt objekt</h2>
       <div class="form-group">
-        <label data-i18n="lblSingular">Namn / Titel (Singular)</label>
-        <input type="text" id="modalTitleSingular" placeholder="t.ex. Freezer, Cinnamon, Tool...">
+        <label>Namn / Titel</label>
+        <input type="text" id="modalTitle" placeholder="t.ex. Freezer, Spice, Meat...">
       </div>
       <div class="form-group">
-        <label data-i18n="lblPlural">Pluralform (för gruppboxar)</label>
-        <input type="text" id="modalTitlePlural" placeholder="t.ex. Freezers, Spices, Tools...">
-      </div>
-      <div class="form-group">
-        <label data-i18n="lblClass">Klass (valfritt)</label>
-        <select id="modalAssignedClass">
-          <option value="">-- Ingen (Självständigt objekt eller egen klass) --</option>
+        <label>Typ</label>
+        <select id="modalIsClass">
+          <option value="false">Simpelt Objekt</option>
+          <option value="true">Klass</option>
         </select>
       </div>
       <div class="form-group">
-        <label data-i18n="lblText">Beskrivning / Anteckningar</label>
-        <textarea id="modalFreeText" rows="4"></textarea>
+        <label>Tillhör Klass (valfritt)</label>
+        <select id="modalAssignedClass">
+          <option value="">-- Ingen klass --</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Fritext / Beskrivning</label>
+        <textarea id="modalFreeText" rows="3"></textarea>
       </div>
       <div class="dialog-actions">
-        <button onclick="dbApp.closeCreateDialog()" data-i18n="btnCancel">Avbryt</button>
-        <button class="primary" onclick="dbApp.saveNewEntry()" data-i18n="btnCreate">Skapa</button>
+        <button onclick="dbApp.closeCreateDialog()">Avbryt</button>
+        <button class="primary" onclick="dbApp.saveNewEntry()">Skapa</button>
       </div>
     </div>
   </div>
 
   <script>
     /* =========================================================================
-       1. FIREBASE KONFIGURATION (ort-wiki)
+       1. FIREBASE SETUP (ort-wiki)
        ========================================================================= */
     const firebaseConfig = {
       apiKey: "AIzaSyDX3KFiW_nScowsEyNoveIC7u-u2WY2NCc",
@@ -378,112 +455,34 @@
     };
 
     /* =========================================================================
-       2. SPRÅKDATA (SV / EN) - RENSAD FRÅN WIKI-TERMER
-       ========================================================================= */
-    const I18N = {
-      sv: {
-        appTitle: "Simpel Databas",
-        searchBtn: "Gå till",
-        newEntryBtn: "+ Nytt Objekt",
-        navTitle: "Navigering",
-        overview: "Översikt",
-        allEntries: "Alla Objekt",
-        classes: "Klasser",
-        classesTitle: "Aktiva Klasser",
-        noClasses: "Inga klasser registrerade",
-        storageTitle: "Databas",
-        readTab: "Visa",
-        editTab: "Redigera",
-        emptyContent: "Inga anteckningar sparade. Klicka på Redigera för att lägga till text.",
-        saveChanges: "Spara ändringar",
-        cancel: "Avbryt",
-        linkExisting: "Koppla relation till existerande objekt:",
-        createLink: "Koppla",
-        modalTitle: "Skapa nytt objekt",
-        lblSingular: "Namn / Titel (Singular)",
-        lblPlural: "Pluralform (för gruppboxar)",
-        lblClass: "Tillhör Klass",
-        lblText: "Anteckningar / Text",
-        btnCancel: "Avbryt",
-        btnCreate: "Skapa",
-        allEntriesHeader: "Alla registrerade objekt",
-        classesHeader: "Klasser och kategorier",
-        noneOption: "-- Ingen (Självständigt objekt / Egen klass) --",
-        newInBox: "+ Ny i"
-      },
-      en: {
-        appTitle: "Simple Database",
-        searchBtn: "Go",
-        newEntryBtn: "+ New Object",
-        navTitle: "Navigation",
-        overview: "Overview",
-        allEntries: "All Objects",
-        classes: "Classes",
-        classesTitle: "Active Classes",
-        noClasses: "No classes found",
-        storageTitle: "Database",
-        readTab: "View",
-        editTab: "Edit",
-        emptyContent: "No notes saved. Click Edit to add text.",
-        saveChanges: "Save changes",
-        cancel: "Cancel",
-        linkExisting: "Link relation to existing object:",
-        createLink: "Link",
-        modalTitle: "Create New Object",
-        lblSingular: "Title (Singular)",
-        lblPlural: "Plural Form (for group boxes)",
-        lblClass: "Assigned Class",
-        lblText: "Notes / Content",
-        btnCancel: "Cancel",
-        btnCreate: "Create",
-        allEntriesHeader: "All Registered Objects",
-        classesHeader: "Classes & Structural Tags",
-        noneOption: "-- None (Independent Object / Class) --",
-        newInBox: "+ New in"
-      }
-    };
-
-    /* =========================================================================
-       3. GRUNDDATA (Franks spec: Kitchen, Table, Freezer, Spice, Cinnamon)
+       2. STARTDATA (Kitchen, Table, Freezer, Spice, Cinnamon)
        ========================================================================= */
     const BASE_OBJECTS = [
-      { id: "obj-kitchen",  title_singular: "Kitchen",  title_plural: "Kitchens",  assigned_class_id: null, free_text: "", layout_config: { box_order: [], theme_color: "#eaecf0" } },
-      { id: "obj-table",    title_singular: "Table",    title_plural: "Tables",    assigned_class_id: null, free_text: "", layout_config: { box_order: [], theme_color: "#eaecf0" } },
-      { id: "obj-freezer",  title_singular: "Freezer",  title_plural: "Freezers",  assigned_class_id: null, free_text: "", layout_config: { box_order: [], theme_color: "#eaecf0" } },
-      { id: "class-spice",  title_singular: "Spice",    title_plural: "Spices",    assigned_class_id: null, free_text: "", layout_config: { box_order: [], theme_color: "#eaecf0" } },
-      { id: "obj-cinnamon", title_singular: "Cinnamon", title_plural: "Cinnamons", assigned_class_id: "class-spice", free_text: "", layout_config: { box_order: [], theme_color: "#eaecf0" } }
-    ];
-    const BASE_RELATIONS = [
-      { a: "obj-cinnamon", b: "class-spice" }
+      { id: "obj-kitchen",  title: "Kitchen",  is_class: false, assigned_class_id: null, free_text: "", boxes: [] },
+      { id: "obj-table",    title: "Table",    is_class: false, assigned_class_id: null, free_text: "", boxes: [] },
+      { id: "obj-freezer",  title: "Freezer",  is_class: false, assigned_class_id: null, free_text: "", boxes: [] },
+      { id: "class-spice",  title: "Spice",    is_class: true,  assigned_class_id: null, free_text: "", boxes: [] },
+      { id: "obj-cinnamon", title: "Cinnamon", is_class: false, assigned_class_id: "class-spice", free_text: "", boxes: [] }
     ];
 
     /* =========================================================================
-       4. DATABASMOTOR MED FIREBASE REALTIDSSYNKRONISERING
+       3. APP ENGINE MED STRUKTUR ENLIGT SKISS
        ========================================================================= */
     class SimpleDatabaseApp {
       constructor() {
         this.lang = 'sv';
         this.tags = [];
-        this.relations = [];
         this.activeTagId = null;
         this.db = null;
 
         this.initFirebase();
       }
 
-      t(key) {
-        return I18N[this.lang][key] || key;
-      }
-
       toggleLanguage() {
         this.lang = this.lang === 'sv' ? 'en' : 'sv';
-        document.getElementById('appMainTitle').innerText = this.t('appTitle');
-        document.querySelectorAll('[data-i18n]').forEach(el => {
-          const key = el.getAttribute('data-i18n');
-          el.innerText = this.t(key);
-        });
+        document.getElementById('appMainTitle').innerText = this.lang === 'sv' ? 'Simpel Databas' : 'Simple Database';
         if (this.activeTagId) {
-          this.renderEntryPage(this.activeTagId);
+          this.renderItemPage(this.activeTagId);
         } else {
           this.renderOverview();
         }
@@ -495,35 +494,31 @@
           firebase.initializeApp(firebaseConfig);
           this.db = firebase.firestore();
 
-          // Lyssna i realtid på 'database/current'
-          this.db.collection('simple_db').doc('current').onSnapshot(doc => {
+          this.db.collection('simple_db').doc('nested_structure').onSnapshot(doc => {
             badge.innerText = "ort-wiki (Moln)";
             badge.className = "status-badge online";
 
             if (doc.exists) {
               const data = doc.data();
-              this.tags = data.tags && data.tags.length > 0 ? data.tags : BASE_OBJECTS;
-              this.relations = data.relations || [];
+              this.tags = (data.tags && data.tags.length > 0) ? data.tags : BASE_OBJECTS;
             } else {
-              // Dokumentet finns inte i databasen ännu -> initiera grundobjekten
               this.tags = BASE_OBJECTS;
-              this.relations = BASE_RELATIONS;
-              this.syncToFirebase();
+              this.sync();
             }
 
             if (this.activeTagId) {
-              this.renderEntryPage(this.activeTagId);
+              this.renderItemPage(this.activeTagId);
             } else {
               this.renderOverview();
             }
           }, err => {
-            console.error("Firestore lyssningsfel:", err);
+            console.error("Firebase Snapshot Error:", err);
             badge.innerText = "Offline (Lokal)";
             badge.className = "status-badge offline";
             this.fallbackLocal();
           });
         } catch (e) {
-          console.error("Firebase startfel:", e);
+          console.error("Firebase Init Error:", e);
           badge.innerText = "Offline (Lokal)";
           badge.className = "status-badge offline";
           this.fallbackLocal();
@@ -531,29 +526,24 @@
       }
 
       fallbackLocal() {
-        const rawTags = localStorage.getItem('simpeldb_tags');
-        const rawRels = localStorage.getItem('simpeldb_relations');
-        this.tags = rawTags ? JSON.parse(rawTags) : BASE_OBJECTS;
-        this.relations = rawRels ? JSON.parse(rawRels) : BASE_RELATIONS;
+        const raw = localStorage.getItem('simpeldb_nested');
+        this.tags = raw ? JSON.parse(raw) : BASE_OBJECTS;
         this.renderOverview();
       }
 
-      async syncToFirebase() {
+      async sync() {
         if (this.db) {
           try {
-            await this.db.collection('simple_db').doc('current').set({
+            await this.db.collection('simple_db').doc('nested_structure').set({
               tags: this.tags,
-              relations: this.relations,
-              lastUpdated: Date.now()
+              updatedAt: Date.now()
             });
           } catch (e) {
-            console.warn("Kunde inte spara till Firestore, sparar lokalt:", e);
-            localStorage.setItem('simpeldb_tags', JSON.stringify(this.tags));
-            localStorage.setItem('simpeldb_relations', JSON.stringify(this.relations));
+            console.warn("Kunde inte synka till molnet, sparar lokalt:", e);
+            localStorage.setItem('simpeldb_nested', JSON.stringify(this.tags));
           }
         } else {
-          localStorage.setItem('simpeldb_tags', JSON.stringify(this.tags));
-          localStorage.setItem('simpeldb_relations', JSON.stringify(this.relations));
+          localStorage.setItem('simpeldb_nested', JSON.stringify(this.tags));
         }
       }
 
@@ -562,249 +552,382 @@
       }
 
       getTagByTitle(title) {
-        const lower = title.toLowerCase().trim();
-        return this.tags.find(t => 
-          t.title_singular.toLowerCase() === lower || 
-          t.title_plural.toLowerCase() === lower
-        );
+        const clean = title.toLowerCase().trim();
+        return this.tags.find(t => t.title.toLowerCase().trim() === clean);
       }
 
-      // Dubbelriktade relationer
-      addRelation(idA, idB) {
-        if (idA === idB) return;
-        const exists = this.relations.some(r => (r.a === idA && r.b === idB) || (r.a === idB && r.b === idA));
-        if (!exists) {
-          this.relations.push({ a: idA, b: idB });
-          this.syncToFirebase();
-        }
+      getClasses() {
+        return this.tags.filter(t => t.is_class);
       }
 
-      removeRelation(idA, idB) {
-        this.relations = this.relations.filter(r => !((r.a === idA && r.b === idB) || (r.a === idB && r.b === idA)));
-        this.syncToFirebase();
-        this.renderEntryPage(this.activeTagId);
+      // Ändra ett simpelt objekt till klass eller tvärtom
+      toggleIsClass(tagId) {
+        const tag = this.getTag(tagId);
+        if (!tag) return;
+        tag.is_class = !tag.is_class;
+        this.sync();
+        this.renderItemPage(tag.id);
       }
 
-      getRelatedTags(id) {
-        const ids = this.relations
-          .filter(r => r.a === id || r.b === id)
-          .map(r => r.a === id ? r.b : r.a);
-        return this.tags.filter(t => ids.includes(t.id));
-      }
-
-      getGroupedRelations(id) {
-        const related = this.getRelatedTags(id);
-        const groups = {};
-        related.forEach(t => {
-          const cid = t.assigned_class_id || 'unassigned';
-          if (!groups[cid]) groups[cid] = [];
-          groups[cid].push(t);
-        });
-        return groups;
-      }
-
-      getAllClasses() {
-        const inUse = new Set(this.tags.map(t => t.assigned_class_id).filter(Boolean));
-        return this.tags.filter(t => inUse.has(t.id) || !t.assigned_class_id);
-      }
-
-      updateSidebar() {
-        const list = document.getElementById('sidebarClassesList');
-        const classes = this.getAllClasses();
-        if (classes.length === 0) {
-          list.innerHTML = `<li style="color: var(--db-muted); font-style: italic;">${this.t('noClasses')}</li>`;
-        } else {
-          list.innerHTML = classes.map(c => `<li><a onclick="dbApp.renderEntryPage('${c.id}')">${c.title_singular}</a></li>`).join('');
-        }
-      }
-
+      // Översikt (visar alla objekt när man inte är inne på ett specifikt item)
       renderOverview() {
         this.activeTagId = null;
-        this.updateSidebar();
         const main = document.getElementById('mainContent');
+        const classes = this.getClasses();
+        const objects = this.tags.filter(t => !t.is_class);
+
         main.innerHTML = `
-          <div class="entry-header">
-            <div class="entry-title-area">
-              <h1>${this.t('overview')}</h1>
-              <div class="entry-subtitle">${this.t('appTitle')} | Databaskoppling: ort-wiki</div>
+          <div class="item-card">
+            <div class="item-top-zone">
+              <div>
+                <h1 class="item-name">${this.lang === 'sv' ? 'Översikt' : 'Overview'}</h1>
+                <div class="item-class-subtitle">${this.lang === 'sv' ? 'Ingen sidomeny aktiv – klicka på ett objekt för att öppna vyn' : 'No sidebar active – click an item to open view'}</div>
+              </div>
             </div>
-          </div>
-          <div>
-            <h3 style="border-bottom: 1px solid var(--db-border-light); padding-bottom: 4px; margin-bottom: 8px;">${this.t('classes')}</h3>
-            <ul style="margin-left: 20px; margin-bottom: 20px;">
-              ${this.getAllClasses().map(c => `<li><a onclick="dbApp.renderEntryPage('${c.id}')"><strong>${c.title_singular}</strong> (${c.title_plural})</a></li>`).join('')}
-            </ul>
 
-            <h3 style="border-bottom: 1px solid var(--db-border-light); padding-bottom: 4px; margin-bottom: 8px;">${this.t('allEntries')}</h3>
-            <ul style="margin-left: 20px;">
-              ${this.tags.map(t => `<li><a onclick="dbApp.renderEntryPage('${t.id}')">${t.title_singular}</a>${t.assigned_class_id ? `<span style="font-size:11px; color:var(--db-muted);">(${this.getTag(t.assigned_class_id)?.title_singular || ''})</span>` : ''}</li>`).join('')}
-            </ul>
-          </div>
-        `;
-      }
+            <div style="margin-bottom: 24px;">
+              <h3 style="margin-bottom: 8px; border-bottom: 1px solid var(--db-border-light); padding-bottom: 4px;">${this.lang === 'sv' ? 'Klasser' : 'Classes'} (${classes.length})</h3>
+              <div class="items-row">
+                ${classes.map(c => `
+                  <span class="item-pill">
+                    <a onclick="dbApp.renderItemPage('${c.id}')"># ${c.title}</a>
+                  </span>
+                `).join('') || '<span style="color:var(--db-muted); font-style:italic;">Inga klasser</span>'}
+              </div>
+            </div>
 
-      renderEntryPage(id, mode = 'read') {
-        const tag = this.getTag(id);
-        if (!tag) return this.renderOverview();
-
-        this.activeTagId = tag.id;
-        this.updateSidebar();
-
-        const main = document.getElementById('mainContent');
-        const assignedClass = tag.assigned_class_id ? this.getTag(tag.assigned_class_id) : null;
-        const subtitle = assignedClass 
-          ? `<a onclick="dbApp.renderEntryPage('${assignedClass.id}')">(${assignedClass.title_singular})</a>` 
-          : `<em>(Objekt / Klass)</em>`;
-
-        const grouped = this.getGroupedRelations(tag.id);
-        const boxClassIds = Object.keys(grouped);
-
-        let content = '';
-        if (mode === 'edit') {
-          content = `
-            <textarea id="editArea" rows="8" style="width:100%; margin-bottom: 10px;">${tag.free_text || ''}</textarea>
             <div>
-              <button class="primary" onclick="dbApp.saveText('${tag.id}')">${this.t('saveChanges')}</button>
-              <button onclick="dbApp.renderEntryPage('${tag.id}', 'read')">${this.t('cancel')}</button>
-            </div>
-          `;
-        } else {
-          content = `
-            <div style="margin-bottom: 20px;">
-              ${tag.free_text ? tag.free_text.replace(/\n/g, '<br>') : `<span style="color:var(--db-muted); font-style:italic;">${this.t('emptyContent')}</span>`}
-            </div>
-          `;
-        }
-
-        const boxes = mode === 'read' ? `
-          <div class="boxes-container">
-            ${boxClassIds.map(cid => this.renderClassBox(tag, cid, grouped[cid])).join('')}
-
-            <div style="background: var(--db-bg); border: 1px solid var(--db-border-light); padding: 12px; margin-top: 16px;">
-              <strong>${this.t('linkExisting')}</strong>
-              <div style="display:flex; gap: 8px; margin-top: 8px;">
-                <select id="linkSelect" style="max-width: 280px;">
-                  <option value="">-- Välj objekt att koppla ihop med --</option>
-                  ${this.tags.filter(t => t.id !== tag.id).map(t => `<option value="${t.id}">${t.title_singular}</option>`).join('')}
-                </select>
-                <button onclick="dbApp.handleQuickLink('${tag.id}')">${this.t('createLink')}</button>
+              <h3 style="margin-bottom: 8px; border-bottom: 1px solid var(--db-border-light); padding-bottom: 4px;">${this.lang === 'sv' ? 'Objekt' : 'Objects'} (${objects.length})</h3>
+              <div class="items-row">
+                ${objects.map(o => `
+                  <span class="item-pill">
+                    <a onclick="dbApp.renderItemPage('${o.id}')">${o.title}</a>
+                  </span>
+                `).join('') || '<span style="color:var(--db-muted); font-style:italic;">Inga objekt</span>'}
               </div>
             </div>
           </div>
-        ` : '';
+        `;
+      }
+
+      // Artikel/Item-sida som motsvarar skissen exakt
+      renderItemPage(tagId, isEditingText = false) {
+        const item = this.getTag(tagId);
+        if (!item) return this.renderOverview();
+
+        this.activeTagId = item.id;
+        const main = document.getElementById('mainContent');
+
+        // Överordnad klass (Class 1 i skissen)
+        const parentClass = item.assigned_class_id ? this.getTag(item.assigned_class_id) : null;
+        const classSubtitle = parentClass 
+          ? `<a onclick="dbApp.renderItemPage('${parentClass.id}')">${parentClass.title}</a>` 
+          : `<span style="font-style:italic;">(Ingen överordnad klass)</span>`;
+
+        // Se till att boxes-array finns
+        if (!item.boxes) item.boxes = [];
+
+        // Rendera de nästlade boxarna enligt skissen
+        const boxesHtml = item.boxes.map((box, bIdx) => this.renderClassBoxHtml(item, box, bIdx)).join('');
+
+        // Fritext-zonen [ free text ]
+        let freeTextZone = '';
+        if (isEditingText) {
+          freeTextZone = `
+            <div class="free-text-frame">
+              <div class="free-text-label">
+                <span>[ Free Text - Redigera ]</span>
+              </div>
+              <textarea id="freeTextEditor" style="width:100%; min-height:80px; margin-bottom:8px;">${item.free_text || ''}</textarea>
+              <div style="display:flex; gap:6px;">
+                <button class="primary" onclick="dbApp.saveFreeText('${item.id}')">Spara text</button>
+                <button onclick="dbApp.renderItemPage('${item.id}', false)">Avbryt</button>
+              </div>
+            </div>
+          `;
+        } else {
+          freeTextZone = `
+            <div class="free-text-frame" onclick="dbApp.renderItemPage('${item.id}', true)" title="Klicka för att redigera fritext" style="cursor:pointer;">
+              <div class="free-text-label">
+                <span>[ Free Text ]</span>
+                <span style="font-size:10px; text-decoration:underline;">Redigera</span>
+              </div>
+              <div class="free-text-content">${item.free_text ? item.free_text : '<span style="color:var(--db-muted); font-style:italic;">Tom fritextzon. Klicka för att skriva...</span>'}</div>
+            </div>
+          `;
+        }
+
+        // Alla tillgängliga klasser för att skapa ny box
+        const availableClasses = this.getClasses();
 
         main.innerHTML = `
-          <div class="entry-header">
-            <div class="entry-title-area">
-              <h1>${tag.title_singular}</h1>
-              <div class="entry-subtitle">${subtitle}</div>
+          <div class="item-card">
+            
+            <!-- TOPP: ITEM + CLASS 1 -->
+            <div class="item-top-zone">
+              <div>
+                <h1 class="item-name">${item.title}</h1>
+                <div class="item-class-subtitle">Klass: ${classSubtitle}</div>
+              </div>
+
+              <!-- Typ & Ändra till klass -->
+              <div class="type-switcher">
+                <span class="type-badge ${item.is_class ? 'class-type' : ''}">
+                  ${item.is_class ? 'KLASS' : 'SIMPELT OBJEKT'}
+                </span>
+                <button onclick="dbApp.toggleIsClass('${item.id}')" title="Växla mellan simpelt objekt och klass">
+                  ${item.is_class ? 'Gör till simpelt objekt' : 'Gör till klass'}
+                </button>
+              </div>
             </div>
-            <div class="entry-tabs">
-              <button class="tab-btn ${mode === 'read' ? 'active':''}" onclick="dbApp.renderEntryPage('${tag.id}', 'read')">${this.t('readTab')}</button>
-              <button class="tab-btn ${mode === 'edit' ? 'active':''}" onclick="dbApp.renderEntryPage('${tag.id}', 'edit')">${this.t('editTab')}</button>
+
+            <!-- FREE TEXT ZONE -->
+            ${freeTextZone}
+
+            <!-- DYNAMISKA BOXAR INUTI BOXAR -->
+            <div class="boxes-container">
+              ${boxesHtml}
             </div>
+
+            <!-- SKAPA NY BOX (Måste ha samma namn som en existerande klass) -->
+            <div class="add-box-zone">
+              <strong>+ Lägg till klassbox:</strong>
+              <select id="selectNewBoxClass">
+                <option value="">-- Välj existerande klass --</option>
+                ${availableClasses.map(c => `<option value="${c.id}">${c.title}</option>`).join('')}
+              </select>
+              <button class="primary" onclick="dbApp.addClassBoxToItem('${item.id}')">Skapa box</button>
+            </div>
+
           </div>
-          <div>${content}</div>
-          ${boxes}
         `;
       }
 
-      renderClassBox(currentTag, classId, items) {
-        const classObj = classId !== 'unassigned' ? this.getTag(classId) : null;
-        const boxTitle = classObj ? classObj.title_plural : "Relaterade";
+      // Rendera en yttre klassbox (# Class 2 Box)
+      renderClassBoxHtml(currentItem, box, boxIndex) {
+        const classObj = this.getTag(box.class_id);
+        const boxTitle = classObj ? classObj.title : (box.custom_name || "Klassbox");
+
+        // Subboxar inuti denna box
+        const subboxesHtml = (box.subboxes || []).map((sub, sIdx) => {
+          const subClassObj = this.getTag(sub.subclass_id);
+          const subTitle = subClassObj ? subClassObj.title : (sub.custom_name || "Subbox");
+
+          // Items inuti denna subbox [ item ] [ item ]
+          const itemsHtml = (sub.items || []).map((itemId, iIdx) => {
+            const itemObj = this.getTag(itemId);
+            const itemName = itemObj ? itemObj.title : itemId;
+            return `
+              <span class="item-pill">
+                ${itemObj ? `<a onclick="dbApp.renderItemPage('${itemObj.id}')">${itemName}</a>` : itemName}
+                <span class="remove-item-btn" onclick="dbApp.removeItemFromSubbox('${currentItem.id}', ${boxIndex}, ${sIdx}, ${iIdx})" title="Ta bort">×</span>
+              </span>
+            `;
+          }).join('');
+
+          return `
+            <div class="class-subbox">
+              <div class="class-subbox-header">
+                ${subClassObj ? `<a class="class-subbox-title" onclick="dbApp.renderItemPage('${subClassObj.id}')"># ${subTitle}</a>` : `<span class="class-subbox-title"># ${subTitle}</span>`}
+                <button style="font-size:11px; padding:2px 6px;" onclick="dbApp.removeSubbox('${currentItem.id}', ${boxIndex}, ${sIdx})">Ta bort subbox</button>
+              </div>
+
+              <!-- Rad med tags/items -->
+              <div class="items-row">
+                ${itemsHtml}
+
+                <!-- Inline tillägg av item inuti subbox -->
+                <div class="inline-item-add">
+                  <input type="text" id="input-item-${boxIndex}-${sIdx}" placeholder="Nytt item..." onkeydown="if(event.key==='Enter') dbApp.addItemToSubbox('${currentItem.id}', ${boxIndex}, ${sIdx})">
+                  <button onclick="dbApp.addItemToSubbox('${currentItem.id}', ${boxIndex}, ${sIdx})">+</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
 
         return `
-          <div class="class-box">
-            <div class="class-box-header">
-              ${classObj ? `<a onclick="dbApp.renderEntryPage('${classObj.id}')">${boxTitle}</a>` : `<strong>${boxTitle}</strong>`}
-              <span style="font-size:11px; color:var(--db-muted);">(${items.length})</span>
+          <div class="class-outer-box">
+            <div class="class-outer-header">
+              <div>
+                ${classObj ? `<a class="class-outer-title" onclick="dbApp.renderItemPage('${classObj.id}')"># ${boxTitle}</a>` : `<span class="class-outer-title"># ${boxTitle}</span>`}
+              </div>
+              <button style="font-size:11px; padding:2px 6px;" onclick="dbApp.removeClassBox('${currentItem.id}', ${boxIndex})">Ta bort box</button>
             </div>
-            <div class="class-box-content">
-              ${items.map(item => `
-                <span class="item-badge">
-                  <a onclick="dbApp.renderEntryPage('${item.id}')">${item.title_singular}</a>
-                  <span class="remove-btn" onclick="dbApp.removeRelation('${currentTag.id}', '${item.id}')">×</span>
-                </span>
-              `).join('')}
-              <input type="text" id="inline-${classId}" placeholder="${this.t('newInBox')} ${boxTitle}..." onkeydown="if(event.key==='Enter') dbApp.handleInlineCreate('${currentTag.id}', '${classId}')" style="width: 140px; padding: 2px 6px;">
+
+            <!-- Lista av underboxar (Class subbox 1, subbox 2...) -->
+            <div class="subbox-list">
+              ${subboxesHtml}
+            </div>
+
+            <!-- Box actions -->
+            <div class="box-footer-actions">
+              <button onclick="dbApp.promptAddSubbox('${currentItem.id}', ${boxIndex})">+ Skapa underbox (Class subbox)</button>
             </div>
           </div>
         `;
       }
 
-      handleInlineCreate(currentTagId, targetClassId) {
-        const input = document.getElementById(`inline-${targetClassId}`);
-        const val = input.value.trim();
-        if (!val) return;
+      // Lägg till en yttre box på ett objekt
+      addClassBoxToItem(itemId) {
+        const select = document.getElementById('selectNewBoxClass');
+        const classId = select.value;
+        if (!classId) {
+          alert("Välj en existerande klass för boxen!");
+          return;
+        }
 
-        let tag = this.getTagByTitle(val);
-        if (!tag) {
-          tag = {
-            id: 'obj-' + Math.random().toString(36).substr(2, 9),
-            title_singular: val,
-            title_plural: val + 's',
-            assigned_class_id: targetClassId !== 'unassigned' ? targetClassId : null,
+        const item = this.getTag(itemId);
+        if (!item) return;
+
+        if (!item.boxes) item.boxes = [];
+        item.boxes.push({
+          class_id: classId,
+          subboxes: []
+        });
+
+        this.sync();
+        this.renderItemPage(itemId);
+      }
+
+      // Skapa en underbox inuti en yttre klassbox
+      promptAddSubbox(itemId, boxIndex) {
+        const name = prompt("Ange namn på underboxen (Class subbox):");
+        if (!name || !name.trim()) return;
+
+        const item = this.getTag(itemId);
+        if (!item || !item.boxes[boxIndex]) return;
+
+        // Kontrollera om det redan finns en klass med det namnet, annars skapa en klass
+        let subClass = this.getTagByTitle(name.trim());
+        if (!subClass) {
+          subClass = {
+            id: 'class-' + Math.random().toString(36).substr(2, 9),
+            title: name.trim(),
+            is_class: true,
+            assigned_class_id: item.boxes[boxIndex].class_id,
             free_text: "",
-            layout_config: { box_order: [], theme_color: "#eaecf0" }
+            boxes: []
           };
-          this.tags.push(tag);
+          this.tags.push(subClass);
+        } else {
+          subClass.is_class = true; // Säkerställ att den räknas som klass
         }
 
-        this.addRelation(currentTagId, tag.id);
-        this.syncToFirebase();
-        this.renderEntryPage(currentTagId);
+        if (!item.boxes[boxIndex].subboxes) item.boxes[boxIndex].subboxes = [];
+        item.boxes[boxIndex].subboxes.push({
+          subclass_id: subClass.id,
+          items: []
+        });
+
+        this.sync();
+        this.renderItemPage(itemId);
       }
 
-      handleQuickLink(currentTagId) {
-        const sel = document.getElementById('linkSelect');
-        if (sel && sel.value) {
-          this.addRelation(currentTagId, sel.value);
-          this.syncToFirebase();
-          this.renderEntryPage(currentTagId);
+      // Lägg till ett item/tag inuti en subbox
+      addItemToSubbox(itemId, boxIndex, subIndex) {
+        const input = document.getElementById(`input-item-${boxIndex}-${subIndex}`);
+        const name = input.value.trim();
+        if (!name) return;
+
+        const item = this.getTag(itemId);
+        if (!item) return;
+
+        const subbox = item.boxes[boxIndex].subboxes[subIndex];
+
+        // Hitta eller skapa item
+        let childObj = this.getTagByTitle(name);
+        if (!childObj) {
+          childObj = {
+            id: 'obj-' + Math.random().toString(36).substr(2, 9),
+            title: name,
+            is_class: false,
+            assigned_class_id: subbox.subclass_id,
+            free_text: "",
+            boxes: []
+          };
+          this.tags.push(childObj);
+        }
+
+        if (!subbox.items) subbox.items = [];
+        if (!subbox.items.includes(childObj.id)) {
+          subbox.items.push(childObj.id);
+        }
+
+        this.sync();
+        this.renderItemPage(itemId);
+      }
+
+      // Ta bort item från subbox
+      removeItemFromSubbox(itemId, boxIndex, subIndex, itemIndex) {
+        const item = this.getTag(itemId);
+        if (!item) return;
+        item.boxes[boxIndex].subboxes[subIndex].items.splice(itemIndex, 1);
+        this.sync();
+        this.renderItemPage(itemId);
+      }
+
+      // Ta bort en hel subbox
+      removeSubbox(itemId, boxIndex, subIndex) {
+        const item = this.getTag(itemId);
+        if (!item) return;
+        item.boxes[boxIndex].subboxes.splice(subIndex, 1);
+        this.sync();
+        this.renderItemPage(itemId);
+      }
+
+      // Ta bort en klassbox
+      removeClassBox(itemId, boxIndex) {
+        const item = this.getTag(itemId);
+        if (!item) return;
+        item.boxes.splice(boxIndex, 1);
+        this.sync();
+        this.renderItemPage(itemId);
+      }
+
+      // Spara fritext
+      saveFreeText(itemId) {
+        const item = this.getTag(itemId);
+        const editor = document.getElementById('freeTextEditor');
+        if (item && editor) {
+          item.free_text = editor.value;
+          this.sync();
+          this.renderItemPage(itemId, false);
         }
       }
 
-      saveText(id) {
-        const tag = this.getTag(id);
-        const area = document.getElementById('editArea');
-        if (tag && area) {
-          tag.free_text = area.value;
-          this.syncToFirebase();
-          this.renderEntryPage(id, 'read');
-        }
-      }
-
+      // Sökning
       handleSearch() {
         const q = document.getElementById('searchInput').value.trim();
         if (!q) return;
         const tag = this.getTagByTitle(q);
         if (tag) {
-          this.renderEntryPage(tag.id);
+          this.renderItemPage(tag.id);
         } else {
-          if (confirm(`"${q}" finns inte i databasen. Skapa som nytt objekt?`)) {
+          if (confirm(`"${q}" finns inte. Vill du skapa det?`)) {
             const newObj = {
               id: 'obj-' + Math.random().toString(36).substr(2, 9),
-              title_singular: q,
-              title_plural: q + 's',
+              title: q,
+              is_class: false,
               assigned_class_id: null,
               free_text: "",
-              layout_config: { box_order: [], theme_color: "#eaecf0" }
+              boxes: []
             };
             this.tags.push(newObj);
-            this.syncToFirebase();
-            this.renderEntryPage(newObj.id, 'edit');
+            this.sync();
+            this.renderItemPage(newObj.id);
           }
         }
       }
 
+      // Skapa nytt objekt modal
       openCreateDialog() {
         const sel = document.getElementById('modalAssignedClass');
-        sel.innerHTML = `<option value="">${this.t('noneOption')}</option>`;
-        this.getAllClasses().forEach(c => {
-          sel.innerHTML += `<option value="${c.id}">${c.title_singular}</option>`;
+        sel.innerHTML = '<option value="">-- Ingen klass --</option>';
+        this.getClasses().forEach(c => {
+          sel.innerHTML += `<option value="${c.id}">${c.title}</option>`;
         });
-        document.getElementById('modalTitleSingular').value = '';
-        document.getElementById('modalTitlePlural').value = '';
+        document.getElementById('modalTitle').value = '';
         document.getElementById('modalFreeText').value = '';
         document.getElementById('createDialog').style.display = 'flex';
       }
@@ -814,58 +937,26 @@
       }
 
       saveNewEntry() {
-        const s = document.getElementById('modalTitleSingular').value.trim();
-        const p = document.getElementById('modalTitlePlural').value.trim();
-        const cid = document.getElementById('modalAssignedClass').value;
-        const txt = document.getElementById('modalFreeText').value;
+        const title = document.getElementById('modalTitle').value.trim();
+        const isClass = document.getElementById('modalIsClass').value === 'true';
+        const assignedClassId = document.getElementById('modalAssignedClass').value || null;
+        const freeText = document.getElementById('modalFreeText').value;
 
-        if (!s) return;
+        if (!title) return;
+
         const newObj = {
-          id: 'obj-' + Math.random().toString(36).substr(2, 9),
-          title_singular: s,
-          title_plural: p || s + 's',
-          assigned_class_id: cid || null,
-          free_text: txt,
-          layout_config: { box_order: [], theme_color: "#eaecf0" }
+          id: (isClass ? 'class-' : 'obj-') + Math.random().toString(36).substr(2, 9),
+          title: title,
+          is_class: isClass,
+          assigned_class_id: assignedClassId,
+          free_text: freeText,
+          boxes: []
         };
 
         this.tags.push(newObj);
-        if (cid) {
-          this.addRelation(newObj.id, cid);
-        }
-        this.syncToFirebase();
+        this.sync();
         this.closeCreateDialog();
-        this.renderEntryPage(newObj.id);
-      }
-
-      renderAllEntries() {
-        this.activeTagId = null;
-        const main = document.getElementById('mainContent');
-        main.innerHTML = `
-          <div class="entry-header">
-            <div class="entry-title-area">
-              <h1>${this.t('allEntriesHeader')}</h1>
-            </div>
-          </div>
-          <ul style="margin-left: 20px;">
-            ${this.tags.map(t => `<li><a onclick="dbApp.renderEntryPage('${t.id}')">${t.title_singular}</a>${t.assigned_class_id ? `<span style="font-size:11px; color:var(--db-muted);">(${this.getTag(t.assigned_class_id)?.title_singular || ''})</span>` : ''}</li>`).join('')}
-          </ul>
-        `;
-      }
-
-      renderAllClasses() {
-        this.activeTagId = null;
-        const main = document.getElementById('mainContent');
-        main.innerHTML = `
-          <div class="entry-header">
-            <div class="entry-title-area">
-              <h1>${this.t('classesHeader')}</h1>
-            </div>
-          </div>
-          <ul style="margin-left: 20px;">
-            ${this.getAllClasses().map(c => `<li><a onclick="dbApp.renderEntryPage('${c.id}')"><strong>${c.title_singular}</strong> (${c.title_plural})</a></li>`).join('')}
-          </ul>
-        `;
+        this.renderItemPage(newObj.id);
       }
     }
 
