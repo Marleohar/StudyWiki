@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Simpel Databas - Compendium Engine</title>
+  <title>Simpel Databas - Pure Graph Engine</title>
 
   <!-- Firebase SDK Compat -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -38,7 +38,6 @@
       min-height: 100vh;
     }
 
-    /* Minimalistisk toppmeny */
     header {
       background-color: #ffffff;
       border-bottom: 1px solid var(--db-border-light);
@@ -46,12 +45,6 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 16px;
-    }
-
-    .header-left {
-      display: flex;
-      align-items: center;
       gap: 16px;
     }
 
@@ -79,17 +72,7 @@
       border-radius: 3px;
     }
 
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .search-bar {
-      display: flex;
-      gap: 6px;
-    }
-
+    .search-bar { display: flex; gap: 6px; }
     input[type="text"], textarea, select {
       padding: 5px 10px;
       font-size: 13px;
@@ -98,7 +81,6 @@
       background: #fff;
       color: var(--db-text);
     }
-
     button {
       background: var(--db-header-bg);
       border: 1px solid var(--db-border);
@@ -107,7 +89,6 @@
       cursor: pointer;
       font-size: 13px;
     }
-
     button:hover { background: #dadde3; }
     button.primary { background: var(--db-link); color: #fff; border-color: #2a4b8d; }
     button.primary:hover { background: var(--db-link-hover); }
@@ -123,9 +104,7 @@
     }
     .status-badge.online { background: #e8f5e9; color: var(--status-online); border: 1px solid #c8e6c9; }
     .status-badge.offline { background: #fff3e0; color: var(--status-offline); border: 1px solid #ffe0b2; }
-    .status-badge.connecting { background: #e3f2fd; color: var(--status-connecting); border: 1px solid #bbdefb; }
 
-    /* Huvudyta */
     .viewport-container {
       max-width: 880px;
       width: 100%;
@@ -141,14 +120,10 @@
       box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     }
 
-    /* TOPPZON */
     .item-top-zone {
       margin-bottom: 20px;
       border-bottom: 1px solid var(--db-border);
       padding-bottom: 14px;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
     }
 
     .item-name {
@@ -159,59 +134,6 @@
       letter-spacing: 0.5px;
     }
 
-    .classes-row {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 6px;
-      margin-top: 8px;
-      font-size: 13px;
-    }
-
-    .class-tag-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      background: #eef2fa;
-      border: 1px solid #cbd5e1;
-      border-radius: 12px;
-      padding: 1px 8px;
-      font-size: 12px;
-    }
-    .class-tag-pill a {
-      color: var(--db-link);
-      text-decoration: none;
-      font-weight: 500;
-    }
-    .class-tag-pill a:hover { text-decoration: underline; }
-    .class-tag-pill .remove-class-btn {
-      color: var(--db-muted);
-      cursor: pointer;
-      font-weight: bold;
-    }
-    .class-tag-pill .remove-class-btn:hover { color: #d32f2f; }
-
-    .type-switcher {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .type-badge {
-      font-size: 11px;
-      padding: 3px 8px;
-      border-radius: 3px;
-      border: 1px solid var(--db-border-light);
-      background: var(--db-bg);
-      font-weight: 600;
-    }
-    .type-badge.class-type {
-      background: #eef2fa;
-      color: var(--db-link);
-      border-color: #cbd5e1;
-    }
-
-    /* FREE TEXT ZONE */
     .free-text-frame {
       border: 1px solid var(--db-border-light);
       border-radius: 3px;
@@ -220,7 +142,6 @@
       margin-bottom: 24px;
       cursor: pointer;
     }
-
     .free-text-frame .free-text-label {
       font-size: 11px;
       color: var(--db-muted);
@@ -230,7 +151,6 @@
       display: flex;
       justify-content: space-between;
     }
-
     .free-text-content {
       font-size: 14px;
       line-height: 1.6;
@@ -238,21 +158,21 @@
       white-space: pre-wrap;
     }
 
-    /* COMPENDIUM & DYNAMIC BOXES */
+    /* GRAPH BOXES */
     .boxes-container {
       display: flex;
       flex-direction: column;
       gap: 20px;
     }
 
-    .compendium-box {
+    .graph-box {
       border: 2px solid var(--db-border);
       border-radius: 4px;
       background: #ffffff;
       padding: 16px;
     }
 
-    .compendium-header {
+    .graph-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -261,14 +181,14 @@
       border-bottom: 1px solid var(--db-border-light);
     }
 
-    .compendium-title {
+    .graph-title {
       font-size: 17px;
       font-weight: bold;
       color: var(--db-text);
       text-decoration: none;
       cursor: pointer;
     }
-    .compendium-title:hover { color: var(--db-link); text-decoration: underline; }
+    .graph-title:hover { color: var(--db-link); text-decoration: underline; }
 
     .subbox-list {
       display: flex;
@@ -277,30 +197,29 @@
       margin-top: 12px;
     }
 
-    .compendium-subbox {
+    .graph-subbox {
       border: 1px solid var(--db-border);
       border-radius: 4px;
       background: var(--db-subbox-bg);
       padding: 12px 14px;
     }
 
-    .compendium-subbox-header {
+    .graph-subbox-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 8px;
     }
-
-    .compendium-subbox-title {
+    .graph-subbox-title {
       font-size: 13px;
       font-weight: bold;
       color: var(--db-muted);
       text-decoration: none;
       cursor: pointer;
     }
-    .compendium-subbox-title:hover { color: var(--db-link); text-decoration: underline; }
+    .graph-subbox-title:hover { color: var(--db-link); text-decoration: underline; }
 
-    /* ITEMS / TAGGAR */
+    /* ITEMS / SATELLITES */
     .items-row {
       display: flex;
       flex-wrap: wrap;
@@ -319,7 +238,6 @@
       font-size: 13px;
       box-shadow: 0 1px 2px rgba(0,0,0,0.03);
     }
-
     .item-pill a {
       color: var(--db-link);
       text-decoration: none;
@@ -328,36 +246,59 @@
     }
     .item-pill a:hover { text-decoration: underline; }
 
+    .satellite-text {
+      color: var(--db-muted);
+      font-size: 12px;
+    }
+    .satellite-text a {
+      color: var(--db-muted);
+    }
+
     .inline-item-add {
       display: inline-flex;
       gap: 4px;
       align-items: center;
       margin-top: 6px;
     }
-
     .inline-item-add input {
       width: 170px;
       padding: 3px 8px;
       font-size: 12px;
       border-radius: 12px;
     }
-
     .inline-item-add button {
       padding: 3px 8px;
       font-size: 11px;
       border-radius: 10px;
     }
 
-    /* SKAPA NY BOX ZONE */
-    .add-box-zone {
-      margin-top: 24px;
+    /* PROSPECTS & RELATION ZONE */
+    .prospects-zone {
+      margin-top: 32px;
       padding: 16px;
       background: #fafafa;
       border: 1px dashed var(--db-border);
       border-radius: 4px;
     }
 
-    /* Modal / Dialog */
+    .prospects-header {
+      font-size: 12px;
+      text-transform: uppercase;
+      font-weight: bold;
+      color: var(--db-muted);
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .add-relation-form {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+      border-top: 1px solid var(--db-border-light);
+      padding-top: 16px;
+    }
+
     .dialog-backdrop {
       display: none;
       position: fixed;
@@ -366,7 +307,6 @@
       align-items: center; justify-content: center;
       z-index: 1000;
     }
-
     .dialog {
       background: #fff;
       border: 1px solid var(--db-border);
@@ -375,7 +315,6 @@
       box-shadow: 0 4px 14px rgba(0,0,0,0.15);
       border-radius: 3px;
     }
-
     .form-group { margin-bottom: 12px; }
     .form-group label { display: block; font-weight: bold; font-size: 12px; margin-bottom: 4px; }
     .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
@@ -385,20 +324,18 @@
 
   <header>
     <div class="header-left">
-      <a class="brand" onclick="dbApp.navigateTo('overview')">
+      <a class="brand" onclick="app.navigateTo('overview')">
         <div class="brand-logo">DB</div>
         <span id="headerAppTitle">Simpel Databas</span>
       </a>
-      <button onclick="dbApp.openCreateDialog()" class="primary" id="btnNewObject">+ Nytt Objekt</button>
+      <button onclick="app.openCreateDialog()" class="primary" id="btnNewNode">+ Ny Nod</button>
     </div>
-
     <div class="search-bar">
-      <input type="text" id="searchInput" placeholder="Sök objekt eller klass..." onkeydown="if(event.key==='Enter') dbApp.handleSearch()">
-      <button onclick="dbApp.handleSearch()" id="btnSearchGo">Gå till</button>
+      <input type="text" id="searchInput" placeholder="Sök..." onkeydown="if(event.key==='Enter') app.handleSearch()">
+      <button onclick="app.handleSearch()" id="btnSearchGo">Gå till</button>
     </div>
-
     <div class="header-actions">
-      <button onclick="dbApp.toggleLanguage()" id="langToggleBtn" style="font-weight: bold;">EN / SV</button>
+      <button onclick="app.toggleLanguage()" id="langToggleBtn" style="font-weight: bold;">EN / SV</button>
       <span id="dbStatus" class="status-badge connecting">☁️ Ansluter...</span>
     </div>
   </header>
@@ -410,30 +347,18 @@
   <!-- Skapa-dialog -->
   <div class="dialog-backdrop" id="createDialog">
     <div class="dialog">
-      <h2 style="font-size: 18px; margin-bottom: 12px;" id="modalHeading">Skapa nytt objekt</h2>
+      <h2 style="font-size: 18px; margin-bottom: 12px;" id="modalHeading">Skapa ny nod</h2>
       <div class="form-group">
         <label id="lblModalTitle">Namn / Titel</label>
-        <input type="text" id="modalTitle" placeholder="t.ex. Hold Portal, Detect Magic...">
+        <input type="text" id="modalTitle" placeholder="t.ex. Fireball, Level 3, Undead...">
       </div>
       <div class="form-group">
-        <label id="lblModalType">Typ</label>
-        <select id="modalIsClass">
-          <option value="false" id="optSimpleObj">Simpelt Objekt</option>
-          <option value="true" id="optClass">Klass</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label id="lblModalClasses">Tillhör Klasser (håll Ctrl/Cmd för flera)</label>
-        <select id="modalAssignedClasses" multiple size="4" style="width: 100%;">
-        </select>
-      </div>
-      <div class="form-group">
-        <label id="lblModalText">Fritext / Beskrivning</label>
+        <label id="lblModalText">Fritext / Anteckningar</label>
         <textarea id="modalFreeText" rows="3"></textarea>
       </div>
       <div class="dialog-actions">
-        <button onclick="dbApp.closeCreateDialog()" id="btnModalCancel">Avbryt</button>
-        <button class="primary" onclick="dbApp.saveNewEntry()" id="btnModalCreate">Skapa</button>
+        <button onclick="app.closeCreateDialog()" id="btnModalCancel">Avbryt</button>
+        <button class="primary" onclick="app.saveNewNode()" id="btnModalCreate">Skapa</button>
       </div>
     </div>
   </div>
@@ -452,292 +377,129 @@
     };
 
     /* =========================================================================
-       2. SPRÅK- OCH ROLLSPELSTEXTER
+       2. I18N
        ========================================================================= */
     const I18N = {
       sv: {
         appTitle: "Simpel Databas",
-        searchPlaceholder: "Sök objekt eller klass...",
+        searchPlaceholder: "Sök nod...",
         searchGo: "Gå till",
-        newObject: "+ Nytt Objekt",
+        newNode: "+ Ny Nod",
         cloudSyncing: "☁️ Ansluter...",
         cloudSynced: "☁️ Synkad",
         cloudLocal: "☁️ Lokal",
         overview: "Översikt",
-        overviewSubtitle: "Simpel Databas / SRD Rollspelsmotor",
-        classes: "Klasser",
-        objects: "Objekt",
-        noClasses: "Inga klasser registrerade",
-        noObjects: "Inga objekt registrerade",
-        classesSubtitle: "Klasser:",
-        noClassesAssigned: "(Inga klasser tilldelade)",
-        addClassBtn: "+ Klass",
-        simpleObject: "SIMPELT OBJEKT",
-        classType: "KLASS",
-        makeClass: "Gör till klass",
-        makeSimple: "Gör till simpelt objekt",
+        allNodes: "Alla Noder i Grafen",
         freeTextTag: "[ Free Text ]",
         clickToEdit: "Klicka för att redigera",
         freeTextEmpty: "Tom fritextzon. Klicka för att skriva...",
         saveText: "Spara text",
         cancel: "Avbryt",
-        compendiumTitle: "Katalog & Medlemmar",
-        generalBoxTitle: "Alla {name}",
-        createInClassPlaceholder: "+ Skapa ny {name}...",
-        addClassBox: "+ Lägg till klassbox / kategori:",
-        selectExistingClass: "-- Välj bland relevanta klasser --",
-        optgroupRelevant: "★ Relevanta för denna sida",
-        optgroupOther: "Övriga klasser i databasen",
-        orWord: "eller",
-        newClassPlaceholder: "Skriv ny underkategori (t.ex. Level 1, Melee)...",
-        addBoxBtn: "Skapa / Lägg till box",
-        inheritanceNoticeMonster: "Denna box sparas på klassen {name} och blir standardlayout för alla dess objekt.",
-        inheritanceNoticeGeneral: "Denna box sparas på detta objekt.",
-        deleteBox: "Ta bort box",
-        modalCreateHeading: "Skapa nytt objekt",
+        prospectsHeader: "Osorterade relationer / Prospects",
+        addBoxBtn: "Skapa Box",
+        selectProspect: "-- Välj från prospects --",
+        createRelationPlaceholder: "Länka till ny eller befintlig nod...",
+        linkBtn: "Skapa länk",
+        removeBox: "Ta bort box",
+        removeSubbox: "Ta bort",
+        inheritedLayout: "Layout ärvd via",
+        modalCreateHeading: "Skapa ny nod",
         modalNameLbl: "Namn / Titel",
-        modalTypeLbl: "Typ",
-        modalClassesLbl: "Tillhör Klasser (håll Ctrl/Cmd för flera)",
         modalTextLbl: "Fritext / Anteckningar",
         modalCancelBtn: "Avbryt",
-        modalCreateBtn: "Skapa"
+        modalCreateBtn: "Skapa",
+        createInBox: "Skapa i rutan..."
       },
       en: {
         appTitle: "Simple Database",
-        searchPlaceholder: "Search object or class...",
+        searchPlaceholder: "Search node...",
         searchGo: "Go",
-        newObject: "+ New Object",
+        newNode: "+ New Node",
         cloudSyncing: "☁️ Connecting...",
         cloudSynced: "☁️ Synced",
         cloudLocal: "☁️ Local",
         overview: "Overview",
-        overviewSubtitle: "Simple Database / SRD Rulebook Engine",
-        classes: "Classes",
-        objects: "Objects",
-        noClasses: "No classes registered",
-        noObjects: "No objects registered",
-        classesSubtitle: "Classes:",
-        noClassesAssigned: "(No classes assigned)",
-        addClassBtn: "+ Class",
-        simpleObject: "SIMPLE OBJECT",
-        classType: "CLASS",
-        makeClass: "Convert to Class",
-        makeSimple: "Convert to Simple Object",
+        allNodes: "All Nodes in Graph",
         freeTextTag: "[ Free Text ]",
         clickToEdit: "Click to edit",
         freeTextEmpty: "Empty free text zone. Click to write...",
         saveText: "Save Text",
         cancel: "Cancel",
-        compendiumTitle: "Compendium Catalog",
-        generalBoxTitle: "All {name}",
-        createInClassPlaceholder: "+ Create new {name}...",
-        addClassBox: "+ Add Class Box / Category:",
-        selectExistingClass: "-- Select relevant class --",
-        optgroupRelevant: "★ Relevant for this page",
-        optgroupOther: "Other database classes",
-        orWord: "or",
-        newClassPlaceholder: "Type new sub-category (e.g. Level 1, Melee)...",
-        addBoxBtn: "Create / Add Box",
-        inheritanceNoticeMonster: "This box is saved on class {name} and becomes the default layout for all its objects.",
-        inheritanceNoticeGeneral: "This box is saved on this object.",
-        deleteBox: "Remove box",
-        modalCreateHeading: "Create New Object",
+        prospectsHeader: "Unsorted Relations / Prospects",
+        addBoxBtn: "Create Box",
+        selectProspect: "-- Select from prospects --",
+        createRelationPlaceholder: "Link to new or existing node...",
+        linkBtn: "Create link",
+        removeBox: "Remove box",
+        removeSubbox: "Remove",
+        inheritedLayout: "Layout inherited via",
+        modalCreateHeading: "Create new node",
         modalNameLbl: "Name / Title",
-        modalTypeLbl: "Type",
-        modalClassesLbl: "Assigned Classes (hold Ctrl/Cmd for multiple)",
         modalTextLbl: "Free Text / Notes",
         modalCancelBtn: "Cancel",
-        modalCreateBtn: "Create"
+        modalCreateBtn: "Create",
+        createInBox: "Create in box..."
       }
     };
 
     /* =========================================================================
-       3. GRUNDDATA MED TVÅSPRÅKIG TEXT (BILINGUAL FREE TEXT)
+       3. DEN RENA GRAF-MODELLEN (Nodes & Edges)
        ========================================================================= */
-    const INITIAL_DATASET = [
-      // Klasser
-      { 
-        id: "class-rpg-class", 
-        title: "Class", 
-        is_class: true, 
-        assigned_classes: [], 
-        free_text: { sv: "Rollspelsklass (t.ex. Ranger, Wizard, Knight, Cleric).", en: "Character classes and vocations in the roleplaying system." }, 
-        template_boxes: [] 
-      },
-      { 
-        id: "class-spell", 
-        title: "Spell", 
-        is_class: true, 
-        assigned_classes: [], 
-        free_text: { sv: "Magiska formler och besvärjelser som kastas av magiker och präster.", en: "Magical spells, incantations, and rituals cast by casters." }, 
-        template_boxes: [] 
-      },
-      { 
-        id: "class-monster", 
-        title: "Monster", 
-        is_class: true, 
-        assigned_classes: [], 
-        free_text: { sv: "Varelser, odjur och bestar.", en: "Creatures, adversaries, and monsters inhabiting the realm." }, 
-        template_boxes: [] 
-      },
-      { 
-        id: "class-undead", 
-        title: "Undead", 
-        is_class: true, 
-        assigned_classes: ["class-monster"], 
-        free_text: { sv: "Odöda varelser som väckts till liv genom nekromanti.", en: "Undead entities reanimated through dark necromantic arts." }, 
-        template_boxes: [] 
-      },
-      { 
-        id: "class-dragon", 
-        title: "Dragon", 
-        is_class: true, 
-        assigned_classes: ["class-monster"], 
-        free_text: { sv: "Urgamla bevingade reptiler med fruktansvärda andedräkter.", en: "Ancient winged reptiles of tremendous power and breath weapons." }, 
-        template_boxes: [] 
-      },
-      { 
-        id: "class-weapon", 
-        title: "Weapon", 
-        is_class: true, 
-        assigned_classes: [], 
-        free_text: { sv: "Vapen och stridsredskap för närstrid och avstånd.", en: "Martial weapons, blades, and implements of combat." }, 
-        template_boxes: [] 
-      },
-      { 
-        id: "class-protective-item", 
-        title: "Protective Item", 
-        is_class: true, 
-        assigned_classes: [], 
-        free_text: { sv: "Sköldar, rustningar och skyddande utrustning.", en: "Shields, armor suits, and defensive warding gear." }, 
-        template_boxes: [] 
-      },
-      { 
-        id: "class-food", 
-        title: "Food", 
-        is_class: true, 
-        assigned_classes: [], 
-        free_text: { sv: "Matvaror, proviant och ingredienser.", en: "Edible provisions, foodstuffs, and cooking components." }, 
-        template_boxes: [] 
-      },
-      { 
-        id: "class-animalia", 
-        title: "Animalia", 
-        is_class: true, 
-        assigned_classes: [], 
-        free_text: { sv: "Djurriket och animaliska produkter.", en: "Animal kingdom and animal-derived products." }, 
-        template_boxes: [] 
-      },
-      { 
-        id: "class-toys", 
-        title: "Toys", 
-        is_class: true, 
-        assigned_classes: [], 
-        free_text: { sv: "Leksaker och prylar.", en: "Playthings and novelty items." }, 
-        template_boxes: [] 
-      },
-      { 
-        id: "class-fridge", 
-        title: "Fridge", 
-        is_class: true, 
-        assigned_classes: [], 
-        free_text: { sv: "Kylskåp för matförvaring.", en: "Refrigerated cabinet for cold food storage." }, 
-        template_boxes: ["class-food"] 
-      },
-      { 
-        id: "class-spice", 
-        title: "Spice", 
-        is_class: true, 
-        assigned_classes: [], 
-        free_text: { sv: "Kryddor och smaksättare.", en: "Culinary seasonings and herbs." }, 
-        template_boxes: [] 
-      },
+    const INIT_NODES = [
+      { id: "n_monster", title: "Monster", free_text: { sv: "Odjur och bestar.", en: "Beasts and monsters." }, boxes: [] },
+      { id: "n_owlbear", title: "Owlbear", free_text: { sv: "Björnuggla.", en: "Bear-owl." }, boxes: [] },
+      { id: "n_dragon", title: "Green Dragon", free_text: { sv: "Grön drake.", en: "Green dragon." }, boxes: [] },
+      { id: "n_attacks", title: "Attacks", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "n_claws", title: "Claws", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "n_bite", title: "Bite", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "n_2d6", title: "2d6", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "n_1d8", title: "1d8", free_text: { sv: "", en: "" }, boxes: [] },
+      
+      { id: "n_class", title: "Class", free_text: { sv: "Rollspelsklass.", en: "RPG Class." }, boxes: [] },
+      { id: "n_cleric", title: "Cleric", free_text: { sv: "Helig krigare.", en: "Holy warrior." }, boxes: [] },
+      { id: "n_wizard", title: "Wizard", free_text: { sv: "Magiker.", en: "Mage." }, boxes: [] },
+      { id: "n_spells", title: "Spells", free_text: { sv: "Trollformler.", en: "Magic spells." }, boxes: [] },
+      { id: "n_level1", title: "Level 1", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "n_level3", title: "Level 3", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "n_cure", title: "Cure Light Wounds", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "n_fireball", title: "Fireball", free_text: { sv: "", en: "" }, boxes: [] }
+    ];
 
-      // Spells
-      { 
-        id: "obj-cure-minor", 
-        title: "Cure Minor Wounds", 
-        is_class: false, 
-        assigned_classes: ["class-spell"], 
-        free_text: { sv: "Återställer en liten mängd hälsa hos målet.", en: "Restores a small amount of vitality and binds light cuts." }, 
-        template_boxes: [] 
-      },
-      { 
-        id: "obj-lightning-bolt", 
-        title: "Lightning Bolt", 
-        is_class: false, 
-        assigned_classes: ["class-spell"], 
-        free_text: { sv: "Skjuter en kraftig blixtlinje genom fienderna.", en: "Releases a straight stroke of electrical power piercing all foes in its line." }, 
-        template_boxes: [] 
-      },
-      { 
-        id: "obj-fire-ball", 
-        title: "Fire Ball", 
-        is_class: false, 
-        assigned_classes: ["class-spell"], 
-        free_text: { sv: "Exploderande eldklot som förbränner allt i radien.", en: "A bright streak that detonates into a roaring blast of flame." }, 
-        template_boxes: [] 
-      },
-
-      // Monster
-      { 
-        id: "obj-ghoul", 
-        title: "Ghoul", 
-        is_class: false, 
-        assigned_classes: ["class-undead"], 
-        free_text: { sv: "Ett glupskt odött monster vars beröring paralyserar.", en: "A ravenous undead scavenger whose touch causes paralysis." }, 
-        template_boxes: [] 
-      },
-      { 
-        id: "obj-skeleton", 
-        title: "Skeleton", 
-        is_class: false, 
-        assigned_classes: ["class-undead"], 
-        free_text: { sv: "Benrangel beväpnad med svärd.", en: "Animated animated skeletal remains of a warrior." }, 
-        template_boxes: [] 
-      },
-      { 
-        id: "obj-owlbear", 
-        title: "Owlbear", 
-        is_class: false, 
-        assigned_classes: ["class-monster"], 
-        free_text: { sv: "Aggressiv korsning mellan björn och uggla.", en: "Monstrous cross between a great owl and a feral grizzly bear." }, 
-        template_boxes: [] 
-      },
-      { 
-        id: "obj-green-dragon", 
-        title: "Green Dragon", 
-        is_class: false, 
-        assigned_classes: ["class-dragon"], 
-        free_text: { sv: "Lömsk och giftig drake som bor i djupa skogar.", en: "Cunning, treacherous dragon with a deadly poisonous chlorine gas breath." }, 
-        template_boxes: [] 
-      },
-
-      // Övriga D&D
-      { id: "obj-sword", title: "Sword", is_class: false, assigned_classes: ["class-weapon"], free_text: { sv: "Ett pålitligt stålsvärd.", en: "A well-balanced steel blade." }, template_boxes: [] },
-      { id: "obj-shield", title: "Shield", is_class: false, assigned_classes: ["class-protective-item"], free_text: { sv: "Rund sköld av trä och metall.", en: "Round shield bound in iron." }, template_boxes: [] },
-      { id: "obj-battle-axe", title: "Battle Axe", is_class: false, assigned_classes: ["class-weapon"], free_text: { sv: "Tung stridsyxa.", en: "Heavy battle axe with a sharp crescent blade." }, template_boxes: [] },
-      { id: "obj-ranger", title: "Ranger", is_class: false, assigned_classes: ["class-rpg-class"], free_text: { sv: "Jägare och spårare.", en: "Wilderness hunter and scout." }, template_boxes: [] },
-      { id: "obj-knight", title: "Knight", is_class: false, assigned_classes: ["class-rpg-class"], free_text: { sv: "Tungt rustad riddare.", en: "Heavy-armored champion." }, template_boxes: [] },
-      { id: "obj-wizard", title: "Wizard", is_class: false, assigned_classes: ["class-rpg-class"], free_text: { sv: "Magins mästare.", en: "Master of arcane sorcery." }, template_boxes: [] },
-      { id: "obj-cleric", title: "Cleric", is_class: false, assigned_classes: ["class-rpg-class"], free_text: { sv: "Helig förkämpe.", en: "Devoted holy warrior and healer." }, template_boxes: [] },
-
-      // Mat & Hus
-      { id: "obj-cheese", title: "Cheese", is_class: false, assigned_classes: ["class-food", "class-animalia"], free_text: { sv: "Lagrad ost gjord på mjölk.", en: "A rich dairy cheese produced from milk." }, template_boxes: [] },
-      { id: "obj-kitchen", title: "Kitchen", is_class: false, assigned_classes: [], free_text: { sv: "Ett kök.", en: "A room equipped for preparing food." }, template_boxes: [] },
-      { id: "obj-table", title: "Table", is_class: false, assigned_classes: [], free_text: { sv: "Ett träbord.", en: "A wooden table." }, template_boxes: [] },
-      { id: "obj-freezer", title: "Freezer", is_class: false, assigned_classes: [], free_text: { sv: "Frys för långtidsförvaring.", en: "Deep freezer for preserved goods." }, template_boxes: [] },
-      { id: "obj-cinnamon", title: "Cinnamon", is_class: false, assigned_classes: ["class-spice"], free_text: { sv: "Aromatisk kanel.", en: "Aromatic ground cinnamon spice." }, template_boxes: [] }
+    const INIT_EDGES = [
+      // Owlbear relations
+      { a: "n_owlbear", b: "n_monster" },
+      { a: "n_owlbear", b: "n_claws" },
+      { a: "n_owlbear", b: "n_bite" },
+      // Dragon relations
+      { a: "n_dragon", b: "n_monster" },
+      { a: "n_dragon", b: "n_bite" },
+      { a: "n_dragon", b: "n_claws" },
+      // Attack properties
+      { a: "n_claws", b: "n_attacks" },
+      { a: "n_claws", b: "n_2d6" },
+      { a: "n_bite", b: "n_attacks" },
+      { a: "n_bite", b: "n_1d8" },
+      
+      // Classes & Spells
+      { a: "n_cleric", b: "n_class" },
+      { a: "n_wizard", b: "n_class" },
+      { a: "n_cure", b: "n_cleric" },
+      { a: "n_cure", b: "n_spells" },
+      { a: "n_cure", b: "n_level1" },
+      { a: "n_fireball", b: "n_wizard" },
+      { a: "n_fireball", b: "n_spells" },
+      { a: "n_fireball", b: "n_level3" }
     ];
 
     /* =========================================================================
-       4. DATABASMOTOR
+       4. GRAFMOTOR & APP
        ========================================================================= */
-    class SimpleDatabaseApp {
+    class GraphApp {
       constructor() {
         this.lang = 'sv';
-        this.tags = [];
-        this.activeTagId = null;
+        this.nodes = [];
+        this.edges = [];
+        this.activeNodeId = null;
         this.db = null;
 
         this.applyLanguage();
@@ -745,28 +507,22 @@
         this.initFirebase();
       }
 
-      t(key) {
-        return I18N[this.lang][key] || key;
-      }
+      t(key) { return I18N[this.lang][key] || key; }
 
-      getFreeText(item) {
-        if (!item || !item.free_text) return '';
-        if (typeof item.free_text === 'string') return item.free_text;
-        return item.free_text[this.lang] || item.free_text['sv'] || item.free_text['en'] || '';
+      getFreeText(node) {
+        if (!node || !node.free_text) return '';
+        if (typeof node.free_text === 'string') return node.free_text;
+        return node.free_text[this.lang] || node.free_text['sv'] || node.free_text['en'] || '';
       }
 
       applyLanguage() {
         document.getElementById('headerAppTitle').innerText = this.t('appTitle');
-        document.getElementById('btnNewObject').innerText = this.t('newObject');
+        document.getElementById('btnNewNode').innerText = this.t('newNode');
         document.getElementById('searchInput').placeholder = this.t('searchPlaceholder');
         document.getElementById('btnSearchGo').innerText = this.t('searchGo');
 
         document.getElementById('modalHeading').innerText = this.t('modalCreateHeading');
         document.getElementById('lblModalTitle').innerText = this.t('modalNameLbl');
-        document.getElementById('lblModalType').innerText = this.t('modalTypeLbl');
-        document.getElementById('optSimpleObj').innerText = this.t('simpleObject');
-        document.getElementById('optClass').innerText = this.t('classType');
-        document.getElementById('lblModalClasses').innerText = this.t('modalClassesLbl');
         document.getElementById('lblModalText').innerText = this.t('modalTextLbl');
         document.getElementById('btnModalCancel').innerText = this.t('modalCancelBtn');
         document.getElementById('btnModalCreate').innerText = this.t('modalCreateBtn');
@@ -776,11 +532,8 @@
         this.lang = this.lang === 'sv' ? 'en' : 'sv';
         this.applyLanguage();
         this.updateCloudBadge(this.cloudState || 'connecting');
-        if (this.activeTagId) {
-          this.renderItemPage(this.activeTagId);
-        } else {
-          this.renderOverview();
-        }
+        if (this.activeNodeId) this.renderPage(this.activeNodeId);
+        else this.renderOverview();
       }
 
       updateCloudBadge(state) {
@@ -799,9 +552,7 @@
       }
 
       initHistoryRouter() {
-        window.addEventListener('popstate', () => {
-          this.routeFromHash();
-        });
+        window.addEventListener('popstate', () => this.routeFromHash());
       }
 
       navigateTo(routeId) {
@@ -810,15 +561,11 @@
 
       routeFromHash() {
         const hash = window.location.hash.replace('#', '').trim();
-        if (!hash || hash === 'overview') {
-          this.renderOverview();
-        } else {
-          const item = this.getTag(hash) || this.getTagByTitle(decodeURIComponent(hash));
-          if (item) {
-            this.renderItemPage(item.id);
-          } else {
-            this.renderOverview();
-          }
+        if (!hash || hash === 'overview') this.renderOverview();
+        else {
+          const node = this.getNode(hash) || this.getNodeByTitle(decodeURIComponent(hash));
+          if (node) this.renderPage(node.id);
+          else this.renderOverview();
         }
       }
 
@@ -826,18 +573,17 @@
         try {
           firebase.initializeApp(firebaseConfig);
           this.db = firebase.firestore();
-
-          this.db.collection('simple_db').doc('compendium_v3').onSnapshot(doc => {
+          this.db.collection('simple_db').doc('pure_graph_v1').onSnapshot(doc => {
             this.updateCloudBadge('online');
-
             if (doc.exists) {
               const data = doc.data();
-              this.tags = (data.tags && data.tags.length > 0) ? data.tags : INITIAL_DATASET;
+              this.nodes = data.nodes || INIT_NODES;
+              this.edges = data.edges || INIT_EDGES;
             } else {
-              this.tags = INITIAL_DATASET;
+              this.nodes = INIT_NODES;
+              this.edges = INIT_EDGES;
               this.sync();
             }
-
             this.routeFromHash();
           }, err => {
             console.error("Firebase Snapshot Error:", err);
@@ -852,676 +598,412 @@
       }
 
       fallbackLocal() {
-        const raw = localStorage.getItem('simpeldb_compendium_v3');
-        this.tags = raw ? JSON.parse(raw) : INITIAL_DATASET;
+        const rawN = localStorage.getItem('pgraph_nodes');
+        const rawE = localStorage.getItem('pgraph_edges');
+        this.nodes = rawN ? JSON.parse(rawN) : INIT_NODES;
+        this.edges = rawE ? JSON.parse(rawE) : INIT_EDGES;
         this.routeFromHash();
       }
 
       async sync() {
         if (this.db) {
           try {
-            await this.db.collection('simple_db').doc('compendium_v3').set({
-              tags: this.tags,
+            await this.db.collection('simple_db').doc('pure_graph_v1').set({
+              nodes: this.nodes,
+              edges: this.edges,
               updatedAt: Date.now()
             });
           } catch (e) {
-            console.warn("Kunde inte spara till Firestore, sparar lokalt:", e);
-            localStorage.setItem('simpeldb_compendium_v3', JSON.stringify(this.tags));
+            localStorage.setItem('pgraph_nodes', JSON.stringify(this.nodes));
+            localStorage.setItem('pgraph_edges', JSON.stringify(this.edges));
           }
         } else {
-          localStorage.setItem('simpeldb_compendium_v3', JSON.stringify(this.tags));
+          localStorage.setItem('pgraph_nodes', JSON.stringify(this.nodes));
+          localStorage.setItem('pgraph_edges', JSON.stringify(this.edges));
         }
       }
 
-      getTag(id) {
-        return this.tags.find(t => t.id === id);
+      /* KÄRNAN I GRAFEN */
+      getNode(id) { return this.nodes.find(n => n.id === id); }
+      getNodeByTitle(title) {
+        const cl = title.toLowerCase().trim();
+        return this.nodes.find(n => n.title.toLowerCase().trim() === cl);
       }
 
-      getTagByTitle(title) {
-        if (!title) return null;
-        const clean = title.toLowerCase().trim();
-        return this.tags.find(t => t.title.toLowerCase().trim() === clean);
+      getNeighbors(nodeId) {
+        return this.edges
+          .filter(e => e.a === nodeId || e.b === nodeId)
+          .map(e => e.a === nodeId ? e.b : e.a);
       }
 
-      getClasses() {
-        return this.tags.filter(t => t.is_class);
+      addRelation(idA, idB) {
+        if (idA === idB) return;
+        const exists = this.edges.some(e => (e.a === idA && e.b === idB) || (e.a === idB && e.b === idA));
+        if (!exists) {
+          this.edges.push({ a: idA, b: idB });
+          this.sync();
+        }
       }
 
-      /* Hitta objekt som tillhör en viss klass */
-      getItemsOfClass(classId) {
-        return this.tags.filter(t => 
-          !t.is_class && t.assigned_classes && t.assigned_classes.includes(classId)
-        );
+      removeRelation(idA, idB) {
+        this.edges = this.edges.filter(e => !((e.a === idA && e.b === idB) || (e.a === idB && e.b === idA)));
+        this.sync();
       }
 
-      /* Kontextbaserad filtrering av klasser i rullgardinen */
-      getContextualClasses(currentPageItem) {
-        const allClasses = this.getClasses().filter(c => c.id !== currentPageItem.id);
-        const relevant = [];
-        const other = [];
+      /* LAYOUT ARV (ORGANISK SYNERGI) */
+      getEffectiveLayout(nodeId) {
+        const node = this.getNode(nodeId);
+        if (node.boxes && node.boxes.length > 0) {
+          return { boxes: node.boxes, inheritedFrom: null };
+        }
+        
+        // Organiskt arv: Leta upp en syskon-nod via första gemensamma granne som har en layout
+        const neighbors = this.getNeighbors(nodeId);
+        for (let n of neighbors) {
+          const siblings = this.getNeighbors(n);
+          for (let s of siblings) {
+            if (s !== nodeId) {
+              const siblingNode = this.getNode(s);
+              if (siblingNode.boxes && siblingNode.boxes.length > 0) {
+                return { boxes: siblingNode.boxes, inheritedFrom: this.getNode(n) };
+              }
+            }
+          }
+        }
+        return { boxes: [], inheritedFrom: null };
+      }
 
-        // Kontextuella indikatorer
-        const memberItems = this.getItemsOfClass(currentPageItem.id);
-        const memberClassesSet = new Set();
-        memberItems.forEach(it => {
-          (it.assigned_classes || []).forEach(cid => {
-            if (cid !== currentPageItem.id) memberClassesSet.add(cid);
+      /* BOX MATEMATIK (INTERSECTION & SATELLITES) */
+      getBoxItems(pageId, boxId, subboxId = null) {
+        const pageNeighbors = new Set(this.getNeighbors(pageId));
+        const boxNeighbors = new Set(this.getNeighbors(boxId));
+
+        let common = [...pageNeighbors].filter(id => boxNeighbors.has(id));
+
+        if (subboxId) {
+          const subNeighbors = new Set(this.getNeighbors(subboxId));
+          common = common.filter(id => subNeighbors.has(id));
+        }
+
+        return common.map(id => {
+          const item = this.getNode(id);
+          // Satelliter: Grannar till 'item' som INTE är page, box, eller subbox
+          const satellitesIds = this.getNeighbors(id).filter(nid => 
+            nid !== pageId && nid !== boxId && nid !== subboxId
+          );
+          return {
+            item,
+            satellites: satellitesIds.map(sid => this.getNode(sid))
+          };
+        });
+      }
+
+      /* PROSPECTS (Osorterade relationer) */
+      getProspects(pageId, effectiveBoxes) {
+        const allNeighbors = this.getNeighbors(pageId);
+        const handledIds = new Set();
+
+        effectiveBoxes.forEach(b => {
+          handledIds.add(b.boxId);
+          (b.subboxes || []).forEach(sub => handledIds.add(sub));
+          // Allt som dragits in i boxarna anses hanterat
+          const items = this.getBoxItems(pageId, b.boxId);
+          items.forEach(res => {
+            handledIds.add(res.item.id);
+            res.satellites.forEach(sat => handledIds.add(sat.id));
           });
         });
 
-        allClasses.forEach(c => {
-          // 1. Är det en underklass till den aktuella sidan?
-          const isChild = (c.assigned_classes || []).includes(currentPageItem.id);
-          // 2. Är den aktuella sidan en underklass till c?
-          const isParent = (currentPageItem.assigned_classes || []).includes(c.id);
-          // 3. Används den av medlemmar på denna sida? (t.ex. Level 1 på Spells)
-          const isUsedByMembers = memberClassesSet.has(c.id);
-
-          if (isChild || isParent || isUsedByMembers) {
-            relevant.push(c);
-          } else {
-            other.push(c);
-          }
-        });
-
-        return { relevant, other };
+        const unhandled = allNeighbors.filter(id => !handledIds.has(id));
+        return unhandled.map(id => this.getNode(id));
       }
 
-      toggleIsClass(tagId) {
-        const tag = this.getTag(tagId);
-        if (!tag) return;
-        tag.is_class = !tag.is_class;
-        if (!tag.template_boxes) tag.template_boxes = [];
-        this.sync();
-        this.renderItemPage(tag.id);
-      }
-
-      promptAddClassToObject(tagId) {
-        const name = prompt(this.lang === 'sv' ? "Skriv namn på klassen du vill tilldela:" : "Enter name of class to assign:");
-        if (!name || !name.trim()) return;
-
-        let cls = this.getTagByTitle(name.trim());
-        if (!cls) {
-          cls = {
-            id: 'class-' + Math.random().toString(36).substr(2, 9),
-            title: name.trim(),
-            is_class: true,
-            assigned_classes: [],
-            free_text: { sv: "", en: "" },
-            template_boxes: []
-          };
-          this.tags.push(cls);
-        } else {
-          cls.is_class = true;
-        }
-
-        const item = this.getTag(tagId);
-        if (!item.assigned_classes) item.assigned_classes = [];
-        if (!item.assigned_classes.includes(cls.id)) {
-          item.assigned_classes.push(cls.id);
-        }
-
-        this.sync();
-        this.renderItemPage(item.id);
-      }
-
-      removeClassFromObject(tagId, classId) {
-        const item = this.getTag(tagId);
-        if (!item || !item.assigned_classes) return;
-        item.assigned_classes = item.assigned_classes.filter(c => c !== classId);
-        this.sync();
-        this.renderItemPage(item.id);
-      }
-
-      /* =========================================================================
-         RENDERING
-         ========================================================================= */
-
+      /* RENDERING */
       renderOverview() {
-        this.activeTagId = null;
+        this.activeNodeId = null;
         const main = document.getElementById('mainContent');
-        const classes = this.getClasses();
-        const objects = this.tags.filter(t => !t.is_class);
-
         main.innerHTML = `
           <div class="item-card">
             <div class="item-top-zone">
-              <div>
-                <h1 class="item-name">${this.t('overview')}</h1>
-                <div style="font-size: 13px; color: var(--db-muted); margin-top: 4px;">${this.t('overviewSubtitle')}</div>
-              </div>
+              <h1 class="item-name">${this.t('overview')}</h1>
             </div>
-
-            <div style="margin-bottom: 24px;">
-              <h3 style="margin-bottom: 8px; border-bottom: 1px solid var(--db-border-light); padding-bottom: 4px;">${this.t('classes')} (${classes.length})</h3>
-              <div class="items-row">
-                ${classes.map(c => `
-                  <span class="item-pill">
-                    <a onclick="dbApp.navigateTo('${c.id}')"># ${c.title}</a>
-                  </span>
-                `).join('') || `<span style="color:var(--db-muted); font-style:italic;">${this.t('noClasses')}</span>`}
-              </div>
-            </div>
-
             <div>
-              <h3 style="margin-bottom: 8px; border-bottom: 1px solid var(--db-border-light); padding-bottom: 4px;">${this.t('objects')} (${objects.length})</h3>
+              <h3 style="margin-bottom: 8px; border-bottom: 1px solid var(--db-border-light); padding-bottom: 4px;">${this.t('allNodes')} (${this.nodes.length})</h3>
               <div class="items-row">
-                ${objects.map(o => {
-                  const classPills = (o.assigned_classes || []).map(cid => {
-                    const c = this.getTag(cid);
-                    return c ? `<span style="font-size:11px; color:var(--db-muted);">${c.title}</span>` : '';
-                  }).filter(Boolean).join(', ');
-
-                  return `
-                    <span class="item-pill">
-                      <a onclick="dbApp.navigateTo('${o.id}')">${o.title}</a>${classPills ? `<span style="font-size:11px; color:var(--db-muted); margin-left:4px;">(${classPills})</span>` : ''}
-                    </span>
-                  `;
-                }).join('') || `<span style="color:var(--db-muted); font-style:italic;">${this.t('noObjects')}</span>`}
+                ${this.nodes.map(n => `
+                  <span class="item-pill"><a onclick="app.navigateTo('${n.id}')">${n.title}</a></span>
+                `).join('')}
               </div>
             </div>
           </div>
         `;
       }
 
-      renderItemPage(tagId, isEditingText = false) {
-        const item = this.getTag(tagId);
-        if (!item) return this.navigateTo('overview');
+      renderPage(nodeId, isEditingText = false) {
+        const node = this.getNode(nodeId);
+        if (!node) return this.navigateTo('overview');
 
-        this.activeTagId = item.id;
+        this.activeNodeId = node.id;
         const main = document.getElementById('mainContent');
 
-        // Multipla klasser
-        const assignedClassesHtml = (item.assigned_classes || []).map(cid => {
-          const c = this.getTag(cid);
-          if (!c) return '';
-          return `
-            <span class="class-tag-pill">
-              <a onclick="dbApp.navigateTo('${c.id}')"># ${c.title}</a>
-              <span class="remove-class-btn" onclick="dbApp.removeClassFromObject('${item.id}', '${c.id}')" title="Koppla bort klass">×</span>
-            </span>
-          `;
-        }).filter(Boolean).join('');
-
-        // Fritext-zon (Tvåspråkig)
-        const currentText = this.getFreeText(item);
+        // Free Text
+        const currentText = this.getFreeText(node);
         let freeTextZone = '';
         if (isEditingText) {
           freeTextZone = `
             <div class="free-text-frame">
-              <div class="free-text-label">
-                <span>${this.t('freeTextTag')} (${this.lang.toUpperCase()})</span>
-              </div>
+              <div class="free-text-label"><span>${this.t('freeTextTag')}</span></div>
               <textarea id="freeTextEditor" style="width:100%; min-height:80px; margin-bottom:8px;">${currentText}</textarea>
               <div style="display:flex; gap:6px;">
-                <button class="primary" onclick="dbApp.saveFreeText('${item.id}')">${this.t('saveText')}</button>
-                <button onclick="dbApp.renderItemPage('${item.id}', false)">${this.t('cancel')}</button>
+                <button class="primary" onclick="app.saveFreeText('${node.id}')">${this.t('saveText')}</button>
+                <button onclick="app.renderPage('${node.id}', false)">${this.t('cancel')}</button>
               </div>
             </div>
           `;
         } else {
           freeTextZone = `
-            <div class="free-text-frame" onclick="dbApp.renderItemPage('${item.id}', true)" title="${this.t('clickToEdit')}">
+            <div class="free-text-frame" onclick="app.renderPage('${node.id}', true)">
               <div class="free-text-label">
                 <span>${this.t('freeTextTag')}</span>
                 <span style="font-size:10px; text-decoration:underline;">${this.t('clickToEdit')}</span>
               </div>
-              <div class="free-text-content">${currentText ? currentText : `<span style="color:var(--db-muted); font-style:italic;">${this.t('freeTextEmpty')}</span>`}</div>
+              <div class="free-text-content">${currentText || `<span style="color:var(--db-muted); font-style:italic;">${this.t('freeTextEmpty')}</span>`}</div>
             </div>
           `;
         }
 
-        // Huvudinnehåll: Om detta är en KLASS (t.ex. Spells) eller ett OBJEKT (t.ex. Owlbear)
-        let mainBoxesHtml = '';
-        if (item.is_class) {
-          mainBoxesHtml = this.renderClassCompendiumView(item);
-        } else {
-          mainBoxesHtml = this.renderObjectBoxesView(item);
+        const layout = this.getEffectiveLayout(node.id);
+        const prospects = this.getProspects(node.id, layout.boxes);
+
+        // BOXAR
+        let boxesHtml = '';
+        if (layout.inheritedFrom) {
+          boxesHtml += `<div style="font-size:11px; color:var(--db-muted); margin-bottom:8px;">💡 ${this.t('inheritedLayout')} <strong>${layout.inheritedFrom.title}</strong></div>`;
         }
 
-        // Kontextbaserad dropdown för box-skaparen
-        const { relevant, other } = this.getContextualClasses(item);
-        let optionsHtml = `<option value="">${this.t('selectExistingClass')}</option>`;
-        if (relevant.length > 0) {
-          optionsHtml += `<optgroup label="${this.t('optgroupRelevant')}">`;
-          relevant.forEach(c => {
-            optionsHtml += `<option value="${c.id}">${c.title}</option>`;
-          });
-          optionsHtml += `</optgroup>`;
-        }
-        if (other.length > 0) {
-          optionsHtml += `<optgroup label="${this.t('optgroupOther')}">`;
-          other.forEach(c => {
-            optionsHtml += `<option value="${c.id}">${c.title}</option>`;
-          });
-          optionsHtml += `</optgroup>`;
-        }
+        boxesHtml += layout.boxes.map((b, bIdx) => {
+          const boxNode = this.getNode(b.boxId);
+          if (!boxNode) return '';
 
-        main.innerHTML = `
-          <div class="item-card">
-            
-            <!-- TOPP: ITEM + KLASSER -->
-            <div class="item-top-zone">
-              <div>
-                <h1 class="item-name">${item.title}</h1>
-                <div class="classes-row">
-                  <span style="font-weight: 500; color: var(--db-muted);">${this.t('classesSubtitle')}</span>
-                  ${assignedClassesHtml || `<span style="font-style:italic; color:var(--db-muted);">${this.t('noClassesAssigned')}</span>`}
-                  <button style="font-size: 11px; padding: 2px 7px; border-radius: 10px;" onclick="dbApp.promptAddClassToObject('${item.id}')">${this.t('addClassBtn')}</button>
+          // Direkt items i boxen (som inte ligger i en subbox)
+          let allItemsInBox = this.getBoxItems(node.id, b.boxId);
+          let handledInSub = new Set();
+
+          const subboxesHtml = (b.subboxes || []).map((subId, sIdx) => {
+            const subNode = this.getNode(subId);
+            const subItems = this.getBoxItems(node.id, b.boxId, subId);
+            subItems.forEach(i => handledInSub.add(i.item.id));
+
+            return `
+              <div class="graph-subbox">
+                <div class="graph-subbox-header">
+                  <a class="graph-subbox-title" onclick="app.navigateTo('${subNode.id}')"># ${subNode.title}</a>
+                  <button style="font-size:11px; padding:2px 6px;" onclick="app.removeSubbox('${node.id}', ${bIdx}, ${sIdx})">${this.t('removeSubbox')}</button>
+                </div>
+                <div class="items-row">
+                  ${subItems.map(res => this.renderPill(res)).join('')}
+                  <div class="inline-item-add">
+                    <input type="text" id="inline-${b.boxId}-${subId}" placeholder="${this.t('createInBox')}" onkeydown="if(event.key==='Enter') app.inlineCreate('${node.id}', '${b.boxId}', '${subId}', this.value)">
+                    <button onclick="app.inlineCreate('${node.id}', '${b.boxId}', '${subId}', document.getElementById('inline-${b.boxId}-${subId}').value)">+</button>
+                  </div>
                 </div>
               </div>
+            `;
+          }).join('');
 
-              <!-- Typ & Ändra till klass -->
-              <div class="type-switcher">
-                <span class="type-badge ${item.is_class ? 'class-type' : ''}">
-                  ${item.is_class ? this.t('classType') : this.t('simpleObject')}
-                </span>
-                <button onclick="dbApp.toggleIsClass('${item.id}')">
-                  ${item.is_class ? this.t('makeSimple') : this.t('makeClass')}
-                </button>
-              </div>
-            </div>
-
-            <!-- FREE TEXT ZONE -->
-            ${freeTextZone}
-
-            <!-- ROLLSPELSBOK / COMPENDIUM BOXAR -->
-            <div class="boxes-container">
-              ${mainBoxesHtml}
-            </div>
-
-            <!-- SKAPA NY BOX ZONE MED KONTEXTFILTER -->
-            <div class="add-box-zone">
-              <div style="font-weight: bold; margin-bottom: 6px;">${this.t('addClassBox')}</div>
-              <div style="display:flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-                <select id="selectNewBoxClass">
-                  ${optionsHtml}
-                </select>
-                <span>${this.t('orWord')}</span>
-                <input type="text" id="inputNewClassName" placeholder="${this.t('newClassPlaceholder')}" style="width: 250px;">
-                <button class="primary" onclick="dbApp.handleCreateBox('${item.id}')">${this.t('addBoxBtn')}</button>
-              </div>
-              <div style="font-size: 11px; color: var(--db-muted); margin-top: 6px;">
-                ${item.is_class 
-                  ? `💡 Denna box/kategori läggs till på katalogen för <strong>${item.title}</strong>.` 
-                  : (item.assigned_classes && item.assigned_classes.length > 0 
-                      ? `💡 ${this.t('inheritanceNoticeMonster').replace('{name}', this.getTag(item.assigned_classes[0])?.title || '')}`
-                      : `💡 ${this.t('inheritanceNoticeGeneral')}`)}
-              </div>
-            </div>
-
-          </div>
-        `;
-      }
-
-      /* ROLLSPELSKATALOG FÖR KLASSER (Spells, Monsters, Weapons etc.) */
-      renderClassCompendiumView(classItem) {
-        const memberItems = this.getItemsOfClass(classItem.id);
-        const subboxClassIds = classItem.template_boxes || [];
-
-        // Om klassen saknar sub-boxar: Visa ALLA medlemmar i en allmän huvudbox
-        if (subboxClassIds.length === 0) {
-          const generalTitle = this.t('generalBoxTitle').replace('{name}', classItem.title);
-          return `
-            <div class="compendium-box">
-              <div class="compendium-header">
-                <div>
-                  <span class="compendium-title"># ${generalTitle}</span>
-                  <span style="font-size: 12px; color: var(--db-muted); margin-left: 6px;">(${memberItems.length})</span>
-                </div>
-              </div>
-
-              <!-- Lista av alla objekt inom klassen -->
-              <div class="items-row">
-                ${memberItems.map(it => `
-                  <span class="item-pill">
-                    <a onclick="dbApp.navigateTo('${it.id}')">${it.title}</a>
-                  </span>
-                `).join('')}
-              </div>
-
-              <!-- INLINE CREATION: Skapa ny spell direkt inuti klassen -->
-              <div class="inline-item-add" style="margin-top: 12px; border-top: 1px dashed var(--db-border-light); padding-top: 8px;">
-                <input type="text" id="inlineClassCreate" placeholder="${this.t('createInClassPlaceholder').replace('{name}', classItem.title)}" onkeydown="if(event.key==='Enter') dbApp.handleCreateItemInsideClass('${classItem.id}')">
-                <button class="primary" onclick="dbApp.handleCreateItemInsideClass('${classItem.id}')">+</button>
-              </div>
-            </div>
-          `;
-        }
-
-        // Om det finns definierade sub-boxar (t.ex. Level 1 Spells, Level 2 Spells)
-        let subboxesHtml = '';
-        const placedIds = new Set();
-
-        subboxClassIds.forEach(subClassId => {
-          const subClass = this.getTag(subClassId);
-          if (!subClass) return;
-
-          // Hitta medlemmar som också har denna sub-klass
-          const subMembers = memberItems.filter(m => (m.assigned_classes || []).includes(subClassId));
-          subMembers.forEach(m => placedIds.add(m.id));
-
-          subboxesHtml += `
-            <div class="compendium-subbox">
-              <div class="compendium-subbox-header">
-                <div>
-                  <a class="compendium-subbox-title" onclick="dbApp.navigateTo('${subClass.id}')"># ${subClass.title}</a>
-                  <span style="font-size: 11px; color: var(--db-muted); margin-left: 6px;">(${subMembers.length})</span>
-                </div>
-                <button style="font-size: 11px; padding: 2px 6px;" onclick="dbApp.removeSubboxFromClass('${classItem.id}', '${subClass.id}')">${this.t('deleteBox')}</button>
-              </div>
-
-              <div class="items-row">
-                ${subMembers.map(it => `
-                  <span class="item-pill">
-                    <a onclick="dbApp.navigateTo('${it.id}')">${it.title}</a>
-                  </span>
-                `).join('')}
-              </div>
-
-              <!-- Inline creation med både huvudklass och subklass tilldelad -->
-              <div class="inline-item-add">
-                <input type="text" id="inlineSub-${subClassId}" placeholder="${this.t('createInClassPlaceholder').replace('{name}', subClass.title)}" onkeydown="if(event.key==='Enter') dbApp.handleCreateItemInsideSubbox('${classItem.id}', '${subClassId}')">
-                <button onclick="dbApp.handleCreateItemInsideSubbox('${classItem.id}', '${subClassId}')">+</button>
-              </div>
-            </div>
-          `;
-        });
-
-        // Osorterade / Allmänna objekt som saknar sub-box
-        const unplaced = memberItems.filter(m => !placedIds.has(m.id));
-        let unplacedHtml = '';
-        if (unplaced.length > 0) {
-          unplacedHtml = `
-            <div class="compendium-subbox" style="background:#fff;">
-              <div class="compendium-subbox-header">
-                <span class="compendium-subbox-title"># Övriga ${classItem.title}</span>
-                <span style="font-size: 11px; color: var(--db-muted);">(${unplaced.length})</span>
-              </div>
-              <div class="items-row">
-                ${unplaced.map(it => `
-                  <span class="item-pill">
-                    <a onclick="dbApp.navigateTo('${it.id}')">${it.title}</a>
-                  </span>
-                `).join('')}
-              </div>
-            </div>
-          `;
-        }
-
-        return `
-          <div class="compendium-box">
-            <div class="compendium-header">
-              <div>
-                <span class="compendium-title"># ${classItem.title} (${memberItems.length})</span>
-              </div>
-            </div>
-            <div class="subbox-list">
-              ${subboxesHtml}
-              ${unplacedHtml}
-            </div>
-            <div class="inline-item-add" style="margin-top: 12px; border-top: 1px dashed var(--db-border-light); padding-top: 8px;">
-              <input type="text" id="inlineClassCreate" placeholder="${this.t('createInClassPlaceholder').replace('{name}', classItem.title)}" onkeydown="if(event.key==='Enter') dbApp.handleCreateItemInsideClass('${classItem.id}')">
-              <button class="primary" onclick="dbApp.handleCreateItemInsideClass('${classItem.id}')">+</button>
-            </div>
-          </div>
-        `;
-      }
-
-      /* VY FÖR INDIVIDUELLA OBJEKT (Owlbear, Green Dragon, etc.) */
-      renderObjectBoxesView(item) {
-        const boxClassIds = new Set();
-        (item.template_boxes || []).forEach(b => boxClassIds.add(b));
-        (item.assigned_classes || []).forEach(cid => {
-          const parentClass = this.getTag(cid);
-          if (parentClass && parentClass.template_boxes) {
-            parentClass.template_boxes.forEach(b => boxClassIds.add(b));
-          }
-        });
-
-        if (boxClassIds.size === 0) return '';
-
-        return Array.from(boxClassIds).map(boxClassId => {
-          const boxClass = this.getTag(boxClassId);
-          if (!boxClass) return '';
-
-          // Hitta objekt som har denna klass och delar relationer
-          const items = this.tags.filter(t => 
-            !t.is_class && t.assigned_classes && t.assigned_classes.includes(boxClassId)
-          );
+          const directItems = allItemsInBox.filter(res => !handledInSub.has(res.item.id));
 
           return `
-            <div class="compendium-box">
-              <div class="compendium-header">
+            <div class="graph-box">
+              <div class="graph-header">
                 <div>
-                  <a class="compendium-title" onclick="dbApp.navigateTo('${boxClass.id}')"># ${boxClass.title}</a>
-                  <span style="font-size: 12px; color: var(--db-muted); margin-left: 6px;">(${items.length})</span>
+                  <a class="graph-title" onclick="app.navigateTo('${boxNode.id}')"># ${boxNode.title}</a>
                 </div>
-                <button style="font-size: 11px; padding: 2px 6px;" onclick="dbApp.removeBoxFromLayout('${item.id}', '${boxClassId}')">${this.t('deleteBox')}</button>
+                <button style="font-size:11px; padding:2px 6px;" onclick="app.removeBox('${node.id}', ${bIdx})">${this.t('removeBox')}</button>
               </div>
-
               <div class="items-row">
-                ${items.map(it => `
-                  <span class="item-pill">
-                    <a onclick="dbApp.navigateTo('${it.id}')">${it.title}</a>
-                  </span>
-                `).join('')}
-
+                ${directItems.map(res => this.renderPill(res)).join('')}
                 <div class="inline-item-add">
-                  <input type="text" id="inlineObj-${boxClassId}" placeholder="${this.t('createInClassPlaceholder').replace('{name}', boxClass.title)}" onkeydown="if(event.key==='Enter') dbApp.handleCreateItemInsideClass('${boxClassId}')">
-                  <button onclick="dbApp.handleCreateItemInsideClass('${boxClassId}')">+</button>
+                  <input type="text" id="inline-${b.boxId}" placeholder="${this.t('createInBox')}" onkeydown="if(event.key==='Enter') app.inlineCreate('${node.id}', '${b.boxId}', null, this.value)">
+                  <button onclick="app.inlineCreate('${node.id}', '${b.boxId}', null, document.getElementById('inline-${b.boxId}').value)">+</button>
                 </div>
+              </div>
+              ${subboxesHtml ? `<div class="subbox-list">${subboxesHtml}</div>` : ''}
+              <div style="margin-top:8px;">
+                <button style="font-size:11px;" onclick="app.promptAddSubbox('${node.id}', ${bIdx})">+ Underbox</button>
               </div>
             </div>
           `;
         }).join('');
+
+        // PROSPECTS
+        const prospectsHtml = `
+          <div class="prospects-zone">
+            <div class="prospects-header">
+              <span>${this.t('prospectsHeader')} (${prospects.length})</span>
+            </div>
+            <div class="items-row">
+              ${prospects.map(p => `
+                <span class="item-pill">
+                  <a onclick="app.navigateTo('${p.id}')">${p.title}</a>
+                  <span style="color:var(--db-muted); cursor:pointer; font-weight:bold; margin-left:4px;" onclick="app.removeRelation('${node.id}', '${p.id}')">×</span>
+                </span>
+              `).join('')}
+            </div>
+
+            <div class="add-relation-form">
+              <input type="text" id="inputNewRelation" placeholder="${this.t('createRelationPlaceholder')}" style="width:250px;" onkeydown="if(event.key==='Enter') app.addRelationFromInput('${node.id}')">
+              <button class="primary" onclick="app.addRelationFromInput('${node.id}')">${this.t('linkBtn')}</button>
+            </div>
+
+            <div style="margin-top:16px; border-top:1px dashed var(--db-border-light); padding-top:12px;">
+              <select id="prospectToBoxSelect">
+                <option value="">${this.t('selectProspect')}</option>
+                ${prospects.map(p => `<option value="${p.id}">${p.title}</option>`).join('')}
+              </select>
+              <button onclick="app.turnProspectIntoBox('${node.id}')">${this.t('addBoxBtn')}</button>
+            </div>
+          </div>
+        `;
+
+        main.innerHTML = `
+          <div class="item-card">
+            <div class="item-top-zone">
+              <h1 class="item-name">${node.title}</h1>
+            </div>
+            ${freeTextZone}
+            <div class="boxes-container">
+              ${boxesHtml}
+            </div>
+            ${prospectsHtml}
+          </div>
+        `;
       }
 
-      /* Skapa nytt objekt direkt i vald klass */
-      handleCreateItemInsideClass(classId) {
-        const input = document.getElementById('inlineClassCreate') || document.getElementById(`inlineObj-${classId}`);
-        if (!input) return;
-        const name = input.value.trim();
-        if (!name) return;
-
-        let obj = this.getTagByTitle(name);
-        if (!obj) {
-          obj = {
-            id: 'obj-' + Math.random().toString(36).substr(2, 9),
-            title: name,
-            is_class: false,
-            assigned_classes: [classId],
-            free_text: { sv: "", en: "" },
-            template_boxes: []
-          };
-          this.tags.push(obj);
-        } else {
-          if (!obj.assigned_classes) obj.assigned_classes = [];
-          if (!obj.assigned_classes.includes(classId)) {
-            obj.assigned_classes.push(classId);
-          }
-        }
-
-        this.sync();
-        this.renderItemPage(this.activeTagId);
+      renderPill(result) {
+        const sats = result.satellites.length > 0 
+          ? ` <span class="satellite-text">(${result.satellites.map(s => `<a onclick="app.navigateTo('${s.id}')">${s.title}</a>`).join(', ')})</span>` 
+          : '';
+        return `
+          <span class="item-pill" style="padding: 6px 12px;">
+            <a onclick="app.navigateTo('${result.item.id}')" style="font-weight:bold;">${result.item.title}</a>
+            ${sats}
+          </span>
+        `;
       }
 
-      /* Skapa nytt objekt inuti en sub-box (tilldelas både klass och subklass) */
-      handleCreateItemInsideSubbox(mainClassId, subClassId) {
-        const input = document.getElementById(`inlineSub-${subClassId}`);
-        if (!input) return;
-        const name = input.value.trim();
-        if (!name) return;
-
-        let obj = this.getTagByTitle(name);
-        if (!obj) {
-          obj = {
-            id: 'obj-' + Math.random().toString(36).substr(2, 9),
-            title: name,
-            is_class: false,
-            assigned_classes: [mainClassId, subClassId],
-            free_text: { sv: "", en: "" },
-            template_boxes: []
-          };
-          this.tags.push(obj);
-        } else {
-          if (!obj.assigned_classes) obj.assigned_classes = [];
-          if (!obj.assigned_classes.includes(mainClassId)) obj.assigned_classes.push(mainClassId);
-          if (!obj.assigned_classes.includes(subClassId)) obj.assigned_classes.push(subClassId);
-        }
-
-        this.sync();
-        this.renderItemPage(this.activeTagId);
-      }
-
-      /* Lägg till ny box / kategori */
-      handleCreateBox(itemId) {
-        const select = document.getElementById('selectNewBoxClass');
-        const customInput = document.getElementById('inputNewClassName');
-        let classId = select.value;
-        const newClassName = customInput.value.trim();
-
-        if (newClassName) {
-          let existingClass = this.getTagByTitle(newClassName);
-          if (!existingClass) {
-            existingClass = {
-              id: 'class-' + Math.random().toString(36).substr(2, 9),
-              title: newClassName,
-              is_class: true,
-              assigned_classes: [],
-              free_text: { sv: "", en: "" },
-              template_boxes: []
-            };
-            this.tags.push(existingClass);
-          } else {
-            existingClass.is_class = true;
-          }
-          classId = existingClass.id;
-        }
-
-        if (!classId) {
-          alert(this.lang === 'sv' ? "Välj eller skriv ett namn." : "Select or type a name.");
-          return;
-        }
-
-        const item = this.getTag(itemId);
-        if (!item) return;
-
-        const targetEntity = (!item.is_class && item.assigned_classes && item.assigned_classes.length > 0)
-          ? this.getTag(item.assigned_classes[0])
-          : item;
-
-        if (!targetEntity.template_boxes) targetEntity.template_boxes = [];
-        if (!targetEntity.template_boxes.includes(classId)) {
-          targetEntity.template_boxes.push(classId);
-        }
-
-        this.sync();
-        this.renderItemPage(itemId);
-      }
-
-      removeSubboxFromClass(classId, subClassId) {
-        const cls = this.getTag(classId);
-        if (cls && cls.template_boxes) {
-          cls.template_boxes = cls.template_boxes.filter(id => id !== subClassId);
-          this.sync();
-          this.renderItemPage(classId);
-        }
-      }
-
-      removeBoxFromLayout(itemId, boxClassId) {
-        const item = this.getTag(itemId);
-        if (!item) return;
-
-        const targetEntity = (!item.is_class && item.assigned_classes && item.assigned_classes.length > 0)
-          ? this.getTag(item.assigned_classes[0])
-          : item;
-
-        if (targetEntity.template_boxes) {
-          targetEntity.template_boxes = targetEntity.template_boxes.filter(b => b !== boxClassId);
-          this.sync();
-          this.renderItemPage(itemId);
-        }
-      }
-
-      saveFreeText(itemId) {
-        const item = this.getTag(itemId);
+      /* ACTIONS */
+      saveFreeText(nodeId) {
+        const node = this.getNode(nodeId);
         const editor = document.getElementById('freeTextEditor');
-        if (item && editor) {
-          if (typeof item.free_text !== 'object' || item.free_text === null) {
-            item.free_text = { sv: item.free_text || '', en: item.free_text || '' };
-          }
-          item.free_text[this.lang] = editor.value;
+        if (node && editor) {
+          if (!node.free_text || typeof node.free_text === 'string') node.free_text = {sv:'', en:''};
+          node.free_text[this.lang] = editor.value;
           this.sync();
-          this.renderItemPage(itemId, false);
+          this.renderPage(nodeId, false);
         }
+      }
+
+      addRelationFromInput(pageId) {
+        const val = document.getElementById('inputNewRelation').value.trim();
+        if (!val) return;
+        let node = this.getNodeByTitle(val);
+        if (!node) {
+          node = { id: 'n_' + Math.random().toString(36).substr(2, 9), title: val, free_text: {sv:'', en:''}, boxes: [] };
+          this.nodes.push(node);
+        }
+        this.addRelation(pageId, node.id);
+        this.renderPage(pageId);
+      }
+
+      turnProspectIntoBox(pageId) {
+        const boxId = document.getElementById('prospectToBoxSelect').value;
+        if (!boxId) return;
+        const page = this.getNode(pageId);
+        if (!page.boxes) page.boxes = [];
+        page.boxes.push({ boxId, subboxes: [] });
+        this.sync();
+        this.renderPage(pageId);
+      }
+
+      inlineCreate(pageId, boxId, subboxId, rawValue) {
+        const val = rawValue.trim();
+        if (!val) return;
+        let node = this.getNodeByTitle(val);
+        if (!node) {
+          node = { id: 'n_' + Math.random().toString(36).substr(2, 9), title: val, free_text: {sv:'', en:''}, boxes: [] };
+          this.nodes.push(node);
+        }
+        // Skapa relations-triangeln!
+        this.addRelation(node.id, pageId);
+        this.addRelation(node.id, boxId);
+        if (subboxId) this.addRelation(node.id, subboxId);
+        this.renderPage(pageId);
+      }
+
+      promptAddSubbox(pageId, boxIdx) {
+        const name = prompt(this.lang === 'sv' ? "Namn på underbox (måste finnas i prospects):" : "Subbox name (must be a prospect):");
+        if (!name) return;
+        let node = this.getNodeByTitle(name);
+        if (!node) {
+          node = { id: 'n_' + Math.random().toString(36).substr(2, 9), title: name, free_text: {sv:'', en:''}, boxes: [] };
+          this.nodes.push(node);
+        }
+        this.addRelation(pageId, node.id); // Skapa relationen först
+        const page = this.getNode(pageId);
+        page.boxes[boxIdx].subboxes.push(node.id);
+        this.sync();
+        this.renderPage(pageId);
+      }
+
+      removeBox(pageId, bIdx) {
+        const p = this.getNode(pageId);
+        if (p.boxes) p.boxes.splice(bIdx, 1);
+        this.sync();
+        this.renderPage(pageId);
+      }
+
+      removeSubbox(pageId, bIdx, sIdx) {
+        const p = this.getNode(pageId);
+        if (p.boxes && p.boxes[bIdx]) p.boxes[bIdx].subboxes.splice(sIdx, 1);
+        this.sync();
+        this.renderPage(pageId);
       }
 
       handleSearch() {
         const q = document.getElementById('searchInput').value.trim();
         if (!q) return;
-        const tag = this.getTagByTitle(q);
-        if (tag) {
-          this.navigateTo(tag.id);
-        } else {
-          if (confirm(this.lang === 'sv' ? `"${q}" finns inte. Skapa som nytt objekt?` : `"${q}" does not exist. Create?`)) {
-            const newObj = {
-              id: 'obj-' + Math.random().toString(36).substr(2, 9),
-              title: q,
-              is_class: false,
-              assigned_classes: [],
-              free_text: { sv: "", en: "" },
-              template_boxes: []
-            };
-            this.tags.push(newObj);
+        const n = this.getNodeByTitle(q);
+        if (n) this.navigateTo(n.id);
+        else {
+          if (confirm(`"${q}" finns inte. Skapa?`)) {
+            const newNode = { id: 'n_' + Math.random().toString(36).substr(2, 9), title: q, free_text: {sv:'', en:''}, boxes: [] };
+            this.nodes.push(newNode);
             this.sync();
-            this.navigateTo(newObj.id);
+            this.navigateTo(newNode.id);
           }
         }
       }
 
       openCreateDialog() {
-        const sel = document.getElementById('modalAssignedClasses');
-        sel.innerHTML = '';
-        this.getClasses().forEach(c => {
-          sel.innerHTML += `<option value="${c.id}">${c.title}</option>`;
-        });
         document.getElementById('modalTitle').value = '';
         document.getElementById('modalFreeText').value = '';
         document.getElementById('createDialog').style.display = 'flex';
       }
-
-      closeCreateDialog() {
-        document.getElementById('createDialog').style.display = 'none';
-      }
-
-      saveNewEntry() {
+      closeCreateDialog() { document.getElementById('createDialog').style.display = 'none'; }
+      saveNewNode() {
         const title = document.getElementById('modalTitle').value.trim();
-        const isClass = document.getElementById('modalIsClass').value === 'true';
-        const freeText = document.getElementById('modalFreeText').value;
-
-        const sel = document.getElementById('modalAssignedClasses');
-        const selectedClasses = Array.from(sel.selectedOptions).map(opt => opt.value);
-
+        const text = document.getElementById('modalFreeText').value;
         if (!title) return;
-
-        const newObj = {
-          id: (isClass ? 'class-' : 'obj-') + Math.random().toString(36).substr(2, 9),
-          title: title,
-          is_class: isClass,
-          assigned_classes: selectedClasses,
-          free_text: { sv: freeText, en: freeText },
-          template_boxes: []
-        };
-
-        this.tags.push(newObj);
+        const newNode = { id: 'n_' + Math.random().toString(36).substr(2, 9), title, free_text: {sv:text, en:text}, boxes: [] };
+        this.nodes.push(newNode);
         this.sync();
         this.closeCreateDialog();
-        this.navigateTo(newObj.id);
+        this.navigateTo(newNode.id);
       }
     }
 
-    const dbApp = new SimpleDatabaseApp();
+    const app = new GraphApp();
   </script>
 </body>
 </html>
