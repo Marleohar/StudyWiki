@@ -16,7 +16,6 @@
       --db-border: #a2a9b1;
       --db-border-light: #c8ccd1;
       --db-header-bg: #eaecf0;
-      --db-subbox-bg: #f8f9fa;
       --db-link: #3366cc;
       --db-link-hover: #447ff5;
       --db-text: #202122;
@@ -34,12 +33,10 @@
       min-height: 100vh; overflow-x: hidden;
     }
 
-    /* BEHÖRIGHET (CSS RULES) */
+    /* BEHÖRIGHET */
     body[data-mode="read"] .creative-only { display: none !important; }
-    body[data-mode="read"] .admin-only { display: none !important; }
-    body[data-mode="create"] .admin-only { display: none !important; }
     body[data-mode="read"] .readonly-only { display: inline-block; }
-    body[data-mode="create"] .readonly-only, body[data-mode="admin"] .readonly-only { display: none; }
+    body[data-mode="create"] .readonly-only { display: none; }
 
     header {
       background-color: #ffffff; border-bottom: 1px solid var(--db-border-light);
@@ -57,10 +54,11 @@
     .search-bar input { flex-grow: 1; min-width: 0; width: 100%; }
     .search-bar button { flex-shrink: 0; white-space: nowrap; }
 
-    input[type="text"], textarea, select {
+    input[type="text"], input[type="color"], textarea, select {
       padding: 8px 12px; font-size: 14px; border: 1px solid var(--db-border);
       border-radius: 4px; background: #fff; color: var(--db-text); width: 100%; max-width: 100%;
     }
+    input[type="color"] { padding: 2px 4px; height: 38px; cursor: pointer; }
     
     button {
       background: var(--db-header-bg); border: 1px solid var(--db-border);
@@ -91,19 +89,11 @@
     .item-top-zone { margin-bottom: 16px; border-bottom: 1px solid var(--db-border); padding-bottom: 12px; }
     .item-name-row { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px; }
     .item-name { font-family: 'Linux Libertine', 'Georgia', Times, serif; font-size: 32px; line-height: 1.1; letter-spacing: 0.5px; display:flex; align-items:center; gap:8px;}
-    .admin-controls { display: flex; gap: 6px; flex-wrap: wrap; }
+    .creative-controls { display: flex; gap: 6px; flex-wrap: wrap; }
 
-    .node-icon { cursor: pointer; padding: 4px 6px; border-radius: 4px; transition: background 0.2s; background:#f6f7f8; border:1px solid var(--db-border-light); font-size:24px;}
+    .node-icon { cursor: pointer; padding: 4px 6px; border-radius: 4px; transition: background 0.2s; background:#f6f7f8; border:1px solid var(--db-border-light); font-size:24px; display:inline-block; text-align:center;}
     .node-icon.creative-only:hover { background: #eaecf0; border-color:var(--db-border); }
     .node-icon.readonly-only { cursor: default; border:none; background:transparent; padding:0; }
-
-    /* FAKTARUTOR (Triangulering) */
-    .auto-facts-row { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; padding: 12px 16px; background: #eef2fa; border: 1px solid #cbd5e1; border-radius: 4px; }
-    .auto-fact-item { font-size: 14px; display: inline-flex; align-items: center; gap: 4px; }
-    .auto-fact-item strong a { color: var(--db-text); text-decoration: none; font-weight: bold; }
-    .auto-fact-item a.val-link { color: var(--db-link); text-decoration: none; }
-    .action-icon-btn { background: transparent; border: none; padding: 0 4px; font-size: 14px; color: var(--db-muted); cursor: pointer; border-radius: 2px; }
-    .action-icon-btn:hover { background: #cbd5e1; color: #000; }
 
     /* FREE TEXT */
     .free-text-frame { border: 1px solid var(--db-border-light); border-radius: 4px; padding: 12px; background: #fafafa; margin-bottom: 24px; cursor: pointer; }
@@ -111,23 +101,19 @@
     .free-text-label { font-size: 11px; color: var(--db-muted); text-transform: uppercase; margin-bottom: 6px; display: flex; justify-content: space-between; }
     .free-text-content { font-size: 14px; white-space: pre-wrap; }
 
-    /* IKON-KLUSTER */
-    .icon-cluster { margin-bottom: 16px; padding: 16px; background: #ffffff; border: 1px solid var(--db-border); border-radius: 4px; }
-    .cluster-header { font-size: 18px; font-weight: bold; color: var(--db-text); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--db-border-light); display:flex; align-items:center; gap:8px;}
-    
-    /* TAGGAR / PILLS */
-    .items-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-    .item-pill {
-      display: inline-flex; align-items: center; padding: 4px 10px;
-      background: #ffffff; border: 1px solid var(--db-border); border-radius: 16px;
-      font-size: 13px; box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    /* NY ENKEL TELEFONLISTA - INGA RUTOR */
+    .flat-list-container { margin-bottom: 24px; width: 100%; }
+    .list-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 6px 0; border-bottom: 1px solid var(--db-border-light);
     }
-    .item-pill a { color: var(--db-link); text-decoration: none; font-weight: 500; cursor: pointer; }
-    .remove-item-btn { color: var(--db-muted); cursor: pointer; font-weight: bold; margin-left: 6px; font-size: 14px; }
-    .remove-item-btn:hover { color: #d32f2f; }
-    .satellite-text { color: var(--db-muted); font-size: 12px; margin-left: 4px;}
-    .satellite-text a { color: var(--db-muted); text-decoration: none;}
-    .satellite-text a:hover { text-decoration: underline;}
+    .list-row:last-child { border-bottom: none; }
+    .list-row-left { display: flex; align-items: center; gap: 12px; }
+    .list-symbol { font-size: 16px; width: 20px; text-align: center; font-weight: bold; }
+    .list-title { font-size: 15px; font-weight: 500; color: var(--db-text); text-decoration: none; cursor: pointer; }
+    .list-title:hover { text-decoration: underline; color: var(--db-link); }
+    .unlink-btn { background: transparent; border: none; color: var(--db-muted); font-size: 16px; cursor: pointer; padding: 2px 8px; border-radius: 4px; }
+    .unlink-btn:hover { color: #d32f2f; background: #fce4e4; }
 
     .form-stack { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; width: 100%; }
     .form-stack button { width: 100%; }
@@ -200,6 +186,25 @@
     </div>
   </div>
 
+  <!-- Utseende-dialog (Ikon & Färg) -->
+  <div class="dialog-backdrop" id="appearanceDialog">
+    <div class="dialog">
+      <h2 style="font-size: 18px; margin-bottom: 16px;">Ändra Utseende (Tagg/Ikon)</h2>
+      <div style="margin-bottom: 12px;">
+        <label style="font-weight: bold; font-size: 12px; display: block; margin-bottom: 4px;">Symbol (Text eller Emoji)</label>
+        <input type="text" id="appIconInput" placeholder="t.ex. &, ☆, eller ⚔️" maxlength="10">
+      </div>
+      <div style="margin-bottom: 12px;">
+        <label style="font-weight: bold; font-size: 12px; display: block; margin-bottom: 4px;">Färg (Påverkar textsymboler)</label>
+        <input type="color" id="appColorInput">
+      </div>
+      <div class="dialog-actions-stacked">
+        <button type="button" class="primary" onclick="app.saveAppearance()">Spara Utseende</button>
+        <button type="button" onclick="app.closeAppearanceDialog()">Avbryt</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Mass-skapa-dialog -->
   <div class="dialog-backdrop" id="batchDialog">
     <div class="dialog" style="max-width: 500px;">
@@ -219,7 +224,7 @@
     </div>
   </div>
 
-  <!-- Multilänk-dialog (Behållen för flexibilitet) -->
+  <!-- Länka dialog -->
   <div class="dialog-backdrop" id="linkDialog">
     <div class="dialog">
       <h2 style="font-size: 18px; margin-bottom: 12px;">Länka till noder</h2>
@@ -231,21 +236,6 @@
       <div class="dialog-actions-stacked">
         <button type="button" class="primary" onclick="app.executeLinkNodes()">Länka alla</button>
         <button type="button" onclick="app.closeLinkDialog()">Avbryt</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Swap Värde-dialog (För Faktarutorna) -->
-  <div class="dialog-backdrop" id="swapDialog">
-    <div class="dialog">
-      <h2 style="font-size: 18px; margin-bottom: 12px;">Byt ut värde</h2>
-      <div style="margin-bottom: 12px;">
-        <label style="font-weight: bold; font-size: 12px; display: block; margin-bottom: 4px;">Välj nod att byta mot:</label>
-        <select id="swapSelect"></select>
-      </div>
-      <div class="dialog-actions-stacked">
-        <button type="button" class="primary" onclick="app.executeSwap()">Genomför byte</button>
-        <button type="button" onclick="app.closeSwapDialog()">Avbryt</button>
       </div>
     </div>
   </div>
@@ -262,10 +252,10 @@
 
     // Reserv-data om databasen är helt tom
     const BX_NODES = [
-      { id: "hub_class", title: "Class", icon: "🛡️", free_text: {sv:"",en:""} },
-      { id: "hub_monster", title: "Monster", icon: "🐲", free_text: {sv:"",en:""} },
-      { id: "c_fighter", title: "Fighter", icon: "⚔️", free_text: {sv:"",en:""} },
-      { id: "m_goblin", title: "Goblin", icon: "👹", free_text: {sv:"",en:""} }
+      { id: "hub_class", title: "Class", icon: "🛡️", color: "#202122", free_text: {sv:"",en:""} },
+      { id: "hub_monster", title: "Monster", icon: "🐲", color: "#202122", free_text: {sv:"",en:""} },
+      { id: "c_fighter", title: "Fighter", icon: "⚔️", color: "#202122", free_text: {sv:"",en:""} },
+      { id: "m_goblin", title: "Goblin", icon: "👹", color: "#202122", free_text: {sv:"",en:""} }
     ];
     const BX_EDGES = [
       { a: "c_fighter", b: "hub_class" },
@@ -277,6 +267,7 @@
         this.nodes = [];
         this.edges = [];
         this.activeNodeId = null;
+        this.appearanceTargetId = null; // För ikon/färg redigering
         this.targetPageForLink = null;
         this.pendingLinks = [];
         this.db = null;
@@ -295,7 +286,6 @@
         const lockBtn = document.getElementById('btnModeLock');
         if (this.mode === 'read') { lockBtn.innerHTML = '🔒 Läs-läge'; lockBtn.style.color = 'var(--db-text)'; } 
         else if (this.mode === 'create') { lockBtn.innerHTML = '🔓 Skapar-läge'; lockBtn.style.color = '#2e7d32'; } 
-        else if (this.mode === 'admin') { lockBtn.innerHTML = '🛠️️ Admin-läge'; lockBtn.style.color = '#d32f2f'; }
       }
 
       promptModeUnlock() {
@@ -307,18 +297,13 @@
             return;
         }
         const pwd = prompt("Ange lösenord för att byta läge:");
-        if (pwd === "Marvei83") this.mode = 'create';
-        else if (pwd === "Oinz82") this.mode = 'admin';
+        // Endast Creative behövs enligt Franks nya regler. Marvei83 löser allt.
+        if (pwd === "Marvei83" || pwd === "Oinz82") this.mode = 'create';
         else if (pwd !== null && pwd.trim() !== '') alert("Fel lösenord.");
         this.updateModeUI();
       }
 
-      checkAdmin() {
-        if (this.mode === 'admin') return true;
-        alert("Kräver Admin-läge (Lösenord: Oinz82). Klicka på låset i menyn.");
-        return false;
-      }
-      checkCreative() { return (this.mode === 'create' || this.mode === 'admin'); }
+      checkCreative() { return (this.mode === 'create'); }
 
       getDocName() { return (this.currentLibrary === 'DnD') ? 'nordverket_live' : 'nv_lib_' + this.currentLibrary; }
 
@@ -433,7 +418,7 @@
       getOrCreateNode(title) {
         let node = this.getNodeByTitle(title);
         if (!node) {
-          node = { id: 'n_' + Math.random().toString(36).substr(2, 9), title, icon: '🏷️', free_text: {sv:'', en:''} };
+          node = { id: 'n_' + Math.random().toString(36).substr(2, 9), title, icon: '&', color: '#202122', free_text: {sv:'', en:''} };
           this.nodes.push(node);
         }
         return node;
@@ -451,7 +436,7 @@
       }
 
       requestRenameNode(nodeId) {
-        if (!this.checkAdmin()) return;
+        if (!this.checkCreative()) return; // Ändrad till Creative Mode
         const node = this.getNode(nodeId);
         const newName = prompt("Ange nytt namn:", node.title);
         if (newName && newName.trim() && newName !== node.title) {
@@ -463,8 +448,8 @@
       }
 
       requestDeleteNode(nodeId) {
-        if (!this.checkAdmin()) return;
-        if (confirm("Är du säker på att du vill radera noden och alla dess relationer?")) {
+        if (!this.checkCreative()) return; // Ändrad till Creative Mode från Admin
+        if (confirm("Är du säker på att du vill radera noden och alla dess relationer helt?")) {
           this.nodes = this.nodes.filter(n => n.id !== nodeId);
           this.edges = this.edges.filter(e => e.a !== nodeId && e.b !== nodeId);
           this.sync();
@@ -472,47 +457,29 @@
         }
       }
 
-      requestChangeIcon(nodeId) {
+      // NY DIALOG FÖR UTSEENDE (Ikon + Färg)
+      openAppearanceDialog(nodeId) {
         if (!this.checkCreative()) return;
         const node = this.getNode(nodeId);
-        const newIcon = prompt("Ange ikon/kategori (t.ex. ⚔️, 🛡️, Vapen):", node.icon || '🏷️');
-        if (newIcon !== null && newIcon.trim() !== '') {
-            node.icon = newIcon.trim();
+        this.appearanceTargetId = nodeId;
+        document.getElementById('appIconInput').value = node.icon || '&';
+        document.getElementById('appColorInput').value = node.color || '#202122';
+        document.getElementById('appearanceDialog').style.display = 'flex';
+      }
+      closeAppearanceDialog() {
+        this.appearanceTargetId = null;
+        document.getElementById('appearanceDialog').style.display = 'none';
+      }
+      saveAppearance() {
+        if (!this.appearanceTargetId) return;
+        const node = this.getNode(this.appearanceTargetId);
+        if (node) {
+            node.icon = document.getElementById('appIconInput').value.trim() || '&';
+            node.color = document.getElementById('appColorInput').value;
             this.sync();
-            this.renderPage(nodeId);
+            this.renderPage(this.activeNodeId || this.appearanceTargetId);
         }
-      }
-
-      // SÄKRAD OCH FÖRBÄTTRAD FAKTARUTE-LOGIK (VÄND OCH BYT)
-      flipAutoFact(bId, cId) {
-        if(!this.checkCreative()) return;
-        let edge = this.edges.find(e => (e.a === bId && e.b === cId) || (e.a === cId && e.b === bId));
-        if (!edge) return;
-        let currentLabelId = edge.labelFirst ? edge.labelFirst : (this.getNeighbors(bId).length >= this.getNeighbors(cId).length ? bId : cId);
-        edge.labelFirst = (currentLabelId === bId) ? cId : bId;
-        this.sync();
-        this.renderPage(this.activeNodeId);
-      }
-
-      openSwapDialog(pageId, labelId, oldValId) {
-        if(!this.checkCreative()) return;
-        this.swapContext = { pageId, labelId, oldValId };
-        const prospects = this.getNeighbors(pageId).filter(id => id !== labelId && id !== oldValId).map(id => this.getNode(id)).filter(Boolean);
-        const sel = document.getElementById('swapSelect');
-        sel.innerHTML = '<option value="">-- Välj nod att byta mot --</option>' + prospects.map(p => `<option value="${p.id}">${p.title}</option>`).join('');
-        document.getElementById('swapDialog').style.display = 'flex';
-      }
-      closeSwapDialog() { document.getElementById('swapDialog').style.display = 'none'; }
-      executeSwap() {
-        const newValId = document.getElementById('swapSelect').value;
-        if (!newValId) return;
-        const { pageId, labelId, oldValId } = this.swapContext;
-        this.edges = this.edges.filter(e => !((e.a === pageId && e.b === oldValId) || (e.a === oldValId && e.b === pageId)));
-        this.addRelation(pageId, newValId);
-        this.addRelation(labelId, newValId);
-        this.sync();
-        this.closeSwapDialog();
-        this.renderPage(pageId);
+        this.closeAppearanceDialog();
       }
 
       // CORE PARSER FÖR KEDJOR (Nod1: Nod2: Nod3; Nod4)
@@ -553,29 +520,30 @@
         });
       }
 
-      renderPill(result, pageIdContext) {
-        if (!result || !result.item) return '';
-        const sats = result.satellites && result.satellites.length > 0 
-          ? ` <span class="satellite-text">(${result.satellites.map(s => `<a onclick="app.navigateTo('${s.id}')">${s.title}</a>`).join(', ')})</span>` 
-          : '';
-        return `
-          <span class="item-pill">
-            <a onclick="app.navigateTo('${result.item.id}')">${result.item.title}</a>${sats}
-            <span class="remove-item-btn creative-only" onclick="app.requestRemoveRelation('${pageIdContext}', '${result.item.id}')" title="Kapa relation">×</span>
-          </span>
-        `;
-      }
-
       renderOverview() {
         this.activeNodeId = null;
         const main = document.getElementById('mainContent');
+        
+        // Sortera noderna alfabetiskt i översikten
+        const sortedNodes = [...this.nodes].sort((a,b) => a.title.localeCompare(b.title));
+
+        const listRows = sortedNodes.map(n => `
+          <div class="list-row">
+            <div class="list-row-left">
+              <span class="list-symbol" style="color: ${n.color || '#202122'};">${n.icon || '&'}</span>
+              <a class="list-title" onclick="app.navigateTo('${n.id}')">${n.title}</a>
+            </div>
+            <button class="unlink-btn creative-only" onclick="app.requestDeleteNode('${n.id}')" title="Radera Nod">🗑</button>
+          </div>
+        `).join('');
+
         main.innerHTML = `
           <div class="item-card">
             <div class="item-top-zone"><h1 class="item-name">Översikt</h1></div>
             <div>
               <h3 style="margin-bottom: 8px; border-bottom: 1px solid var(--db-border-light); padding-bottom: 4px;">Alla Noder i Grafen (${this.nodes.length})</h3>
-              <div class="items-row">
-                ${this.nodes.map(n => `<span class="item-pill"><a onclick="app.navigateTo('${n.id}')">${n.title}</a></span>`).join('')}
+              <div class="flat-list-container">
+                ${listRows}
               </div>
             </div>
           </div>
@@ -590,74 +558,33 @@
 
         // HÄMTA ALLA RELATIONER FÖR SIDAN
         const allNeighbors = this.getNeighbors(node.id);
-        const umbrellas = {};
-
-        // LETA EFTER TRIANGLAR (FÖR AUTO-FAKTA)
-        for(let i=0; i<allNeighbors.length; i++) {
-          for(let j=i+1; j<allNeighbors.length; j++) {
-            const idA = allNeighbors[i];
-            const idB = allNeighbors[j];
-            let edge = this.edges.find(e => (e.a === idA && e.b === idB) || (e.a === idB && e.b === idA));
-            if(edge) {
-              let parentId, childId;
-              if (edge.labelFirst) {
-                parentId = edge.labelFirst;
-                childId = (parentId === idA) ? idB : idA;
-              } else {
-                const degA = this.getNeighbors(idA).length;
-                const degB = this.getNeighbors(idB).length;
-                parentId = degA >= degB ? idA : idB;
-                childId = degA >= degB ? idB : idA;
-              }
-              if (!umbrellas[parentId]) umbrellas[parentId] = new Set();
-              umbrellas[parentId].add(childId);
-            }
-          }
-        }
-
-        const autoFacts = [];
-        const handledByTriangles = new Set();
-
-        Object.keys(umbrellas).forEach(parentId => {
-          const children = Array.from(umbrellas[parentId]);
-          const parentNode = this.getNode(parentId);
-          if(!parentNode) return;
-          // Om det bara är 1 barn => Skapa faktaruta (THAC0: 14)
-          if(children.length === 1) {
-            const childNode = this.getNode(children[0]);
-            if (childNode) {
-                autoFacts.push({ label: parentNode, val: childNode });
-                handledByTriangles.add(parentId);
-                handledByTriangles.add(children[0]);
-            }
-          }
-        });
-
-        // RESTEN BLIR IKON-KLUSTER
-        const clusterIds = allNeighbors.filter(id => !handledByTriangles.has(id));
+        
+        // GRUPPERA PÅ IKON OCH FÄRG (Franks telefonlista-klustring)
         const grouped = {};
-        clusterIds.forEach(id => {
+        allNeighbors.forEach(id => {
             const n = this.getNode(id);
             if (!n) return;
-            const icon = n.icon || '🏷️';
-            if(!grouped[icon]) grouped[icon] = [];
-            grouped[icon].push(n);
+            const icon = n.icon || '&';
+            const color = n.color || '#202122';
+            const groupKey = `${icon}|${color}`;
+            if (!grouped[groupKey]) grouped[groupKey] = [];
+            grouped[groupKey].push(n);
         });
 
-        // BYGG HTML FÖR IKON-KLUSTER
-        const clustersHtml = Object.keys(grouped).sort().map(icon => {
-            const items = grouped[icon];
-            const pills = items.map(item => {
-                // Satelliter för klustrade items (som inte är aktuella sidan)
-                const sats = this.getNeighbors(item.id).filter(sid => sid !== node.id).map(sid => this.getNode(sid)).filter(Boolean);
-                return this.renderPill({ item, satellites: sats }, node.id);
-            }).join('');
-            return `
-            <div class="icon-cluster">
-                <div class="cluster-header"><span class="cluster-icon">${icon}</span></div>
-                <div class="items-row">${pills}</div>
-            </div>
-            `;
+        // BYGG DEN FLATA TELEFONLISTAN
+        const listHtml = Object.keys(grouped).sort().map(key => {
+            const [icon, color] = key.split('|');
+            const items = grouped[key].sort((a,b) => a.title.localeCompare(b.title));
+            
+            return items.map(item => `
+              <div class="list-row">
+                <div class="list-row-left">
+                  <span class="list-symbol" style="color: ${color};">${icon}</span>
+                  <a class="list-title" onclick="app.navigateTo('${item.id}')">${item.title}</a>
+                </div>
+                <button class="unlink-btn creative-only" onclick="app.requestRemoveRelation('${node.id}', '${item.id}')" title="Koppla bort relation">×</button>
+              </div>
+            `).join('');
         }).join('');
 
         // Fritext
@@ -680,20 +607,6 @@
           </div>
         `;
 
-        // Faktarutor HTML
-        let autoFactsHtml = '';
-        if (autoFacts.length > 0) {
-          autoFactsHtml = `<div class="auto-facts-row">
-            ${autoFacts.map(t => `<div class="auto-fact-item">
-              <strong><a onclick="app.navigateTo('${t.label.id}')">${t.label.title}</a>:</strong> 
-              <a class="val-link" onclick="app.navigateTo('${t.val.id}')">${t.val.title}</a>
-              <button type="button" class="action-icon-btn creative-only" onclick="app.flipAutoFact('${t.label.id}', '${t.val.id}')" title="Vänd">⇄</button>
-              <button type="button" class="action-icon-btn creative-only" onclick="app.openSwapDialog('${node.id}', '${t.label.id}', '${t.val.id}')" title="Byt ut">🔄</button>
-              <button type="button" class="action-icon-btn creative-only" style="color:#d32f2f;" onclick="app.requestRemoveRelation('${node.id}', '${t.val.id}')" title="Kapa">×</button>
-            </div>`).join('')}
-          </div>`;
-        }
-
         // Inline-skapare HTML
         const inputZone = `
           <div class="creative-only" style="margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--db-border-light);">
@@ -714,19 +627,23 @@
             <div class="item-top-zone">
               <div class="item-name-row">
                 <h1 class="item-name">
-                  <span class="node-icon creative-only" onclick="app.requestChangeIcon('${node.id}')" title="Byt ikon">${node.icon || '🏷️'}</span>
-                  <span class="node-icon readonly-only">${node.icon || '🏷️'}</span>
+                  <span class="node-icon creative-only" style="color: ${node.color || '#202122'}" onclick="app.openAppearanceDialog('${node.id}')" title="Ändra Ikon & Färg">${node.icon || '&'}</span>
+                  <span class="node-icon readonly-only" style="color: ${node.color || '#202122'}">${node.icon || '&'}</span>
                   ${node.title}
                 </h1>
-                <div class="admin-controls">
-                  <button type="button" class="admin-only" style="font-size:11px; padding:4px 8px;" onclick="app.requestRenameNode('${node.id}')">✎ Byt namn</button>
-                  <button type="button" class="btn-danger admin-only" style="font-size:11px; padding:4px 8px;" onclick="app.requestDeleteNode('${node.id}')">🗑 Radera</button>
+                <div class="creative-controls">
+                  <button type="button" class="creative-only btn-ghost" style="font-size:11px; padding:4px 8px; border: 1px solid var(--db-border);" onclick="app.requestRenameNode('${node.id}')">✎ Byt namn</button>
+                  <button type="button" class="btn-danger creative-only" style="font-size:11px; padding:4px 8px;" onclick="app.requestDeleteNode('${node.id}')">🗑 Radera</button>
                 </div>
               </div>
             </div>
-            ${autoFactsHtml}
+            
             ${freeTextZone}
-            ${clustersHtml}
+            
+            <div class="flat-list-container">
+              ${listHtml}
+            </div>
+
             ${inputZone}
           </div>
         `;
@@ -754,7 +671,7 @@
         const title = document.getElementById('modalTitle').value.trim();
         if (!title) return;
         if (this.getNodeByTitle(title)) return alert(`Namnet är upptaget.`);
-        const newNode = { id: 'n_' + Math.random().toString(36).substr(2, 9), title, icon: '🏷️', free_text: {sv:document.getElementById('modalFreeText').value, en:document.getElementById('modalFreeText').value} };
+        const newNode = { id: 'n_' + Math.random().toString(36).substr(2, 9), title, icon: '&', color: '#202122', free_text: {sv:document.getElementById('modalFreeText').value, en:document.getElementById('modalFreeText').value} };
         this.nodes.push(newNode);
         this.sync();
         this.closeCreateDialog();
@@ -812,7 +729,7 @@
           container.innerHTML = this.pendingLinks.map((name, idx) => {
               const isNew = !this.getNodeByTitle(name);
               const nyText = isNew ? ` <span style="color:var(--db-link); font-size:11px;">(ny)</span>` : '';
-              return `<span class="item-pill" style="background:#eef2fa;">${name}${nyText} <span class="remove-item-btn" onclick="app.removePendingLink(${idx})">×</span></span>`;
+              return `<span style="background:#eef2fa; padding: 4px 8px; border-radius: 12px; border: 1px solid var(--db-border-light); font-size: 13px;">${name}${nyText} <span style="cursor:pointer; color:var(--db-muted); margin-left:4px; font-weight:bold;" onclick="app.removePendingLink(${idx})">×</span></span>`;
           }).join('');
       }
       executeLinkNodes() {
