@@ -40,7 +40,6 @@
       overflow-x: hidden;
     }
 
-    /* MOBILVÄNLIG HEADER */
     header {
       background-color: #ffffff; border-bottom: 1px solid var(--db-border-light);
       padding: 10px 16px; display: flex; flex-wrap: wrap; align-items: center;
@@ -101,9 +100,14 @@
       display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px;
       padding: 12px 16px; background: #eef2fa; border: 1px solid #cbd5e1; border-radius: 4px;
     }
-    .auto-fact-item { font-size: 14px; }
+    .auto-fact-item { font-size: 14px; display: inline-flex; align-items: center; gap: 4px; }
     .auto-fact-item strong a { color: var(--db-text); text-decoration: none; font-weight: bold; }
     .auto-fact-item a.val-link { color: var(--db-link); text-decoration: none; }
+    .flip-btn {
+      background: transparent; border: none; padding: 0 4px; font-size: 14px;
+      color: var(--db-muted); cursor: pointer; border-radius: 2px;
+    }
+    .flip-btn:hover { background: #cbd5e1; color: #000; }
 
     /* FREE TEXT */
     .free-text-frame {
@@ -136,7 +140,7 @@
     .satellite-text a { color: var(--db-muted); text-decoration: none;}
     .satellite-text a:hover { text-decoration: underline;}
 
-    /* MOBILVÄNLIGA FORMULÄR (Staplade) */
+    /* MOBILVÄNLIGA FORMULÄR */
     .form-stack { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; width: 100%; }
     .form-stack button { width: 100%; }
     
@@ -157,7 +161,7 @@
     .dialog-actions-stacked { display: flex; flex-direction: column; gap: 8px; margin-top: 20px; }
     .dialog-actions-stacked button { width: 100%; padding: 10px; font-size: 15px; }
 
-    /* Layout-justeringar för tablet/desktop */
+    /* Layout för surfplatta/desktop */
     @media (min-width: 600px) {
       .form-stack { flex-direction: row; align-items: stretch; }
       .form-stack button { width: auto; }
@@ -179,7 +183,7 @@
       </a>
     </div>
     <div class="search-bar">
-      <input type="text" id="searchInput" list="existingNodesList" placeholder="Sök..." onkeydown="if(event.key==='Enter') app.handleSearch()">
+      <input type="text" id="searchInput" list="existingNodesList" placeholder="Sök..." onkeydown="if(event.key==='Enter') { event.preventDefault(); app.handleSearch(); }">
       <button type="button" onclick="app.handleSearch()" id="btnSearchGo">Gå till</button>
     </div>
     <div class="header-actions">
@@ -228,17 +232,20 @@
     </div>
   </div>
 
-  <!-- Länka nod-dialog -->
+  <!-- Multilänk-dialog (Ersätter gamla Länka Nod) -->
   <div class="dialog-backdrop" id="linkDialog">
     <div class="dialog">
-      <h2 style="font-size: 18px; margin-bottom: 12px;" id="linkHeading">Länka till nod</h2>
+      <h2 style="font-size: 18px; margin-bottom: 12px;" id="linkHeading">Länka till noder</h2>
       <div style="margin-bottom: 12px;">
-        <label style="font-weight: bold; font-size: 12px; display: block; margin-bottom: 4px;">Sök befintlig eller skapa ny</label>
-        <input type="text" id="linkNodeInput" list="existingNodesList" placeholder="Börja skriva namnet...">
+        <label style="font-weight: bold; font-size: 12px; display: block; margin-bottom: 4px;" id="lblLinkSearch">Skriv namn och tryck Enter för att lägga i lista</label>
+        <input type="text" id="linkNodeInput" list="existingNodesList" placeholder="Börja skriva..." onkeydown="if(event.key==='Enter') { event.preventDefault(); app.addPendingLink(); }">
       </div>
+      <!-- Här listas alla noder man håller på att lägga till -->
+      <div id="pendingLinksContainer" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px;"></div>
+      
       <div class="dialog-actions-stacked">
-        <button type="button" class="primary" onclick="app.executeLinkNode()">Länka</button>
-        <button type="button" onclick="app.closeLinkDialog()">Avbryt</button>
+        <button type="button" class="primary" onclick="app.executeLinkNodes()" id="btnLinkSubmit">Länka alla</button>
+        <button type="button" onclick="app.closeLinkDialog()" id="btnLinkCancel">Avbryt</button>
       </div>
     </div>
   </div>
@@ -260,67 +267,33 @@
         cloudSynced: "☁️ Synkad", cloudLocal: "☁️ Lokal", overview: "Översikt",
         allNodes: "Alla Noder i Grafen", freeTextTag: "[ Free Text ]", clickToEdit: "Klicka för att redigera",
         freeTextEmpty: "Tom fritextzon. Klicka för att skriva...", saveText: "Spara text", cancel: "Avbryt",
-        prospectsHeader: "Osorterade relationer (Prospects)", addBoxBtn: "Skapa Box", linkBtn: "Länka till nod",
-        linkDialogHeading: "Länka nod", removeBox: "Ta bort", removeSubbox: "Ta bort",
-        inheritedLayout: "Layout ärvd från", modalCreateHeading: "Skapa ny nod",
-        modalNameLbl: "Namn / Titel (Måste vara unikt)", modalTextLbl: "Fritext / Anteckningar",
-        modalCancelBtn: "Avbryt", modalCreateBtn: "Skapa", batchHeading: "Mass-skapa noder",
-        batchInstr: "Skriv rader med formatet 'Huvudnod: Nod 1, Nod 2'", batchCreateAction: "Kör",
-        createInBox: "Sök/Skapa i rutan...", backToOverview: "← Tillbaka till Översikt", layoutTargetLbl: "Spara box på:"
+        prospectsHeader: "Osorterade relationer (Prospects)", addBoxBtn: "Skapa Box", 
+        linkBtn: "Länka till noder", linkDialogHeading: "Länka till noder", linkSubmit: "Länka alla", linkCancel: "Avbryt",
+        linkSearchLbl: "Skriv namn och tryck Enter för att lägga i lista", newText: "ny",
+        removeBox: "Ta bort", removeSubbox: "Ta bort", inheritedLayout: "Layout ärvd från", 
+        modalCreateHeading: "Skapa ny nod", modalNameLbl: "Namn / Titel (Måste vara unikt)", 
+        modalTextLbl: "Fritext / Anteckningar", modalCancelBtn: "Avbryt", modalCreateBtn: "Skapa", 
+        batchHeading: "Mass-skapa noder", batchInstr: "Skriv rader med formatet 'Huvudnod: Nod 1, Nod 2'", 
+        batchCreateAction: "Kör", createInBox: "Sök/Skapa i rutan...", backToOverview: "← Tillbaka till Översikt", 
+        layoutTargetLbl: "Spara box på:", flipWeight: "Byt ordning (Spara vikt)"
       },
       en: {
         appTitle: "Nerd Network", searchPlaceholder: "Search node...", searchGo: "Go",
-        newNode: "+ New Node", batchNode: "+ Batch Create", cloudSyncing: "☁️ Connecting...",
+        newNode: "+ New Node", batchNode: "+ Batch Create", cloudSyncing: "☁️️ Connecting...",
         cloudSynced: "☁️ Synced", cloudLocal: "☁️ Local", overview: "Overview",
         allNodes: "All Nodes in Graph", freeTextTag: "[ Free Text ]", clickToEdit: "Click to edit",
         freeTextEmpty: "Empty free text zone. Click to write...", saveText: "Save Text", cancel: "Cancel",
-        prospectsHeader: "Unsorted Relations (Prospects)", addBoxBtn: "Create Box", linkBtn: "Link to node",
-        linkDialogHeading: "Link Node", removeBox: "Remove", removeSubbox: "Remove",
-        inheritedLayout: "Layout inherited from", modalCreateHeading: "Create new node",
-        modalNameLbl: "Name / Title (Must be unique)", modalTextLbl: "Free Text / Notes",
-        modalCancelBtn: "Cancel", modalCreateBtn: "Create", batchHeading: "Batch Create",
-        batchInstr: "Write rows using format 'Main Node: Node 1, Node 2'", batchCreateAction: "Execute",
-        createInBox: "Search/Create in box...", backToOverview: "← Back to Overview", layoutTargetLbl: "Save box to:"
+        prospectsHeader: "Unsorted Relations (Prospects)", addBoxBtn: "Create Box", 
+        linkBtn: "Link to nodes", linkDialogHeading: "Link to nodes", linkSubmit: "Link all", linkCancel: "Cancel",
+        linkSearchLbl: "Type name and press Enter to add to list", newText: "new",
+        removeBox: "Remove", removeSubbox: "Remove", inheritedLayout: "Layout inherited from", 
+        modalCreateHeading: "Create new node", modalNameLbl: "Name / Title (Must be unique)", 
+        modalTextLbl: "Free Text / Notes", modalCancelBtn: "Cancel", modalCreateBtn: "Create", 
+        batchHeading: "Batch Create", batchInstr: "Write rows using format 'Main Node: Node 1, Node 2'", 
+        batchCreateAction: "Execute", createInBox: "Search/Create in box...", backToOverview: "← Back to Overview", 
+        layoutTargetLbl: "Save box to:", flipWeight: "Swap direction (Save weight)"
       }
     };
-
-    const BX_NODES = [
-      { id: "hub_class", title: "Class", free_text: {sv:"",en:""}, boxes: [] },
-      { id: "hub_monster", title: "Monster", free_text: {sv:"",en:""}, boxes: [] },
-      { id: "hub_spell", title: "Spell", free_text: {sv:"",en:""}, boxes: [] },
-      { id: "hub_weapon", title: "Weapon", free_text: {sv:"",en:""}, boxes: [] },
-      { id: "hub_undead", title: "Undead", free_text: {sv:"",en:""}, boxes: [] },
-      { id: "hub_dragon", title: "Dragon", free_text: {sv:"",en:""}, boxes: [] },
-      { id: "c_fighter", title: "Fighter", free_text: {sv:"",en:""}, boxes: [] },
-      { id: "c_cleric", title: "Cleric", free_text: {sv:"",en:""}, boxes: [] },
-      { id: "c_magicuser", title: "Magic-User", free_text: {sv:"",en:""}, boxes: [] },
-      { id: "s_cure", title: "Cure Light Wounds", free_text: {sv:"",en:""}, boxes: [] },
-      { id: "s_fireball", title: "Fireball", free_text: {sv:"",en:""}, boxes: [] },
-      { id: "m_skeleton", title: "Skeleton", free_text: {sv:"",en:""}, boxes: [] },
-      { id: "m_zombie", title: "Zombie", free_text: {sv:"",en:""}, boxes: [] },
-      { id: "m_wraith", title: "Wraith", free_text: {sv:"",en:""}, boxes: [] },
-      { id: "m_owlbear", title: "Owlbear", free_text: {sv:"",en:""}, boxes: [] },
-      { id: "w_sword", title: "Sword", free_text: {sv:"",en:""}, boxes: [] },
-      { id: "a_hitdice", title: "Hit Dice", free_text: {sv:"",en:""}, boxes: [] },
-      { id: "a_hd1", title: "HD 1", free_text: {sv:"",en:""}, boxes: [] },
-      { id: "a_hd5", title: "HD 5", free_text: {sv:"",en:""}, boxes: [] }
-    ];
-
-    const BX_EDGES = [
-      { a: "c_fighter", b: "hub_class" }, { a: "c_cleric", b: "hub_class" }, { a: "c_magicuser", b: "hub_class" },
-      { a: "s_cure", b: "hub_spell" }, { a: "s_cure", b: "c_cleric" },
-      { a: "s_fireball", b: "hub_spell" }, { a: "s_fireball", b: "c_magicuser" },
-      { a: "w_sword", b: "hub_weapon" }, 
-      { a: "hub_undead", b: "hub_monster" },
-      { a: "m_skeleton", b: "hub_monster" }, { a: "m_skeleton", b: "hub_undead" },
-      { a: "m_zombie", b: "hub_monster" }, { a: "m_zombie", b: "hub_undead" },
-      { a: "m_wraith", b: "hub_monster" }, { a: "m_wraith", b: "hub_undead" },
-      { a: "m_owlbear", b: "hub_monster" },
-      { a: "m_owlbear", b: "a_hitdice" }, { a: "m_owlbear", b: "a_hd5" },
-      { a: "a_hitdice", b: "a_hd5" }, 
-      { a: "m_skeleton", b: "a_hitdice" }, { a: "m_skeleton", b: "a_hd1" },
-      { a: "a_hitdice", b: "a_hd1" }
-    ];
 
     class GraphApp {
       constructor() {
@@ -329,6 +302,7 @@
         this.edges = [];
         this.activeNodeId = null;
         this.targetPageForLink = null;
+        this.pendingLinks = []; // Håller koll på noder som ska multilänkas
         this.db = null;
 
         this.applyLanguage();
@@ -349,27 +323,27 @@
         document.getElementById('btnBatchCreate').innerText = this.t('batchNode');
         document.getElementById('searchInput').placeholder = this.t('searchPlaceholder');
         document.getElementById('btnSearchGo').innerText = this.t('searchGo');
-
         document.getElementById('modalHeading').innerText = this.t('modalCreateHeading');
         document.getElementById('lblModalTitle').innerText = this.t('modalNameLbl');
         document.getElementById('lblModalText').innerText = this.t('modalTextLbl');
         document.getElementById('btnModalCancel').innerText = this.t('modalCancelBtn');
         document.getElementById('btnModalCreate').innerText = this.t('modalCreateBtn');
-        
         document.getElementById('batchHeading').innerText = this.t('batchHeading');
         document.getElementById('lblBatchInstr').innerText = this.t('batchInstr');
         document.getElementById('btnBatchCancel').innerText = this.t('cancel');
         document.getElementById('btnBatchCreateAction').innerText = this.t('batchCreateAction');
-
         document.getElementById('linkHeading').innerText = this.t('linkDialogHeading');
+        document.getElementById('btnLinkSubmit').innerText = this.t('linkSubmit');
+        document.getElementById('btnLinkCancel').innerText = this.t('linkCancel');
+        document.getElementById('lblLinkSearch').innerText = this.t('linkSearchLbl');
       }
 
       toggleLanguage() {
         this.lang = this.lang === 'sv' ? 'en' : 'sv';
         this.applyLanguage();
         this.updateCloudBadge(this.cloudState || 'connecting');
-        if (this.activeNodeId) this.navigateTo(this.activeNodeId);
-        else this.navigateTo('overview');
+        if (this.activeNodeId) this.renderPage(this.activeNodeId);
+        else this.renderOverview();
       }
 
       updateCloudBadge(state) {
@@ -385,7 +359,9 @@
       }
 
       navigateTo(routeId) {
-        window.location.hash = routeId;
+        if (window.location.hash !== '#' + routeId) {
+            window.location.hash = routeId;
+        }
         this.routeFromHash();
       }
 
@@ -408,15 +384,13 @@
             this.updateCloudBadge('online');
             if (doc.exists) {
               const data = doc.data();
-              this.nodes = this.cleanDuplicates(data.nodes || BX_NODES);
-              this.edges = data.edges || BX_EDGES;
+              this.nodes = this.cleanDuplicates(data.nodes || []);
+              this.edges = data.edges || [];
             } else {
-              this.nodes = BX_NODES;
-              this.edges = BX_EDGES;
               this.sync();
             }
             this.updateDatalist();
-            this.routeFromHash();
+            this.routeFromHash(); // Update UI
           }, err => {
             this.updateCloudBadge('offline');
             this.fallbackLocal();
@@ -430,8 +404,8 @@
       fallbackLocal() {
         const rawN = localStorage.getItem('nv_nodes_live');
         const rawE = localStorage.getItem('nv_edges_live');
-        this.nodes = this.cleanDuplicates(rawN ? JSON.parse(rawN) : BX_NODES);
-        this.edges = rawE ? JSON.parse(rawE) : BX_EDGES;
+        this.nodes = this.cleanDuplicates(rawN ? JSON.parse(rawN) : []);
+        this.edges = rawE ? JSON.parse(rawE) : [];
         this.updateDatalist();
         this.routeFromHash();
       }
@@ -500,7 +474,7 @@
       removeRelation(idA, idB) {
         this.edges = this.edges.filter(e => !((e.a === idA && e.b === idB) || (e.a === idB && e.b === idA)));
         this.sync();
-        this.navigateTo(this.activeNodeId);
+        this.renderPage(this.activeNodeId);
       }
 
       getEffectiveLayout(nodeId) {
@@ -535,8 +509,26 @@
         }).filter(res => res.item);
       }
 
+      /* ÄNDRAD: Nu sparar vi även labelFirst för triangeln för att tvinga fram ordning */
+      flipAutoFact(bId, cId) {
+        let edge = this.edges.find(e => (e.a === bId && e.b === cId) || (e.a === cId && e.b === bId));
+        if (!edge) return;
+        
+        let currentLabelId;
+        if (edge.labelFirst) {
+            currentLabelId = edge.labelFirst;
+        } else {
+            const degB = this.getNeighbors(bId).length;
+            const degC = this.getNeighbors(cId).length;
+            currentLabelId = degB >= degC ? bId : cId;
+        }
+        
+        edge.labelFirst = (currentLabelId === bId) ? cId : bId;
+        this.sync();
+        this.renderPage(this.activeNodeId);
+      }
+
       renderPill(result) {
-        // DETTA ÄR DEN SAKNADE FUNKTIONEN SOM RITAR UT ITEMS + SATELLITER
         const sats = result.satellites && result.satellites.length > 0 
           ? ` <span class="satellite-text">(${result.satellites.map(s => `<a onclick="app.navigateTo('${s.id}')">${s.title}</a>`).join(', ')})</span>` 
           : '';
@@ -584,15 +576,27 @@
 
         const unhandledIds = allNeighbors.filter(id => !explicitlyHandled.has(id));
         const umbrellas = {};
+        const edgeLookups = {};
+
         for(let i=0; i<unhandledIds.length; i++) {
           for(let j=i+1; j<unhandledIds.length; j++) {
             const idA = unhandledIds[i];
             const idB = unhandledIds[j];
-            if(this.areNeighbors(idA, idB)) {
-              const degA = this.getNeighbors(idA).length;
-              const degB = this.getNeighbors(idB).length;
-              const parentId = degA >= degB ? idA : idB;
-              const childId = degA >= degB ? idB : idA;
+            
+            let edge = this.edges.find(e => (e.a === idA && e.b === idB) || (e.a === idB && e.b === idA));
+            if(edge) {
+              let parentId, childId;
+              
+              if (edge.labelFirst) {
+                parentId = edge.labelFirst;
+                childId = (parentId === idA) ? idB : idA;
+              } else {
+                const degA = this.getNeighbors(idA).length;
+                const degB = this.getNeighbors(idB).length;
+                parentId = degA >= degB ? idA : idB;
+                childId = degA >= degB ? idB : idA;
+              }
+              
               if (!umbrellas[parentId]) umbrellas[parentId] = new Set();
               umbrellas[parentId].add(childId);
             }
@@ -636,7 +640,11 @@
         let autoFactsHtml = '';
         if (autoFacts.length > 0) {
           autoFactsHtml = `<div class="auto-facts-row">
-            ${autoFacts.map(t => `<div class="auto-fact-item"><strong><a onclick="app.navigateTo('${t.label.id}')">${t.label.title}</a>:</strong> <a class="val-link" onclick="app.navigateTo('${t.val.id}')">${t.val.title}</a></div>`).join('')}
+            ${autoFacts.map(t => `<div class="auto-fact-item">
+              <strong><a onclick="app.navigateTo('${t.label.id}')">${t.label.title}</a>:</strong> 
+              <a class="val-link" onclick="app.navigateTo('${t.val.id}')">${t.val.title}</a>
+              <button type="button" class="flip-btn" onclick="app.flipAutoFact('${t.label.id}', '${t.val.id}')" title="${this.t('flipWeight')}">⇄</button>
+            </div>`).join('')}
           </div>`;
         }
 
@@ -661,7 +669,7 @@
                   ${subItems.map(res => this.renderPill(res)).join('')}
                 </div>
                 <div class="form-stack">
-                  <input type="text" id="inline-${b.boxId}-${subId}" list="existingNodesList" placeholder="${this.t('createInBox')}" onkeydown="if(event.key==='Enter') app.inlineCreate('${node.id}', '${b.boxId}', '${subId}', this.value)">
+                  <input type="text" id="inline-${b.boxId}-${subId}" list="existingNodesList" placeholder="${this.t('createInBox')}" onkeydown="if(event.key==='Enter'){ event.preventDefault(); app.inlineCreate('${node.id}', '${b.boxId}', '${subId}', this.value); }">
                   <button type="button" onclick="app.inlineCreate('${node.id}', '${b.boxId}', '${subId}', document.getElementById('inline-${b.boxId}-${subId}').value)">+</button>
                 </div>
               </div>
@@ -676,7 +684,7 @@
               </div>
               <div class="items-row">${directItems.map(res => this.renderPill(res)).join('')}</div>
               <div class="form-stack">
-                <input type="text" id="inline-${b.boxId}" list="existingNodesList" placeholder="${this.t('createInBox')}" onkeydown="if(event.key==='Enter') app.inlineCreate('${node.id}', '${b.boxId}', null, this.value)">
+                <input type="text" id="inline-${b.boxId}" list="existingNodesList" placeholder="${this.t('createInBox')}" onkeydown="if(event.key==='Enter'){ event.preventDefault(); app.inlineCreate('${node.id}', '${b.boxId}', null, this.value); }">
                 <button type="button" onclick="app.inlineCreate('${node.id}', '${b.boxId}', null, document.getElementById('inline-${b.boxId}').value)">+</button>
               </div>
               ${subboxesHtml ? `<div class="subbox-list">${subboxesHtml}</div>` : ''}
@@ -697,7 +705,7 @@
               ${ab.children.map(child => this.renderPill({ item: child, satellites: [] })).join('')}
             </div>
             <div class="form-stack">
-              <input type="text" id="autoInline-${ab.parent.id}" list="existingNodesList" placeholder="${this.t('createInBox')}" onkeydown="if(event.key==='Enter') app.inlineCreate('${node.id}', '${ab.parent.id}', null, this.value)">
+              <input type="text" id="autoInline-${ab.parent.id}" list="existingNodesList" placeholder="${this.t('createInBox')}" onkeydown="if(event.key==='Enter'){ event.preventDefault(); app.inlineCreate('${node.id}', '${ab.parent.id}', null, this.value); }">
               <button type="button" onclick="app.inlineCreate('${node.id}', '${ab.parent.id}', null, document.getElementById('autoInline-${ab.parent.id}').value)">+</button>
             </div>
           </div>
@@ -710,7 +718,7 @@
             <div style="font-weight:bold; margin-bottom:8px;">${this.t('addBoxBtn')}</div>
             <div class="form-stack">
               <select id="boxTargetLayout">${possibleTargets.map(tgt => `<option value="${tgt.id}" ${tgt.id === layout.targetId ? 'selected' : ''}>${tgt.title}</option>`).join('')}</select>
-              <input type="text" id="newBoxInput" list="existingNodesList" placeholder="Klass för boxen...">
+              <input type="text" id="newBoxInput" list="existingNodesList" placeholder="Sök/skapa klass...">
               <button type="button" class="primary" onclick="app.createBoxFromInput()">${this.t('addBoxBtn')}</button>
             </div>
           </div>
@@ -746,7 +754,7 @@
           if (!node.free_text || typeof node.free_text === 'string') node.free_text = {sv:'', en:''};
           node.free_text[this.lang] = document.getElementById('freeTextEditor').value;
           this.sync();
-          this.navigateTo(nodeId);
+          this.renderPage(nodeId, false);
         }
       }
 
@@ -790,27 +798,54 @@
         });
         this.sync();
         this.closeBatchDialog();
-        this.navigateTo(this.activeNodeId || 'overview');
+        this.renderPage(this.activeNodeId);
       }
 
+      // MULTILÄNK DIALOG
       openLinkDialog(pageId) {
         this.targetPageForLink = pageId;
+        this.pendingLinks = [];
         document.getElementById('linkNodeInput').value = '';
+        this.renderPendingLinks();
         document.getElementById('linkDialog').style.display = 'flex';
         setTimeout(() => document.getElementById('linkNodeInput').focus(), 50);
       }
       closeLinkDialog() {
         this.targetPageForLink = null;
+        this.pendingLinks = [];
         document.getElementById('linkDialog').style.display = 'none';
       }
-      executeLinkNode() {
-        if (!this.targetPageForLink) return;
-        const val = document.getElementById('linkNodeInput').value.trim();
+      addPendingLink() {
+        const input = document.getElementById('linkNodeInput');
+        const val = input.value.trim();
         if (!val) return;
-        this.addRelation(this.targetPageForLink, this.getOrCreateNode(val).id);
+        if (!this.pendingLinks.includes(val)) {
+            this.pendingLinks.push(val);
+            this.renderPendingLinks();
+        }
+        input.value = '';
+      }
+      removePendingLink(idx) {
+          this.pendingLinks.splice(idx, 1);
+          this.renderPendingLinks();
+      }
+      renderPendingLinks() {
+          const container = document.getElementById('pendingLinksContainer');
+          container.innerHTML = this.pendingLinks.map((name, idx) => {
+              const isNew = !this.getNodeByTitle(name);
+              const nyText = isNew ? ` <span style="color:var(--db-link); font-size:11px;">(${this.t('newText')})</span>` : '';
+              return `<span class="item-pill" style="background:#eef2fa;">${name}${nyText} <span style="cursor:pointer; color:var(--db-muted); margin-left:4px;" onclick="app.removePendingLink(${idx})">×</span></span>`;
+          }).join('');
+      }
+      executeLinkNodes() {
+        if (!this.targetPageForLink || this.pendingLinks.length === 0) return;
+        this.pendingLinks.forEach(name => {
+            let node = this.getOrCreateNode(name);
+            this.addRelation(this.targetPageForLink, node.id);
+        });
         this.sync();
         this.closeLinkDialog();
-        this.navigateTo(this.targetPageForLink);
+        this.renderPage(this.targetPageForLink);
       }
 
       inlineCreate(pageId, boxId, subboxId, rawValue) {
@@ -821,7 +856,7 @@
         this.addRelation(node.id, boxId);
         if (subboxId) this.addRelation(node.id, subboxId);
         this.sync();
-        this.navigateTo(pageId);
+        this.renderPage(pageId);
       }
 
       createBoxFromInput() {
@@ -833,7 +868,7 @@
         if (!targetNode.boxes) targetNode.boxes = [];
         targetNode.boxes.push({ boxId: node.id, subboxes: [] });
         this.sync();
-        this.navigateTo(this.activeNodeId);
+        this.renderPage(this.activeNodeId);
       }
 
       promptAddSubbox(targetId, boxIdx) {
@@ -842,21 +877,21 @@
         const targetNode = this.getNode(targetId);
         targetNode.boxes[boxIdx].subboxes.push(this.getOrCreateNode(name).id);
         this.sync();
-        this.navigateTo(this.activeNodeId);
+        this.renderPage(this.activeNodeId);
       }
 
       removeBox(targetId, bIdx) {
         const p = this.getNode(targetId);
         if (p.boxes) p.boxes.splice(bIdx, 1);
         this.sync();
-        this.navigateTo(this.activeNodeId);
+        this.renderPage(this.activeNodeId);
       }
 
       removeSubbox(targetId, bIdx, sIdx) {
         const p = this.getNode(targetId);
         if (p.boxes && p.boxes[bIdx]) p.boxes[bIdx].subboxes.splice(sIdx, 1);
         this.sync();
-        this.navigateTo(this.activeNodeId);
+        this.renderPage(this.activeNodeId);
       }
 
       handleSearch() {
