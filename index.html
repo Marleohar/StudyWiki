@@ -52,7 +52,6 @@
     .header-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
     .header-left { display: flex; gap: 8px; align-items: center; }
 
-    /* FIX FÖR SÖKFÄLTET */
     .search-bar { 
       display: flex; flex-wrap: nowrap; gap: 4px; align-items: stretch; 
       flex-grow: 1; max-width: 300px; min-width: 150px;
@@ -187,7 +186,7 @@
       <button type="button" class="creative-only primary" onclick="app.openCreateDialog()" id="btnNewNode">+ Ny Nod</button>
       <button type="button" class="creative-only btn-secondary" onclick="app.openBatchDialog()" id="btnBatchCreate">+ Mass-skapa</button>
       <button type="button" class="btn-ghost" onclick="app.promptModeUnlock()" id="btnModeLock" title="Lås upp redigering">🔒 Läs-läge</button>
-      <span id="dbStatus" class="status-badge connecting">☁️ Ansluter...</span>
+      <span id="dbStatus" class="status-badge connecting">☁️️ Ansluter...</span>
     </div>
   </header>
 
@@ -317,7 +316,6 @@
 
     class GraphApp {
       constructor() {
-        this.lang = 'sv';
         this.nodes = [];
         this.edges = [];
         this.activeNodeId = null;
@@ -371,7 +369,6 @@
       }
       checkCreative() { return (this.mode === 'create' || this.mode === 'admin'); }
 
-      // BIND DND TILL NORDVERKET_LIVE (DÄR DINA 124 NODER FINNS)
       getDocName() {
           if (this.currentLibrary === 'DnD') return 'nordverket_live';
           return 'nv_lib_' + this.currentLibrary;
@@ -412,6 +409,7 @@
           if (this.unsubFirebase) this.unsubFirebase(); 
           
           const docName = this.getDocName();
+          document.getElementById('btnLibSwitcher').innerHTML = '📚 ' + this.currentLibrary;
 
           this.unsubFirebase = this.db.collection('simple_db').doc(docName).onSnapshot(doc => {
             document.getElementById('dbStatus').className = "status-badge online";
@@ -419,7 +417,7 @@
             if (doc.exists) {
               const data = doc.data();
               this.nodes = this.cleanDuplicates(data.nodes || []);
-              this.edges = data.edges || [];
+              this.edges = this.cleanEdges(data.edges || []);
             } else if (this.nodes.length === 0 && this.currentLibrary !== 'DnD') {
                this.getOrCreateNode("System Hub");
                this.sync();
@@ -441,7 +439,7 @@
         const rawN = localStorage.getItem('nv_nodes_' + docName);
         const rawE = localStorage.getItem('nv_edges_' + docName);
         this.nodes = this.cleanDuplicates(rawN ? JSON.parse(rawN) : []);
-        this.edges = rawE ? JSON.parse(rawE) : [];
+        this.edges = this.cleanEdges(rawE ? JSON.parse(rawE) : []);
         this.updateDatalist();
         this.routeFromHash();
       }
@@ -455,10 +453,17 @@
           return true;
         });
       }
+      
+      cleanEdges(edgeArray) {
+        // DETTA LÖSER SPÖK-RELATIONERNA
+        const validIds = new Set(this.nodes.map(n => n.id));
+        return edgeArray.filter(e => validIds.has(e.a) && validIds.has(e.b));
+      }
 
       async sync() {
         this.updateDatalist();
         const docName = this.getDocName();
+        this.edges = this.cleanEdges(this.edges);
         if (this.db) {
           try {
             await this.db.collection('simple_db').doc(docName).set({
@@ -479,12 +484,22 @@
         if (dl) dl.innerHTML = this.nodes.map(n => `<option value="${n.title}">`).join('');
       }
 
-      getNode(id) { return this.nodes.find(n => n.id === id); }
+      getFreeText(node) {
+        if (!node || !node.free_text) return '';
+        if (typeof node.free_text === 'string') return node.free_text;
+        return node.free_text[this.lang] || node.free_text['sv'] || '';
+      }
+
+      getNode(id) { 
+        return this.nodes.find(n => n.id === id); 
+      }
+      
       getNodeByTitle(title) {
         if (!title) return null;
         const cl = title.toLowerCase().trim();
         return this.nodes.find(n => n.title.toLowerCase().trim() === cl);
       }
+      
       getOrCreateNode(title) {
         let node = this.getNodeByTitle(title);
         if (!node) {
@@ -529,7 +544,9 @@
 
       getEffectiveLayout(nodeId) {
         const node = this.getNode(nodeId);
+        if (!node) return { boxes: [], inheritedFrom: null, targetId: nodeId };
         if (node.boxes && node.boxes.length > 0) return { boxes: node.boxes, inheritedFrom: null, targetId: node.id };
+        
         const neighbors = this.getNeighbors(nodeId);
         let bestNeighbor = null;
         let maxBoxes = 0;
@@ -595,7 +612,7 @@
         this.changeBoxContext = { targetId, boxIdx };
         const targetNode = this.getNode(targetId);
         const currentBoxId = targetNode.boxes[boxIdx].boxId;
-        const possibleNewHeaders = this.getNeighbors(currentBoxId).map(id => this.getNode(id));
+        const possibleNewHeaders = this.getNeighbors(currentBoxId).map(id => this.getNode(id)).filter(Boolean);
         const sel = document.getElementById('changeBoxSelect');
         sel.innerHTML = `<option value="">-- Välj ny huvudnod --</option>` + possibleNewHeaders.map(p => `<option value="${p.id}">${p.title}</option>`).join('');
         document.getElementById('changeBoxDialog').style.display = 'flex';
@@ -638,7 +655,7 @@
         } else {
             cl.innerHTML = neighbors.map(nid => {
                 const n = this.getNode(nid);
-                // Om noden redan är länkad, låt den vara i kryssad men inaktiv (valfritt)
+                if(!n) return '';
                 const alreadyLinked = this.areNeighbors(this.importTargetId, nid);
                 return `<label style="display:flex; align-items:center; gap:8px; font-size:13px; margin-bottom:6px;">
                     <input type="checkbox" value="${n.id}" ${alreadyLinked ? 'checked disabled' : 'checked'}> ${n.title}
@@ -667,6 +684,7 @@
       closeImportDialog() { document.getElementById('importLayoutDialog').style.display = 'none'; }
 
       renderPill(result, pageIdContext) {
+        if (!result || !result.item) return '';
         const sats = result.satellites && result.satellites.length > 0 
           ? ` <span class="satellite-text">(${result.satellites.map(s => `<a onclick="app.navigateTo('${s.id}')">${s.title}</a>`).join(', ')})</span>` 
           : '';
@@ -744,12 +762,17 @@
 
         Object.keys(umbrellas).forEach(parentId => {
           const children = Array.from(umbrellas[parentId]);
+          const parentNode = this.getNode(parentId);
+          if(!parentNode) return;
+
           if(children.length === 1) {
-            autoFacts.push({ label: this.getNode(parentId), val: this.getNode(children[0]) });
+            const childNode = this.getNode(children[0]);
+            if (childNode) autoFacts.push({ label: parentNode, val: childNode });
             handledByTriangles.add(parentId);
             handledByTriangles.add(children[0]);
           } else if(children.length > 1) {
-            autoBoxes.push({ parent: this.getNode(parentId), children: children.map(cid => this.getNode(cid)) });
+            const validChildren = children.map(cid => this.getNode(cid)).filter(Boolean);
+            autoBoxes.push({ parent: parentNode, children: validChildren });
             handledByTriangles.add(parentId);
             children.forEach(cid => handledByTriangles.add(cid));
           }
@@ -779,7 +802,7 @@
               <strong><a onclick="app.navigateTo('${t.label.id}')">${t.label.title}</a>:</strong> 
               <a class="val-link" onclick="app.navigateTo('${t.val.id}')">${t.val.title}</a>
               <button type="button" class="action-icon-btn creative-only" onclick="app.flipAutoFact('${t.label.id}', '${t.val.id}')" title="Vänd">⇄</button>
-              <button type="button" class="action-icon-btn creative-only" onclick="app.openSwapDialog('${node.id}', '${t.label.id}', '${t.val.id}')" title="Byt">🔄</button>
+              <button type="button" class="action-icon-btn creative-only" onclick="app.openSwapDialog('${node.id}', '${t.label.id}', '${t.val.id}')" title="Byt ut">🔄</button>
               <button type="button" class="action-icon-btn creative-only" style="color:#d32f2f;" onclick="app.requestRemoveRelation('${node.id}', '${t.val.id}')" title="Kapa">×</button>
             </div>`).join('')}
           </div>`;
@@ -852,7 +875,7 @@
         `).join('');
 
         const possibleTargets = [{ id: node.id, title: node.title }];
-        this.getNeighbors(node.id).forEach(nid => { const n = this.getNode(nid); possibleTargets.push({ id: n.id, title: n.title }); });
+        this.getNeighbors(node.id).forEach(nid => { const n = this.getNode(nid); if(n) possibleTargets.push({ id: n.id, title: n.title }); });
         const addBoxHtml = `
           <div class="add-box-zone creative-only">
             <div style="font-weight:bold; margin-bottom:8px;">Skapa Box</div>
@@ -864,7 +887,7 @@
           </div>
         `;
 
-        const prospects = unhandledIds.filter(id => !handledByTriangles.has(id)).map(id => this.getNode(id));
+        const prospects = unhandledIds.filter(id => !handledByTriangles.has(id)).map(id => this.getNode(id)).filter(Boolean);
         const prospectsHtml = `
           <div class="prospects-zone creative-only">
             <div class="prospects-header"><span>Osorterade relationer (${prospects.length})</span></div>
@@ -876,7 +899,7 @@
         `;
 
         main.innerHTML = `
-          <div class="breadcrumb-nav"><a onclick="app.navigateTo('overview')">← Tillbaka</a></div>
+          <div class="breadcrumb-nav"><a onclick="app.navigateTo('overview')">← Tillbaka till Översikt</a></div>
           <div class="item-card">
             <div class="item-top-zone">
               <div class="item-name-row">
@@ -1021,7 +1044,8 @@
       executeLinkNodes() {
         if (!this.targetPageForLink || this.pendingLinks.length === 0) return;
         this.pendingLinks.forEach(name => {
-            this.addRelation(this.targetPageForLink, this.getOrCreateNode(name).id);
+            let node = this.getOrCreateNode(name);
+            this.addRelation(this.targetPageForLink, node.id);
         });
         this.sync();
         this.closeLinkDialog();
