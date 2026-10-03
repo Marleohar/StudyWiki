@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Simpel Databas - Pure Graph Engine</title>
+  <title>Nördverket</title>
 
   <!-- Firebase SDK Compat -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -113,6 +113,19 @@
       flex-grow: 1;
     }
 
+    /* Brödsmulor / Tillbaka */
+    .breadcrumb-nav {
+      margin-bottom: 12px;
+      font-size: 13px;
+    }
+    .breadcrumb-nav a {
+      color: var(--db-link);
+      text-decoration: none;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .breadcrumb-nav a:hover { text-decoration: underline; }
+
     .item-card {
       background: var(--db-content-bg);
       border: 1px solid var(--db-border-light);
@@ -164,14 +177,12 @@
       flex-direction: column;
       gap: 20px;
     }
-
     .graph-box {
       border: 2px solid var(--db-border);
       border-radius: 4px;
       background: #ffffff;
       padding: 16px;
     }
-
     .graph-header {
       display: flex;
       justify-content: space-between;
@@ -180,7 +191,6 @@
       padding-bottom: 6px;
       border-bottom: 1px solid var(--db-border-light);
     }
-
     .graph-title {
       font-size: 17px;
       font-weight: bold;
@@ -196,14 +206,12 @@
       gap: 12px;
       margin-top: 12px;
     }
-
     .graph-subbox {
       border: 1px solid var(--db-border);
       border-radius: 4px;
       background: var(--db-subbox-bg);
       padding: 12px 14px;
     }
-
     .graph-subbox-header {
       display: flex;
       justify-content: space-between;
@@ -226,7 +234,6 @@
       gap: 8px;
       align-items: center;
     }
-
     .item-pill {
       display: inline-flex;
       align-items: center;
@@ -250,9 +257,7 @@
       color: var(--db-muted);
       font-size: 12px;
     }
-    .satellite-text a {
-      color: var(--db-muted);
-    }
+    .satellite-text a { color: var(--db-muted); }
 
     .inline-item-add {
       display: inline-flex;
@@ -280,7 +285,6 @@
       border: 1px dashed var(--db-border);
       border-radius: 4px;
     }
-
     .prospects-header {
       font-size: 12px;
       text-transform: uppercase;
@@ -291,20 +295,16 @@
       justify-content: space-between;
     }
 
-    .add-relation-form {
-      display: flex;
-      gap: 8px;
-      margin-top: 16px;
-      border-top: 1px solid var(--db-border-light);
-      padding-top: 16px;
-    }
-
+    /* DIALOGER OCH FÖNSTER */
     .dialog-backdrop {
       display: none;
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.4);
-      align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.5);
+      /* FRANK: Placerar popups högt upp istället för i mitten */
+      align-items: flex-start; 
+      justify-content: center;
+      padding-top: 10vh;
       z-index: 1000;
     }
     .dialog {
@@ -312,8 +312,8 @@
       border: 1px solid var(--db-border);
       width: 480px;
       padding: 20px;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.15);
-      border-radius: 3px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      border-radius: 4px;
     }
     .form-group { margin-bottom: 12px; }
     .form-group label { display: block; font-weight: bold; font-size: 12px; margin-bottom: 4px; }
@@ -322,16 +322,19 @@
 </head>
 <body>
 
+  <!-- Databas för autokorrekt/förslag -->
+  <datalist id="existingNodesList"></datalist>
+
   <header>
     <div class="header-left">
       <a class="brand" onclick="app.navigateTo('overview')">
-        <div class="brand-logo">DB</div>
-        <span id="headerAppTitle">Simpel Databas</span>
+        <div class="brand-logo">NV</div>
+        <span id="headerAppTitle">Nördverket</span>
       </a>
       <button onclick="app.openCreateDialog()" class="primary" id="btnNewNode">+ Ny Nod</button>
     </div>
     <div class="search-bar">
-      <input type="text" id="searchInput" placeholder="Sök..." onkeydown="if(event.key==='Enter') app.handleSearch()">
+      <input type="text" id="searchInput" list="existingNodesList" placeholder="Sök..." onkeydown="if(event.key==='Enter') app.handleSearch()">
       <button onclick="app.handleSearch()" id="btnSearchGo">Gå till</button>
     </div>
     <div class="header-actions">
@@ -344,13 +347,13 @@
     <main id="mainContent"></main>
   </div>
 
-  <!-- Skapa-dialog -->
+  <!-- Skapa ny nod-dialog -->
   <div class="dialog-backdrop" id="createDialog">
     <div class="dialog">
       <h2 style="font-size: 18px; margin-bottom: 12px;" id="modalHeading">Skapa ny nod</h2>
       <div class="form-group">
-        <label id="lblModalTitle">Namn / Titel</label>
-        <input type="text" id="modalTitle" placeholder="t.ex. Fireball, Level 3, Undead...">
+        <label id="lblModalTitle">Namn / Titel (Måste vara unikt)</label>
+        <input type="text" id="modalTitle" list="existingNodesList" placeholder="t.ex. Fireball, Level 3, Undead...">
       </div>
       <div class="form-group">
         <label id="lblModalText">Fritext / Anteckningar</label>
@@ -359,6 +362,22 @@
       <div class="dialog-actions">
         <button onclick="app.closeCreateDialog()" id="btnModalCancel">Avbryt</button>
         <button class="primary" onclick="app.saveNewNode()" id="btnModalCreate">Skapa</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Länka nod-dialog (Ersätter tidigare inline-fält) -->
+  <div class="dialog-backdrop" id="linkDialog">
+    <div class="dialog">
+      <h2 style="font-size: 18px; margin-bottom: 12px;" id="linkHeading">Länka till nod</h2>
+      <div class="form-group">
+        <label>Sök befintlig eller skapa ny</label>
+        <!-- Frank: Autokorrekt via datalist -->
+        <input type="text" id="linkNodeInput" list="existingNodesList" placeholder="Börja skriva namnet...">
+      </div>
+      <div class="dialog-actions">
+        <button onclick="app.closeLinkDialog()">Avbryt</button>
+        <button class="primary" onclick="app.executeLinkNode()">Länka</button>
       </div>
     </div>
   </div>
@@ -381,7 +400,7 @@
        ========================================================================= */
     const I18N = {
       sv: {
-        appTitle: "Simpel Databas",
+        appTitle: "Nördverket",
         searchPlaceholder: "Sök nod...",
         searchGo: "Gå till",
         newNode: "+ Ny Nod",
@@ -398,20 +417,21 @@
         prospectsHeader: "Osorterade relationer / Prospects",
         addBoxBtn: "Skapa Box",
         selectProspect: "-- Välj från prospects --",
-        createRelationPlaceholder: "Länka till ny eller befintlig nod...",
-        linkBtn: "Skapa länk",
+        linkBtn: "Länka till nod",
+        linkDialogHeading: "Länka nod",
         removeBox: "Ta bort box",
         removeSubbox: "Ta bort",
         inheritedLayout: "Layout ärvd via",
         modalCreateHeading: "Skapa ny nod",
-        modalNameLbl: "Namn / Titel",
+        modalNameLbl: "Namn / Titel (Måste vara unikt)",
         modalTextLbl: "Fritext / Anteckningar",
         modalCancelBtn: "Avbryt",
         modalCreateBtn: "Skapa",
-        createInBox: "Skapa i rutan..."
+        createInBox: "Sök/Skapa i rutan...",
+        backToOverview: "← Tillbaka till Översikt"
       },
       en: {
-        appTitle: "Simple Database",
+        appTitle: "Nördverket",
         searchPlaceholder: "Search node...",
         searchGo: "Go",
         newNode: "+ New Node",
@@ -428,24 +448,25 @@
         prospectsHeader: "Unsorted Relations / Prospects",
         addBoxBtn: "Create Box",
         selectProspect: "-- Select from prospects --",
-        createRelationPlaceholder: "Link to new or existing node...",
-        linkBtn: "Create link",
+        linkBtn: "Link to node",
+        linkDialogHeading: "Link Node",
         removeBox: "Remove box",
         removeSubbox: "Remove",
         inheritedLayout: "Layout inherited via",
         modalCreateHeading: "Create new node",
-        modalNameLbl: "Name / Title",
+        modalNameLbl: "Name / Title (Must be unique)",
         modalTextLbl: "Free Text / Notes",
         modalCancelBtn: "Cancel",
         modalCreateBtn: "Create",
-        createInBox: "Create in box..."
+        createInBox: "Search/Create in box...",
+        backToOverview: "← Back to Overview"
       }
     };
 
     /* =========================================================================
-       3. DEN RENA GRAF-MODELLEN (Nodes & Edges)
+       3. DEN RENA GRAF-MODELLEN
        ========================================================================= */
-    const INIT_NODES = [
+    let INIT_NODES = [
       { id: "n_monster", title: "Monster", free_text: { sv: "Odjur och bestar.", en: "Beasts and monsters." }, boxes: [] },
       { id: "n_owlbear", title: "Owlbear", free_text: { sv: "Björnuggla.", en: "Bear-owl." }, boxes: [] },
       { id: "n_dragon", title: "Green Dragon", free_text: { sv: "Grön drake.", en: "Green dragon." }, boxes: [] },
@@ -453,42 +474,20 @@
       { id: "n_claws", title: "Claws", free_text: { sv: "", en: "" }, boxes: [] },
       { id: "n_bite", title: "Bite", free_text: { sv: "", en: "" }, boxes: [] },
       { id: "n_2d6", title: "2d6", free_text: { sv: "", en: "" }, boxes: [] },
-      { id: "n_1d8", title: "1d8", free_text: { sv: "", en: "" }, boxes: [] },
-      
-      { id: "n_class", title: "Class", free_text: { sv: "Rollspelsklass.", en: "RPG Class." }, boxes: [] },
-      { id: "n_cleric", title: "Cleric", free_text: { sv: "Helig krigare.", en: "Holy warrior." }, boxes: [] },
-      { id: "n_wizard", title: "Wizard", free_text: { sv: "Magiker.", en: "Mage." }, boxes: [] },
-      { id: "n_spells", title: "Spells", free_text: { sv: "Trollformler.", en: "Magic spells." }, boxes: [] },
-      { id: "n_level1", title: "Level 1", free_text: { sv: "", en: "" }, boxes: [] },
-      { id: "n_level3", title: "Level 3", free_text: { sv: "", en: "" }, boxes: [] },
-      { id: "n_cure", title: "Cure Light Wounds", free_text: { sv: "", en: "" }, boxes: [] },
-      { id: "n_fireball", title: "Fireball", free_text: { sv: "", en: "" }, boxes: [] }
+      { id: "n_1d8", title: "1d8", free_text: { sv: "", en: "" }, boxes: [] }
     ];
 
-    const INIT_EDGES = [
-      // Owlbear relations
+    let INIT_EDGES = [
       { a: "n_owlbear", b: "n_monster" },
       { a: "n_owlbear", b: "n_claws" },
       { a: "n_owlbear", b: "n_bite" },
-      // Dragon relations
       { a: "n_dragon", b: "n_monster" },
       { a: "n_dragon", b: "n_bite" },
       { a: "n_dragon", b: "n_claws" },
-      // Attack properties
       { a: "n_claws", b: "n_attacks" },
       { a: "n_claws", b: "n_2d6" },
       { a: "n_bite", b: "n_attacks" },
-      { a: "n_bite", b: "n_1d8" },
-      
-      // Classes & Spells
-      { a: "n_cleric", b: "n_class" },
-      { a: "n_wizard", b: "n_class" },
-      { a: "n_cure", b: "n_cleric" },
-      { a: "n_cure", b: "n_spells" },
-      { a: "n_cure", b: "n_level1" },
-      { a: "n_fireball", b: "n_wizard" },
-      { a: "n_fireball", b: "n_spells" },
-      { a: "n_fireball", b: "n_level3" }
+      { a: "n_bite", b: "n_1d8" }
     ];
 
     /* =========================================================================
@@ -500,6 +499,7 @@
         this.nodes = [];
         this.edges = [];
         this.activeNodeId = null;
+        this.targetPageForLink = null; // För popup-länken
         this.db = null;
 
         this.applyLanguage();
@@ -526,6 +526,7 @@
         document.getElementById('lblModalText').innerText = this.t('modalTextLbl');
         document.getElementById('btnModalCancel').innerText = this.t('modalCancelBtn');
         document.getElementById('btnModalCreate').innerText = this.t('modalCreateBtn');
+        document.getElementById('linkHeading').innerText = this.t('linkDialogHeading');
       }
 
       toggleLanguage() {
@@ -573,17 +574,18 @@
         try {
           firebase.initializeApp(firebaseConfig);
           this.db = firebase.firestore();
-          this.db.collection('simple_db').doc('pure_graph_v1').onSnapshot(doc => {
+          this.db.collection('simple_db').doc('nordverket_graph_v1').onSnapshot(doc => {
             this.updateCloudBadge('online');
             if (doc.exists) {
               const data = doc.data();
-              this.nodes = data.nodes || INIT_NODES;
+              this.nodes = this.cleanDuplicates(data.nodes || INIT_NODES);
               this.edges = data.edges || INIT_EDGES;
             } else {
               this.nodes = INIT_NODES;
               this.edges = INIT_EDGES;
               this.sync();
             }
+            this.updateDatalist();
             this.routeFromHash();
           }, err => {
             console.error("Firebase Snapshot Error:", err);
@@ -598,34 +600,57 @@
       }
 
       fallbackLocal() {
-        const rawN = localStorage.getItem('pgraph_nodes');
-        const rawE = localStorage.getItem('pgraph_edges');
-        this.nodes = rawN ? JSON.parse(rawN) : INIT_NODES;
+        const rawN = localStorage.getItem('nordverket_nodes');
+        const rawE = localStorage.getItem('nordverket_edges');
+        this.nodes = this.cleanDuplicates(rawN ? JSON.parse(rawN) : INIT_NODES);
         this.edges = rawE ? JSON.parse(rawE) : INIT_EDGES;
+        this.updateDatalist();
         this.routeFromHash();
       }
 
+      // Rensar om det smugit sig in dubbletter från förut
+      cleanDuplicates(nodeArray) {
+        const seen = new Set();
+        return nodeArray.filter(n => {
+          const lower = n.title.toLowerCase().trim();
+          if (seen.has(lower)) return false;
+          seen.add(lower);
+          return true;
+        });
+      }
+
       async sync() {
+        this.updateDatalist();
         if (this.db) {
           try {
-            await this.db.collection('simple_db').doc('pure_graph_v1').set({
+            await this.db.collection('simple_db').doc('nordverket_graph_v1').set({
               nodes: this.nodes,
               edges: this.edges,
               updatedAt: Date.now()
             });
           } catch (e) {
-            localStorage.setItem('pgraph_nodes', JSON.stringify(this.nodes));
-            localStorage.setItem('pgraph_edges', JSON.stringify(this.edges));
+            localStorage.setItem('nordverket_nodes', JSON.stringify(this.nodes));
+            localStorage.setItem('nordverket_edges', JSON.stringify(this.edges));
           }
         } else {
-          localStorage.setItem('pgraph_nodes', JSON.stringify(this.nodes));
-          localStorage.setItem('pgraph_edges', JSON.stringify(this.edges));
+          localStorage.setItem('nordverket_nodes', JSON.stringify(this.nodes));
+          localStorage.setItem('nordverket_edges', JSON.stringify(this.edges));
         }
+      }
+
+      // Uppdaterar <datalist> för autoförslag
+      updateDatalist() {
+        const dl = document.getElementById('existingNodesList');
+        if (!dl) return;
+        dl.innerHTML = this.nodes.map(n => `<option value="${n.title}">`).join('');
       }
 
       /* KÄRNAN I GRAFEN */
       getNode(id) { return this.nodes.find(n => n.id === id); }
+      
+      // Helt okänslig för gemener/versaler - garanterar att namn är upptagna
       getNodeByTitle(title) {
+        if (!title) return null;
         const cl = title.toLowerCase().trim();
         return this.nodes.find(n => n.title.toLowerCase().trim() === cl);
       }
@@ -650,21 +675,19 @@
         this.sync();
       }
 
-      /* LAYOUT ARV (ORGANISK SYNERGI) */
+      /* LAYOUT ARV */
       getEffectiveLayout(nodeId) {
         const node = this.getNode(nodeId);
         if (node.boxes && node.boxes.length > 0) {
           return { boxes: node.boxes, inheritedFrom: null };
         }
-        
-        // Organiskt arv: Leta upp en syskon-nod via första gemensamma granne som har en layout
         const neighbors = this.getNeighbors(nodeId);
         for (let n of neighbors) {
           const siblings = this.getNeighbors(n);
           for (let s of siblings) {
             if (s !== nodeId) {
               const siblingNode = this.getNode(s);
-              if (siblingNode.boxes && siblingNode.boxes.length > 0) {
+              if (siblingNode && siblingNode.boxes && siblingNode.boxes.length > 0) {
                 return { boxes: siblingNode.boxes, inheritedFrom: this.getNode(n) };
               }
             }
@@ -673,13 +696,12 @@
         return { boxes: [], inheritedFrom: null };
       }
 
-      /* BOX MATEMATIK (INTERSECTION & SATELLITES) */
+      /* BOX MATEMATIK */
       getBoxItems(pageId, boxId, subboxId = null) {
         const pageNeighbors = new Set(this.getNeighbors(pageId));
         const boxNeighbors = new Set(this.getNeighbors(boxId));
 
         let common = [...pageNeighbors].filter(id => boxNeighbors.has(id));
-
         if (subboxId) {
           const subNeighbors = new Set(this.getNeighbors(subboxId));
           common = common.filter(id => subNeighbors.has(id));
@@ -687,18 +709,17 @@
 
         return common.map(id => {
           const item = this.getNode(id);
-          // Satelliter: Grannar till 'item' som INTE är page, box, eller subbox
           const satellitesIds = this.getNeighbors(id).filter(nid => 
             nid !== pageId && nid !== boxId && nid !== subboxId
           );
           return {
             item,
-            satellites: satellitesIds.map(sid => this.getNode(sid))
+            satellites: satellitesIds.map(sid => this.getNode(sid)).filter(Boolean)
           };
-        });
+        }).filter(res => res.item);
       }
 
-      /* PROSPECTS (Osorterade relationer) */
+      /* PROSPECTS */
       getProspects(pageId, effectiveBoxes) {
         const allNeighbors = this.getNeighbors(pageId);
         const handledIds = new Set();
@@ -706,7 +727,6 @@
         effectiveBoxes.forEach(b => {
           handledIds.add(b.boxId);
           (b.subboxes || []).forEach(sub => handledIds.add(sub));
-          // Allt som dragits in i boxarna anses hanterat
           const items = this.getBoxItems(pageId, b.boxId);
           items.forEach(res => {
             handledIds.add(res.item.id);
@@ -715,7 +735,7 @@
         });
 
         const unhandled = allNeighbors.filter(id => !handledIds.has(id));
-        return unhandled.map(id => this.getNode(id));
+        return unhandled.map(id => this.getNode(id)).filter(Boolean);
       }
 
       /* RENDERING */
@@ -746,7 +766,7 @@
         this.activeNodeId = node.id;
         const main = document.getElementById('mainContent');
 
-        // Free Text
+        // Fritext
         const currentText = this.getFreeText(node);
         let freeTextZone = '';
         if (isEditingText) {
@@ -775,7 +795,6 @@
         const layout = this.getEffectiveLayout(node.id);
         const prospects = this.getProspects(node.id, layout.boxes);
 
-        // BOXAR
         let boxesHtml = '';
         if (layout.inheritedFrom) {
           boxesHtml += `<div style="font-size:11px; color:var(--db-muted); margin-bottom:8px;">💡 ${this.t('inheritedLayout')} <strong>${layout.inheritedFrom.title}</strong></div>`;
@@ -785,12 +804,12 @@
           const boxNode = this.getNode(b.boxId);
           if (!boxNode) return '';
 
-          // Direkt items i boxen (som inte ligger i en subbox)
           let allItemsInBox = this.getBoxItems(node.id, b.boxId);
           let handledInSub = new Set();
 
           const subboxesHtml = (b.subboxes || []).map((subId, sIdx) => {
             const subNode = this.getNode(subId);
+            if (!subNode) return '';
             const subItems = this.getBoxItems(node.id, b.boxId, subId);
             subItems.forEach(i => handledInSub.add(i.item.id));
 
@@ -803,7 +822,7 @@
                 <div class="items-row">
                   ${subItems.map(res => this.renderPill(res)).join('')}
                   <div class="inline-item-add">
-                    <input type="text" id="inline-${b.boxId}-${subId}" placeholder="${this.t('createInBox')}" onkeydown="if(event.key==='Enter') app.inlineCreate('${node.id}', '${b.boxId}', '${subId}', this.value)">
+                    <input type="text" id="inline-${b.boxId}-${subId}" list="existingNodesList" placeholder="${this.t('createInBox')}" onkeydown="if(event.key==='Enter') app.inlineCreate('${node.id}', '${b.boxId}', '${subId}', this.value)">
                     <button onclick="app.inlineCreate('${node.id}', '${b.boxId}', '${subId}', document.getElementById('inline-${b.boxId}-${subId}').value)">+</button>
                   </div>
                 </div>
@@ -816,15 +835,13 @@
           return `
             <div class="graph-box">
               <div class="graph-header">
-                <div>
-                  <a class="graph-title" onclick="app.navigateTo('${boxNode.id}')"># ${boxNode.title}</a>
-                </div>
+                <div><a class="graph-title" onclick="app.navigateTo('${boxNode.id}')"># ${boxNode.title}</a></div>
                 <button style="font-size:11px; padding:2px 6px;" onclick="app.removeBox('${node.id}', ${bIdx})">${this.t('removeBox')}</button>
               </div>
               <div class="items-row">
                 ${directItems.map(res => this.renderPill(res)).join('')}
                 <div class="inline-item-add">
-                  <input type="text" id="inline-${b.boxId}" placeholder="${this.t('createInBox')}" onkeydown="if(event.key==='Enter') app.inlineCreate('${node.id}', '${b.boxId}', null, this.value)">
+                  <input type="text" id="inline-${b.boxId}" list="existingNodesList" placeholder="${this.t('createInBox')}" onkeydown="if(event.key==='Enter') app.inlineCreate('${node.id}', '${b.boxId}', null, this.value)">
                   <button onclick="app.inlineCreate('${node.id}', '${b.boxId}', null, document.getElementById('inline-${b.boxId}').value)">+</button>
                 </div>
               </div>
@@ -850,10 +867,9 @@
                 </span>
               `).join('')}
             </div>
-
-            <div class="add-relation-form">
-              <input type="text" id="inputNewRelation" placeholder="${this.t('createRelationPlaceholder')}" style="width:250px;" onkeydown="if(event.key==='Enter') app.addRelationFromInput('${node.id}')">
-              <button class="primary" onclick="app.addRelationFromInput('${node.id}')">${this.t('linkBtn')}</button>
+            
+            <div style="margin-top:16px; padding-top:12px; border-top:1px solid var(--db-border-light); display:flex; gap:12px;">
+              <button class="primary" onclick="app.openLinkDialog('${node.id}')">+ ${this.t('linkBtn')}</button>
             </div>
 
             <div style="margin-top:16px; border-top:1px dashed var(--db-border-light); padding-top:12px;">
@@ -867,6 +883,9 @@
         `;
 
         main.innerHTML = `
+          <div class="breadcrumb-nav">
+            <a onclick="app.navigateTo('overview')">${this.t('backToOverview')}</a>
+          </div>
           <div class="item-card">
             <div class="item-top-zone">
               <h1 class="item-name">${node.title}</h1>
@@ -904,15 +923,72 @@
         }
       }
 
-      addRelationFromInput(pageId) {
-        const val = document.getElementById('inputNewRelation').value.trim();
+      // Dialoger för att skapa och länka
+      openCreateDialog() {
+        document.getElementById('modalTitle').value = '';
+        document.getElementById('modalFreeText').value = '';
+        document.getElementById('createDialog').style.display = 'flex';
+        setTimeout(() => document.getElementById('modalTitle').focus(), 50);
+      }
+      closeCreateDialog() { document.getElementById('createDialog').style.display = 'none'; }
+      
+      saveNewNode() {
+        const title = document.getElementById('modalTitle').value.trim();
+        const text = document.getElementById('modalFreeText').value;
+        if (!title) return;
+        
+        // Stenhård dubblettkontroll (Frank's regel: Upptagna namn är upptagna)
+        const existing = this.getNodeByTitle(title);
+        if (existing) {
+          alert(`Namnet "${existing.title}" är redan upptaget. Klicka på "Länka till nod" om du vill koppla den.`);
+          return;
+        }
+
+        const newNode = { id: 'n_' + Math.random().toString(36).substr(2, 9), title, free_text: {sv:text, en:text}, boxes: [] };
+        this.nodes.push(newNode);
+        this.sync();
+        this.closeCreateDialog();
+        this.navigateTo(newNode.id);
+      }
+
+      openLinkDialog(pageId) {
+        this.targetPageForLink = pageId;
+        document.getElementById('linkNodeInput').value = '';
+        document.getElementById('linkDialog').style.display = 'flex';
+        setTimeout(() => document.getElementById('linkNodeInput').focus(), 50);
+      }
+      closeLinkDialog() {
+        this.targetPageForLink = null;
+        document.getElementById('linkDialog').style.display = 'none';
+      }
+
+      executeLinkNode() {
+        if (!this.targetPageForLink) return;
+        const val = document.getElementById('linkNodeInput').value.trim();
+        if (!val) return;
+        
+        let node = this.getNodeByTitle(val);
+        if (!node) {
+          node = { id: 'n_' + Math.random().toString(36).substr(2, 9), title: val, free_text: {sv:'', en:''}, boxes: [] };
+          this.nodes.push(node);
+        }
+        
+        this.addRelation(this.targetPageForLink, node.id);
+        this.closeLinkDialog();
+        this.renderPage(this.targetPageForLink);
+      }
+
+      inlineCreate(pageId, boxId, subboxId, rawValue) {
+        const val = rawValue.trim();
         if (!val) return;
         let node = this.getNodeByTitle(val);
         if (!node) {
           node = { id: 'n_' + Math.random().toString(36).substr(2, 9), title: val, free_text: {sv:'', en:''}, boxes: [] };
           this.nodes.push(node);
         }
-        this.addRelation(pageId, node.id);
+        this.addRelation(node.id, pageId);
+        this.addRelation(node.id, boxId);
+        if (subboxId) this.addRelation(node.id, subboxId);
         this.renderPage(pageId);
       }
 
@@ -926,21 +1002,6 @@
         this.renderPage(pageId);
       }
 
-      inlineCreate(pageId, boxId, subboxId, rawValue) {
-        const val = rawValue.trim();
-        if (!val) return;
-        let node = this.getNodeByTitle(val);
-        if (!node) {
-          node = { id: 'n_' + Math.random().toString(36).substr(2, 9), title: val, free_text: {sv:'', en:''}, boxes: [] };
-          this.nodes.push(node);
-        }
-        // Skapa relations-triangeln!
-        this.addRelation(node.id, pageId);
-        this.addRelation(node.id, boxId);
-        if (subboxId) this.addRelation(node.id, subboxId);
-        this.renderPage(pageId);
-      }
-
       promptAddSubbox(pageId, boxIdx) {
         const name = prompt(this.lang === 'sv' ? "Namn på underbox (måste finnas i prospects):" : "Subbox name (must be a prospect):");
         if (!name) return;
@@ -949,7 +1010,7 @@
           node = { id: 'n_' + Math.random().toString(36).substr(2, 9), title: name, free_text: {sv:'', en:''}, boxes: [] };
           this.nodes.push(node);
         }
-        this.addRelation(pageId, node.id); // Skapa relationen först
+        this.addRelation(pageId, node.id);
         const page = this.getNode(pageId);
         page.boxes[boxIdx].subboxes.push(node.id);
         this.sync();
@@ -983,23 +1044,6 @@
             this.navigateTo(newNode.id);
           }
         }
-      }
-
-      openCreateDialog() {
-        document.getElementById('modalTitle').value = '';
-        document.getElementById('modalFreeText').value = '';
-        document.getElementById('createDialog').style.display = 'flex';
-      }
-      closeCreateDialog() { document.getElementById('createDialog').style.display = 'none'; }
-      saveNewNode() {
-        const title = document.getElementById('modalTitle').value.trim();
-        const text = document.getElementById('modalFreeText').value;
-        if (!title) return;
-        const newNode = { id: 'n_' + Math.random().toString(36).substr(2, 9), title, free_text: {sv:text, en:text}, boxes: [] };
-        this.nodes.push(newNode);
-        this.sync();
-        this.closeCreateDialog();
-        this.navigateTo(newNode.id);
       }
     }
 
