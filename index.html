@@ -16,14 +16,12 @@
       --db-border: #a2a9b1;
       --db-border-light: #c8ccd1;
       --db-header-bg: #eaecf0;
-      --db-subbox-bg: #f8f9fa;
       --db-link: #3366cc;
       --db-link-hover: #447ff5;
       --db-text: #202122;
       --db-muted: #54595d;
       --status-online: #2e7d32;
       --status-offline: #e65100;
-      --status-connecting: #1565c0;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -35,10 +33,12 @@
       min-height: 100vh; overflow-x: hidden;
     }
 
-    /* BEHÖRIGHET (CSS RULES) */
+    /* BEHÖRIGHET */
     body[data-mode="read"] .creative-only { display: none !important; }
     body[data-mode="read"] .admin-only { display: none !important; }
     body[data-mode="create"] .admin-only { display: none !important; }
+    body[data-mode="read"] .readonly-only { display: inline-block; }
+    body[data-mode="create"] .readonly-only, body[data-mode="admin"] .readonly-only { display: none; }
 
     header {
       background-color: #ffffff; border-bottom: 1px solid var(--db-border-light);
@@ -52,10 +52,7 @@
     .header-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
     .header-left { display: flex; gap: 8px; align-items: center; }
 
-    .search-bar { 
-      display: flex; flex-wrap: nowrap; gap: 4px; align-items: stretch; 
-      flex-grow: 1; max-width: 300px; min-width: 150px;
-    }
+    .search-bar { display: flex; flex-wrap: nowrap; gap: 4px; align-items: stretch; flex-grow: 1; max-width: 300px; min-width: 150px; }
     .search-bar input { flex-grow: 1; min-width: 0; width: 100%; }
     .search-bar button { flex-shrink: 0; white-space: nowrap; }
 
@@ -92,34 +89,23 @@
     
     .item-top-zone { margin-bottom: 16px; border-bottom: 1px solid var(--db-border); padding-bottom: 12px; }
     .item-name-row { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px; }
-    .item-name { font-family: 'Linux Libertine', 'Georgia', Times, serif; font-size: 32px; line-height: 1.1; letter-spacing: 0.5px; }
+    .item-name { font-family: 'Linux Libertine', 'Georgia', Times, serif; font-size: 32px; line-height: 1.1; letter-spacing: 0.5px; display:flex; align-items:center; gap:8px;}
     .admin-controls { display: flex; gap: 6px; flex-wrap: wrap; }
 
-    /* FAKTARUTOR */
-    .auto-facts-row { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; padding: 12px 16px; background: #eef2fa; border: 1px solid #cbd5e1; border-radius: 4px; }
-    .auto-fact-item { font-size: 14px; display: inline-flex; align-items: center; gap: 4px; }
-    .auto-fact-item strong a { color: var(--db-text); text-decoration: none; font-weight: bold; }
-    .auto-fact-item a.val-link { color: var(--db-link); text-decoration: none; }
-    .action-icon-btn { background: transparent; border: none; padding: 0 4px; font-size: 14px; color: var(--db-muted); cursor: pointer; border-radius: 2px; }
-    .action-icon-btn:hover { background: #cbd5e1; color: #000; }
+    .node-icon { cursor: pointer; padding: 4px 6px; border-radius: 4px; transition: background 0.2s; background:#f6f7f8; border:1px solid var(--db-border-light); font-size:24px;}
+    .node-icon.creative-only:hover { background: #eaecf0; border-color:var(--db-border); }
+    .node-icon.readonly-only { cursor: default; border:none; background:transparent; padding:0; }
 
     /* FREE TEXT */
-    .free-text-frame { border: 1px solid var(--db-border-light); border-radius: 4px; padding: 12px; background: #fafafa; margin-bottom: 24px; cursor: pointer; }
+    .free-text-frame { border: 1px solid var(--db-border-light); border-radius: 4px; padding: 12px; background: #fafafa; margin-bottom: 32px; cursor: pointer; }
     .free-text-frame.readonly { cursor: default; }
     .free-text-label { font-size: 11px; color: var(--db-muted); text-transform: uppercase; margin-bottom: 6px; display: flex; justify-content: space-between; }
     .free-text-content { font-size: 14px; white-space: pre-wrap; }
 
-    /* BOXAR */
-    .boxes-container { display: flex; flex-direction: column; gap: 16px; }
-    .graph-box { border: 2px solid var(--db-border); border-radius: 4px; background: #ffffff; padding: 16px; }
-    .graph-box.auto-umbrella { border-color: #cbd5e1; background: #f8fafc; }
-    .graph-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid var(--db-border-light); }
-    .graph-title { font-size: 16px; font-weight: bold; color: var(--db-text); text-decoration: none; cursor: pointer; }
+    /* IKON-KLUSTER */
+    .icon-cluster { margin-bottom: 24px; }
+    .cluster-header { font-size: 20px; font-weight: bold; color: var(--db-text); margin-bottom: 12px; padding-bottom: 4px; border-bottom: 1px solid var(--db-border-light); }
     
-    .graph-subbox { border: 1px solid var(--db-border); border-radius: 4px; background: var(--db-subbox-bg); padding: 12px; margin-top: 12px; }
-    .graph-subbox-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .graph-subbox-title { font-size: 13px; font-weight: bold; color: var(--db-muted); text-decoration: none; cursor: pointer; }
-
     /* TAGGAR / PILLS */
     .items-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
     .item-pill {
@@ -134,16 +120,8 @@
     .satellite-text a { color: var(--db-muted); text-decoration: none;}
     .satellite-text a:hover { text-decoration: underline;}
 
-    .inline-item-add { display: inline-flex; gap: 4px; align-items: center; margin-top: 6px; }
-    .inline-item-add input { width: 170px; padding: 3px 8px; font-size: 12px; border-radius: 12px; }
-    .inline-item-add button { padding: 3px 8px; font-size: 11px; border-radius: 10px; }
-
-    /* FORM STACK & ZONES */
     .form-stack { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; width: 100%; }
     .form-stack button { width: 100%; }
-    .add-box-zone { margin-top: 24px; padding: 16px; background: #fafafa; border: 1px dashed var(--db-border); border-radius: 4px; }
-    .prospects-zone { margin-top: 24px; padding: 16px; background: #fafafa; border: 1px dashed var(--db-border); border-radius: 4px; }
-    .prospects-header { font-size: 12px; text-transform: uppercase; font-weight: bold; color: var(--db-muted); margin-bottom: 12px; }
 
     /* DIALOGER */
     .dialog-backdrop {
@@ -183,125 +161,13 @@
     </div>
     
     <div class="header-actions">
-      <button type="button" class="creative-only primary" onclick="app.openCreateDialog()" id="btnNewNode">+ Ny Nod</button>
-      <button type="button" class="creative-only btn-secondary" onclick="app.openBatchDialog()" id="btnBatchCreate">+ Mass-skapa</button>
       <button type="button" class="btn-ghost" onclick="app.promptModeUnlock()" id="btnModeLock" title="Lås upp redigering">🔒 Läs-läge</button>
-      <span id="dbStatus" class="status-badge connecting">☁️️ Ansluter...</span>
+      <span id="dbStatus" class="status-badge connecting">☁ Ansluter...</span>
     </div>
   </header>
 
   <div class="viewport-container">
     <main id="mainContent"></main>
-  </div>
-
-  <!-- Skapa ny nod-dialog -->
-  <div class="dialog-backdrop" id="createDialog">
-    <div class="dialog">
-      <h2 style="font-size: 18px; margin-bottom: 16px;">Skapa ny nod</h2>
-      <div style="margin-bottom: 12px;">
-        <label style="font-weight: bold; font-size: 12px; display: block; margin-bottom: 4px;">Namn / Titel</label>
-        <input type="text" id="modalTitle" list="existingNodesList" placeholder="t.ex. Fireball...">
-      </div>
-      <div style="margin-bottom: 12px;">
-        <label style="font-weight: bold; font-size: 12px; display: block; margin-bottom: 4px;">Fritext / Anteckningar</label>
-        <textarea id="modalFreeText" rows="4"></textarea>
-      </div>
-      <div class="dialog-actions-stacked">
-        <button type="button" class="primary" onclick="app.saveNewNode()">Skapa</button>
-        <button type="button" onclick="app.closeCreateDialog()">Avbryt</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Mass-skapa-dialog -->
-  <div class="dialog-backdrop" id="batchDialog">
-    <div class="dialog" style="max-width: 500px;">
-      <h2 style="font-size: 18px; margin-bottom: 12px;">Mass-skapa noder & relationer</h2>
-      <div style="margin-bottom: 12px;">
-        <label style="font-weight: bold; font-size: 12px; display: block; margin-bottom: 4px;">Syntax (Punkter separerar rader):</label>
-        <div style="font-size:12px; color:var(--db-muted); margin-bottom:8px; line-height:1.4;">
-          <strong>Nod1: Nod2, Nod3.</strong><br>
-          <strong>Nod1: Nod2(Nod3).</strong> (Nod3 blir satellit till Nod2)<br>
-          <strong>Typ of Vapen: Svärd.</strong> (Svärd kopplas till Vapen OCH Typ)
-        </div>
-        <textarea id="batchInput" rows="6" placeholder="Taste of Apple: Sweet, Sour(Lemon)." style="font-family: monospace;"></textarea>
-      </div>
-      <div class="dialog-actions-stacked">
-        <button type="button" class="primary" onclick="app.executeBatchCreate()">Kör kommando</button>
-        <button type="button" onclick="app.closeBatchDialog()">Avbryt</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Multilänk-dialog -->
-  <div class="dialog-backdrop" id="linkDialog">
-    <div class="dialog">
-      <h2 style="font-size: 18px; margin-bottom: 12px;">Länka till noder</h2>
-      <div style="margin-bottom: 12px;">
-        <label style="font-weight: bold; font-size: 12px; display: block; margin-bottom: 4px;">Skriv namn och tryck Enter för att lägga i lista</label>
-        <input type="text" id="linkNodeInput" list="existingNodesList" placeholder="Börja skriva..." onkeydown="if(event.key==='Enter') { event.preventDefault(); app.addPendingLink(); }">
-      </div>
-      <div id="pendingLinksContainer" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px;"></div>
-      <div class="dialog-actions-stacked">
-        <button type="button" class="primary" onclick="app.executeLinkNodes()">Länka alla</button>
-        <button type="button" onclick="app.closeLinkDialog()">Avbryt</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Swap Värde-dialog -->
-  <div class="dialog-backdrop" id="swapDialog">
-    <div class="dialog">
-      <h2 style="font-size: 18px; margin-bottom: 12px;">Byt ut värde</h2>
-      <div style="margin-bottom: 12px;">
-        <label style="font-weight: bold; font-size: 12px; display: block; margin-bottom: 4px;">Välj ny prospect att byta mot:</label>
-        <select id="swapSelect"></select>
-      </div>
-      <div class="dialog-actions-stacked">
-        <button type="button" class="primary" onclick="app.executeSwap()">Genomför byte</button>
-        <button type="button" onclick="app.closeSwapDialog()">Avbryt</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Invertera/Byt Boxrubrik-dialog -->
-  <div class="dialog-backdrop" id="changeBoxDialog">
-    <div class="dialog">
-      <h2 style="font-size: 18px; margin-bottom: 12px;">Invertera / Byt Boxrubrik</h2>
-      <div style="margin-bottom: 12px;">
-        <label style="font-weight: bold; font-size: 12px; display: block; margin-bottom: 4px;">Välj ny huvudnod för denna box:</label>
-        <select id="changeBoxSelect"></select>
-      </div>
-      <div class="dialog-actions-stacked">
-        <button type="button" class="primary" onclick="app.executeChangeBox()">Spara ny rubrik</button>
-        <button type="button" onclick="app.closeChangeBoxDialog()">Avbryt</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Importera Mall-dialog -->
-  <div class="dialog-backdrop" id="importLayoutDialog">
-    <div class="dialog" style="max-width: 500px;">
-      <h2 style="font-size: 18px; margin-bottom: 12px;">Importera mall & relationer</h2>
-      
-      <div id="importStep1">
-        <label style="font-weight: bold; font-size: 12px; display: block; margin-bottom: 4px;">Sök upp nod att importera layout från:</label>
-        <input type="text" id="importNodeInput" list="existingNodesList" placeholder="T.ex. Kobold..." style="margin-bottom:12px;" onkeydown="if(event.key==='Enter'){event.preventDefault(); app.previewImport();}">
-        <div class="dialog-actions-stacked">
-          <button type="button" class="primary" onclick="app.previewImport()">Nästa</button>
-          <button type="button" onclick="app.closeImportDialog()">Avbryt</button>
-        </div>
-      </div>
-      
-      <div id="importStep2" style="display:none;">
-        <p style="font-size: 13px; margin-bottom: 8px;">Välj vilka relationer du vill kopiera till <strong><span id="importTargetName"></span></strong>:</p>
-        <div id="importChecklist" style="max-height: 200px; overflow-y: auto; border: 1px solid var(--db-border); border-radius: 4px; padding: 8px; margin-bottom: 12px;"></div>
-        <div class="dialog-actions-stacked">
-          <button type="button" class="primary" onclick="app.executeImport()">Slutför import</button>
-          <button type="button" onclick="app.closeImportDialog()">Avbryt</button>
-        </div>
-      </div>
-    </div>
   </div>
 
   <script>
@@ -319,12 +185,10 @@
         this.nodes = [];
         this.edges = [];
         this.activeNodeId = null;
-        this.targetPageForLink = null;
-        this.pendingLinks = [];
         this.db = null;
         this.unsubFirebase = null;
         
-        this.mode = 'read'; // 'read', 'create', 'admin'
+        this.mode = 'read'; 
         this.currentLibrary = localStorage.getItem('nv_current_lib') || 'DnD';
 
         this.updateModeUI();
@@ -335,16 +199,9 @@
       updateModeUI() {
         document.body.setAttribute('data-mode', this.mode);
         const lockBtn = document.getElementById('btnModeLock');
-        if (this.mode === 'read') {
-          lockBtn.innerHTML = '🔒 Läs-läge';
-          lockBtn.style.color = 'var(--db-text)';
-        } else if (this.mode === 'create') {
-          lockBtn.innerHTML = '🔓 Skapar-läge';
-          lockBtn.style.color = '#2e7d32'; 
-        } else if (this.mode === 'admin') {
-          lockBtn.innerHTML = '🛠️ Admin-läge';
-          lockBtn.style.color = '#d32f2f'; 
-        }
+        if (this.mode === 'read') { lockBtn.innerHTML = '🔒 Läs-läge'; lockBtn.style.color = 'var(--db-text)'; } 
+        else if (this.mode === 'create') { lockBtn.innerHTML = '🔓 Skapar-läge'; lockBtn.style.color = '#2e7d32'; } 
+        else if (this.mode === 'admin') { lockBtn.innerHTML = '🛠️ Admin-läge'; lockBtn.style.color = '#d32f2f'; }
       }
 
       promptModeUnlock() {
@@ -369,10 +226,7 @@
       }
       checkCreative() { return (this.mode === 'create' || this.mode === 'admin'); }
 
-      getDocName() {
-          if (this.currentLibrary === 'DnD') return 'nordverket_live';
-          return 'nv_lib_' + this.currentLibrary;
-      }
+      getDocName() { return (this.currentLibrary === 'DnD') ? 'nordverket_live' : 'nv_lib_' + this.currentLibrary; }
 
       promptLibrarySwitch() {
           const newLib = prompt("Aktuellt bibliotek: " + this.currentLibrary + "\nAnge namnet på biblioteket du vill ladda/skapa:", this.currentLibrary);
@@ -380,8 +234,7 @@
               this.currentLibrary = newLib.trim();
               localStorage.setItem('nv_current_lib', this.currentLibrary);
               document.getElementById('btnLibSwitcher').innerHTML = '📚 ' + this.currentLibrary;
-              this.nodes = [];
-              this.edges = [];
+              this.nodes = []; this.edges = [];
               this.initFirebase();
               this.navigateTo('overview');
           }
@@ -424,12 +277,8 @@
             }
             this.updateDatalist();
             this.routeFromHash();
-          }, err => {
-            this.fallbackLocal();
-          });
-        } catch (e) {
-          this.fallbackLocal();
-        }
+          }, err => { this.fallbackLocal(); });
+        } catch (e) { this.fallbackLocal(); }
       }
 
       fallbackLocal() {
@@ -453,9 +302,7 @@
           return true;
         });
       }
-      
       cleanEdges(edgeArray) {
-        // DETTA LÖSER SPÖK-RELATIONERNA
         const validIds = new Set(this.nodes.map(n => n.id));
         return edgeArray.filter(e => validIds.has(e.a) && validIds.has(e.b));
       }
@@ -466,9 +313,7 @@
         this.edges = this.cleanEdges(this.edges);
         if (this.db) {
           try {
-            await this.db.collection('simple_db').doc(docName).set({
-              nodes: this.nodes, edges: this.edges, updatedAt: Date.now()
-            });
+            await this.db.collection('simple_db').doc(docName).set({ nodes: this.nodes, edges: this.edges, updatedAt: Date.now() });
           } catch (e) {
             localStorage.setItem('nv_nodes_' + docName, JSON.stringify(this.nodes));
             localStorage.setItem('nv_edges_' + docName, JSON.stringify(this.edges));
@@ -484,26 +329,16 @@
         if (dl) dl.innerHTML = this.nodes.map(n => `<option value="${n.title}">`).join('');
       }
 
-      getFreeText(node) {
-        if (!node || !node.free_text) return '';
-        if (typeof node.free_text === 'string') return node.free_text;
-        return node.free_text[this.lang] || node.free_text['sv'] || '';
-      }
-
-      getNode(id) { 
-        return this.nodes.find(n => n.id === id); 
-      }
-      
+      getNode(id) { return this.nodes.find(n => n.id === id); }
       getNodeByTitle(title) {
         if (!title) return null;
         const cl = title.toLowerCase().trim();
         return this.nodes.find(n => n.title.toLowerCase().trim() === cl);
       }
-      
       getOrCreateNode(title) {
         let node = this.getNodeByTitle(title);
         if (!node) {
-          node = { id: 'n_' + Math.random().toString(36).substr(2, 9), title, free_text: {sv:'', en:''}, boxes: [] };
+          node = { id: 'n_' + Math.random().toString(36).substr(2, 9), title, icon: '🏷️', free_text: {sv:'', en:''} };
           this.nodes.push(node);
         }
         return node;
@@ -542,146 +377,61 @@
         }
       }
 
-      getEffectiveLayout(nodeId) {
+      requestChangeIcon(nodeId) {
+        if (!this.checkCreative()) return;
         const node = this.getNode(nodeId);
-        if (!node) return { boxes: [], inheritedFrom: null, targetId: nodeId };
-        if (node.boxes && node.boxes.length > 0) return { boxes: node.boxes, inheritedFrom: null, targetId: node.id };
+        const newIcon = prompt("Ange ikon/kategori (t.ex. ⚔️, 🛡️, Vapen):", node.icon || '🏷️');
+        if (newIcon !== null && newIcon.trim() !== '') {
+            node.icon = newIcon.trim();
+            this.sync();
+            this.renderPage(nodeId);
+        }
+      }
+
+      // KRAFTFULL KEDJE-PARSER: Nod1: Nod2: Nod3; Nod4, AnnanNod: Barn
+      inlineChainCreate(pageId, rawValue) {
+        if(!this.checkCreative()) return;
+        const val = rawValue.trim();
+        if(!val) return;
         
-        const neighbors = this.getNeighbors(nodeId);
-        let bestNeighbor = null;
-        let maxBoxes = 0;
-        for (let nId of neighbors) {
-          const neighborNode = this.getNode(nId);
-          if (neighborNode && neighborNode.boxes && neighborNode.boxes.length > maxBoxes) {
-            maxBoxes = neighborNode.boxes.length;
-            bestNeighbor = neighborNode;
-          }
-        }
-        if (bestNeighbor) return { boxes: bestNeighbor.boxes, inheritedFrom: bestNeighbor, targetId: bestNeighbor.id };
-        return { boxes: [], inheritedFrom: null, targetId: node.id };
-      }
-
-      getBoxItems(pageId, boxId, subboxId = null) {
-        const pageNeighbors = new Set(this.getNeighbors(pageId));
-        const boxNeighbors = new Set(this.getNeighbors(boxId));
-        let common = [...pageNeighbors].filter(id => boxNeighbors.has(id));
-        if (subboxId) {
-          const subNeighbors = new Set(this.getNeighbors(subboxId));
-          common = common.filter(id => subNeighbors.has(id));
-        }
-        return common.map(id => {
-          const item = this.getNode(id);
-          const satellitesIds = this.getNeighbors(id).filter(nid => nid !== pageId && nid !== boxId && nid !== subboxId);
-          return { item, satellites: satellitesIds.map(sid => this.getNode(sid)).filter(Boolean) };
-        }).filter(res => res.item);
-      }
-
-      flipAutoFact(bId, cId) {
-        if(!this.checkCreative()) return;
-        let edge = this.edges.find(e => (e.a === bId && e.b === cId) || (e.a === cId && e.b === bId));
-        if (!edge) return;
-        let currentLabelId = edge.labelFirst ? edge.labelFirst : (this.getNeighbors(bId).length >= this.getNeighbors(cId).length ? bId : cId);
-        edge.labelFirst = (currentLabelId === bId) ? cId : bId;
+        const statements = val.split(','); // Översta nivån
+        
+        statements.forEach(statement => {
+            const chunks = statement.split(';');
+            let baseNodeId = null;
+            
+            chunks.forEach((chunk, index) => {
+                const parts = chunk.split(':').map(s => s.trim()).filter(Boolean);
+                if(parts.length === 0) return;
+                
+                if(index === 0) {
+                    const rootNode = this.getOrCreateNode(parts[0]);
+                    baseNodeId = rootNode.id;
+                    this.addRelation(pageId, rootNode.id); // Koppla till sidans kontext
+                    
+                    let prevId = rootNode.id;
+                    for(let i=1; i<parts.length; i++){
+                        const n = this.getOrCreateNode(parts[i]);
+                        this.addRelation(prevId, n.id);
+                        prevId = n.id;
+                    }
+                } else {
+                    const firstInChunk = this.getOrCreateNode(parts[0]);
+                    this.addRelation(baseNodeId, firstInChunk.id); // Koppla till baseNode
+                    
+                    let prevId = firstInChunk.id;
+                    for(let i=1; i<parts.length; i++){
+                        const n = this.getOrCreateNode(parts[i]);
+                        this.addRelation(prevId, n.id);
+                        prevId = n.id;
+                    }
+                }
+            });
+        });
+        
         this.sync();
-        this.renderPage(this.activeNodeId);
-      }
-
-      openSwapDialog(pageId, labelId, oldValId) {
-        if(!this.checkCreative()) return;
-        this.swapContext = { pageId, labelId, oldValId };
-        const prospects = this.getNeighbors(pageId).filter(id => id !== labelId && id !== oldValId).map(id => this.getNode(id)).filter(Boolean);
-        const sel = document.getElementById('swapSelect');
-        sel.innerHTML = '<option value="">-- Välj nod att byta mot --</option>' + prospects.map(p => `<option value="${p.id}">${p.title}</option>`).join('');
-        document.getElementById('swapDialog').style.display = 'flex';
-      }
-      closeSwapDialog() { document.getElementById('swapDialog').style.display = 'none'; }
-      executeSwap() {
-        const newValId = document.getElementById('swapSelect').value;
-        if (!newValId) return;
-        const { pageId, labelId, oldValId } = this.swapContext;
-        this.edges = this.edges.filter(e => !((e.a === pageId && e.b === oldValId) || (e.a === oldValId && e.b === pageId)));
-        this.addRelation(pageId, newValId);
-        this.addRelation(labelId, newValId);
-        this.sync();
-        this.closeSwapDialog();
         this.renderPage(pageId);
       }
-
-      openChangeBoxDialog(targetId, boxIdx) {
-        if(!this.checkCreative()) return;
-        this.changeBoxContext = { targetId, boxIdx };
-        const targetNode = this.getNode(targetId);
-        const currentBoxId = targetNode.boxes[boxIdx].boxId;
-        const possibleNewHeaders = this.getNeighbors(currentBoxId).map(id => this.getNode(id)).filter(Boolean);
-        const sel = document.getElementById('changeBoxSelect');
-        sel.innerHTML = `<option value="">-- Välj ny huvudnod --</option>` + possibleNewHeaders.map(p => `<option value="${p.id}">${p.title}</option>`).join('');
-        document.getElementById('changeBoxDialog').style.display = 'flex';
-      }
-      closeChangeBoxDialog() { document.getElementById('changeBoxDialog').style.display = 'none'; }
-      executeChangeBox() {
-        const newBoxId = document.getElementById('changeBoxSelect').value;
-        if(!newBoxId) return;
-        const { targetId, boxIdx } = this.changeBoxContext;
-        const targetNode = this.getNode(targetId);
-        targetNode.boxes[boxIdx].boxId = newBoxId;
-        this.sync();
-        this.closeChangeBoxDialog();
-        this.renderPage(this.activeNodeId);
-      }
-
-      // IMPORTERA MALL-LOGIK
-      openImportDialog(targetId) {
-        if(!this.checkCreative()) return;
-        this.importTargetId = targetId;
-        document.getElementById('importNodeInput').value = '';
-        document.getElementById('importStep1').style.display = 'block';
-        document.getElementById('importStep2').style.display = 'none';
-        document.getElementById('importLayoutDialog').style.display = 'flex';
-        setTimeout(() => document.getElementById('importNodeInput').focus(), 50);
-      }
-      previewImport() {
-        const sourceName = document.getElementById('importNodeInput').value.trim();
-        const sourceNode = this.getNodeByTitle(sourceName);
-        if(!sourceNode) { alert("Kunde inte hitta noden."); return; }
-        
-        this.importSourceId = sourceNode.id;
-        const targetNode = this.getNode(this.importTargetId);
-        document.getElementById('importTargetName').innerText = targetNode.title;
-        
-        const neighbors = this.getNeighbors(sourceNode.id);
-        const cl = document.getElementById('importChecklist');
-        if(neighbors.length === 0) {
-            cl.innerHTML = '<span style="color:var(--db-muted); font-size:12px;">Inga relationer att kopiera.</span>';
-        } else {
-            cl.innerHTML = neighbors.map(nid => {
-                const n = this.getNode(nid);
-                if(!n) return '';
-                const alreadyLinked = this.areNeighbors(this.importTargetId, nid);
-                return `<label style="display:flex; align-items:center; gap:8px; font-size:13px; margin-bottom:6px;">
-                    <input type="checkbox" value="${n.id}" ${alreadyLinked ? 'checked disabled' : 'checked'}> ${n.title}
-                </label>`;
-            }).join('');
-        }
-        
-        document.getElementById('importStep1').style.display = 'none';
-        document.getElementById('importStep2').style.display = 'block';
-      }
-      executeImport() {
-        const targetNode = this.getNode(this.importTargetId);
-        const sourceNode = this.getNode(this.importSourceId);
-        
-        if(sourceNode.boxes && sourceNode.boxes.length > 0) {
-            targetNode.boxes = JSON.parse(JSON.stringify(sourceNode.boxes)); 
-        }
-        
-        const checkboxes = document.querySelectorAll('#importChecklist input[type="checkbox"]:checked:not(:disabled)');
-        checkboxes.forEach(cb => { this.addRelation(this.importTargetId, cb.value); });
-        
-        this.sync();
-        this.closeImportDialog();
-        this.renderPage(this.importTargetId);
-      }
-      closeImportDialog() { document.getElementById('importLayoutDialog').style.display = 'none'; }
 
       renderPill(result, pageIdContext) {
         if (!result || !result.item) return '';
@@ -718,72 +468,14 @@
         this.activeNodeId = node.id;
         const main = document.getElementById('mainContent');
 
-        const layout = this.getEffectiveLayout(node.id);
-        const allNeighbors = this.getNeighbors(node.id);
-        const explicitlyHandled = new Set();
-
-        layout.boxes.forEach(b => {
-          explicitlyHandled.add(b.boxId);
-          (b.subboxes || []).forEach(sub => explicitlyHandled.add(sub));
-          this.getBoxItems(node.id, b.boxId).forEach(res => {
-            explicitlyHandled.add(res.item.id);
-            res.satellites.forEach(sat => explicitlyHandled.add(sat.id));
-          });
-        });
-
-        const unhandledIds = allNeighbors.filter(id => !explicitlyHandled.has(id));
-        const umbrellas = {};
-
-        for(let i=0; i<unhandledIds.length; i++) {
-          for(let j=i+1; j<unhandledIds.length; j++) {
-            const idA = unhandledIds[i];
-            const idB = unhandledIds[j];
-            let edge = this.edges.find(e => (e.a === idA && e.b === idB) || (e.a === idB && e.b === idA));
-            if(edge) {
-              let parentId, childId;
-              if (edge.labelFirst) {
-                parentId = edge.labelFirst;
-                childId = (parentId === idA) ? idB : idA;
-              } else {
-                const degA = this.getNeighbors(idA).length;
-                const degB = this.getNeighbors(idB).length;
-                parentId = degA >= degB ? idA : idB;
-                childId = degA >= degB ? idB : idA;
-              }
-              if (!umbrellas[parentId]) umbrellas[parentId] = new Set();
-              umbrellas[parentId].add(childId);
-            }
-          }
-        }
-
-        const autoFacts = [];
-        const autoBoxes = [];
-        const handledByTriangles = new Set();
-
-        Object.keys(umbrellas).forEach(parentId => {
-          const children = Array.from(umbrellas[parentId]);
-          const parentNode = this.getNode(parentId);
-          if(!parentNode) return;
-
-          if(children.length === 1) {
-            const childNode = this.getNode(children[0]);
-            if (childNode) autoFacts.push({ label: parentNode, val: childNode });
-            handledByTriangles.add(parentId);
-            handledByTriangles.add(children[0]);
-          } else if(children.length > 1) {
-            const validChildren = children.map(cid => this.getNode(cid)).filter(Boolean);
-            autoBoxes.push({ parent: parentNode, children: validChildren });
-            handledByTriangles.add(parentId);
-            children.forEach(cid => handledByTriangles.add(cid));
-          }
-        });
-
-        const currentText = this.getFreeText(node);
+        const currentText = (node.free_text && (node.free_text['sv'] || typeof node.free_text === 'string')) ? 
+            (typeof node.free_text === 'string' ? node.free_text : node.free_text['sv']) : '';
+            
         let freeTextZone = (isEditingText && this.checkCreative()) ? `
           <div class="free-text-frame">
             <div class="free-text-label"><span>Fritext</span></div>
             <textarea id="freeTextEditor" style="width:100%; min-height:80px; margin-bottom:8px;">${currentText}</textarea>
-            <div class="form-stack">
+            <div class="form-stack" style="flex-direction:row; width:auto;">
               <button type="button" class="primary" onclick="app.saveFreeText('${node.id}')">Spara</button>
               <button type="button" onclick="app.renderPage('${node.id}', false)">Avbryt</button>
             </div>
@@ -795,106 +487,38 @@
           </div>
         `;
 
-        let autoFactsHtml = '';
-        if (autoFacts.length > 0) {
-          autoFactsHtml = `<div class="auto-facts-row">
-            ${autoFacts.map(t => `<div class="auto-fact-item">
-              <strong><a onclick="app.navigateTo('${t.label.id}')">${t.label.title}</a>:</strong> 
-              <a class="val-link" onclick="app.navigateTo('${t.val.id}')">${t.val.title}</a>
-              <button type="button" class="action-icon-btn creative-only" onclick="app.flipAutoFact('${t.label.id}', '${t.val.id}')" title="Vänd">⇄</button>
-              <button type="button" class="action-icon-btn creative-only" onclick="app.openSwapDialog('${node.id}', '${t.label.id}', '${t.val.id}')" title="Byt ut">🔄</button>
-              <button type="button" class="action-icon-btn creative-only" style="color:#d32f2f;" onclick="app.requestRemoveRelation('${node.id}', '${t.val.id}')" title="Kapa">×</button>
-            </div>`).join('')}
-          </div>`;
-        }
+        // SAMLA OCH KLUSTRA RELATIONER VIA IKON
+        const neighbors = this.getNeighbors(node.id).map(id => this.getNode(id)).filter(Boolean);
+        const grouped = {};
+        neighbors.forEach(n => {
+            const icon = n.icon || '🏷️';
+            if(!grouped[icon]) grouped[icon] = [];
+            grouped[icon].push(n);
+        });
 
-        let boxesHtml = layout.inheritedFrom ? `<div style="font-size:12px; color:var(--db-link); margin-bottom:12px; background: #eef2fa; padding: 8px 12px; border-radius: 4px; border: 1px solid #cbd5e1;">💡 <strong>Layout ärvd från <a onclick="app.navigateTo('${layout.inheritedFrom.id}')">${layout.inheritedFrom.title}</a></strong></div>` : '';
-        boxesHtml += layout.boxes.map((b, bIdx) => {
-          const boxNode = this.getNode(b.boxId);
-          if (!boxNode) return '';
-          let allItemsInBox = this.getBoxItems(node.id, b.boxId);
-          let handledInSub = new Set();
-          const subboxesHtml = (b.subboxes || []).map((subId, sIdx) => {
-            const subNode = this.getNode(subId);
-            if (!subNode) return '';
-            const subItems = this.getBoxItems(node.id, b.boxId, subId);
-            subItems.forEach(i => handledInSub.add(i.item.id));
+        const clustersHtml = Object.keys(grouped).map(icon => {
+            const items = grouped[icon];
+            const pills = items.map(item => {
+                const sats = this.getNeighbors(item.id).filter(sid => sid !== node.id).map(sid => this.getNode(sid)).filter(Boolean);
+                return this.renderPill({ item, satellites: sats }, node.id);
+            }).join('');
             return `
-              <div class="graph-subbox">
-                <div class="graph-subbox-header">
-                  <a class="graph-subbox-title" onclick="app.navigateTo('${subNode.id}')"># ${subNode.title}</a>
-                  <button type="button" class="creative-only" style="font-size:11px; padding:4px 8px;" onclick="app.removeSubbox('${layout.targetId}', ${bIdx}, ${sIdx})">Ta bort</button>
-                </div>
-                <div class="items-row">
-                  ${subItems.map(res => this.renderPill(res, node.id)).join('')}
-                </div>
-                <div class="form-stack creative-only">
-                  <input type="text" id="inline-${b.boxId}-${subId}" list="existingNodesList" placeholder="Sök/Skapa i rutan..." onkeydown="if(event.key==='Enter'){ event.preventDefault(); app.inlineCreate('${node.id}', '${b.boxId}', '${subId}', this.value); }">
-                  <button type="button" onclick="app.inlineCreate('${node.id}', '${b.boxId}', '${subId}', document.getElementById('inline-${b.boxId}-${subId}').value)">+</button>
-                </div>
-              </div>
-            `;
-          }).join('');
-          const directItems = allItemsInBox.filter(res => !handledInSub.has(res.item.id));
-          return `
-            <div class="graph-box">
-              <div class="graph-header">
-                <div>
-                  <a class="graph-title" onclick="app.navigateTo('${boxNode.id}')"># ${boxNode.title}</a>
-                  <button type="button" class="btn-ghost creative-only" style="font-size:11px; margin-left:6px;" onclick="app.openChangeBoxDialog('${layout.targetId}', ${bIdx})" title="Invertera / Byt rubrik">↻</button>
-                </div>
-                <button type="button" class="creative-only" style="font-size:11px; padding:4px 8px;" onclick="app.removeBox('${layout.targetId}', ${bIdx})">Ta bort</button>
-              </div>
-              <div class="items-row">${directItems.map(res => this.renderPill(res, node.id)).join('')}</div>
-              <div class="form-stack creative-only">
-                <input type="text" id="inline-${b.boxId}" list="existingNodesList" placeholder="Sök/Skapa i rutan..." onkeydown="if(event.key==='Enter'){ event.preventDefault(); app.inlineCreate('${node.id}', '${b.boxId}', null, this.value); }">
-                <button type="button" onclick="app.inlineCreate('${node.id}', '${b.boxId}', null, document.getElementById('inline-${b.boxId}').value)">+</button>
-              </div>
-              ${subboxesHtml ? `<div class="subbox-list">${subboxesHtml}</div>` : ''}
-              <button type="button" class="btn-secondary creative-only" style="margin-top:12px; font-size:12px; width:100%;" onclick="app.promptAddSubbox('${layout.targetId}', ${bIdx})">+ Underbox</button>
+            <div class="icon-cluster">
+                <div class="cluster-header">${icon}</div>
+                <div class="items-row">${pills}</div>
             </div>
-          `;
+            `;
         }).join('');
 
-        boxesHtml += autoBoxes.map(ab => `
-          <div class="graph-box auto-umbrella">
-            <div class="graph-header" style="border-bottom-color: #cbd5e1;">
-              <div>
-                <a class="graph-title" onclick="app.navigateTo('${ab.parent.id}')"># ${ab.parent.title}</a>
-                <span style="font-size:12px; color:var(--db-muted); margin-left:6px;">(Auto)</span>
-              </div>
+        const inputZone = `
+          <div class="creative-only" style="margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--db-border-light);">
+            <div style="font-size:12px; color:var(--db-muted); margin-bottom:8px;">
+                <strong>Snabblänka:</strong> Ex. <em>Saving Throws: Poison: 14; Magic: 15, Weapon: Sword</em>
             </div>
-            <div class="items-row">
-              ${ab.children.map(child => this.renderPill({ item: child, satellites: [] }, node.id)).join('')}
+            <div style="display:flex; gap:8px;">
+                <input type="text" id="inlineChainInput" list="existingNodesList" placeholder="Skapa relationer..." onkeydown="if(event.key==='Enter'){ event.preventDefault(); app.inlineChainCreate('${node.id}', this.value); this.value=''; }">
+                <button type="button" class="primary" onclick="app.inlineChainCreate('${node.id}', document.getElementById('inlineChainInput').value); document.getElementById('inlineChainInput').value='';">Koppla</button>
             </div>
-            <div class="form-stack creative-only">
-              <input type="text" id="autoInline-${ab.parent.id}" list="existingNodesList" placeholder="Sök/Skapa i rutan..." onkeydown="if(event.key==='Enter'){ event.preventDefault(); app.inlineCreate('${node.id}', '${ab.parent.id}', null, this.value); }">
-              <button type="button" onclick="app.inlineCreate('${node.id}', '${ab.parent.id}', null, document.getElementById('autoInline-${ab.parent.id}').value)">+</button>
-            </div>
-          </div>
-        `).join('');
-
-        const possibleTargets = [{ id: node.id, title: node.title }];
-        this.getNeighbors(node.id).forEach(nid => { const n = this.getNode(nid); if(n) possibleTargets.push({ id: n.id, title: n.title }); });
-        const addBoxHtml = `
-          <div class="add-box-zone creative-only">
-            <div style="font-weight:bold; margin-bottom:8px;">Skapa Box</div>
-            <div class="form-stack">
-              <select id="boxTargetLayout">${possibleTargets.map(tgt => `<option value="${tgt.id}" ${tgt.id === layout.targetId ? 'selected' : ''}>${tgt.title}</option>`).join('')}</select>
-              <input type="text" id="newBoxInput" list="existingNodesList" placeholder="Klass för boxen...">
-              <button type="button" class="primary" onclick="app.createBoxFromInput()">Skapa</button>
-            </div>
-          </div>
-        `;
-
-        const prospects = unhandledIds.filter(id => !handledByTriangles.has(id)).map(id => this.getNode(id)).filter(Boolean);
-        const prospectsHtml = `
-          <div class="prospects-zone creative-only">
-            <div class="prospects-header"><span>Osorterade relationer (${prospects.length})</span></div>
-            <div class="items-row">
-              ${prospects.map(p => `<span class="item-pill"><a onclick="app.navigateTo('${p.id}')">${p.title}</a><span class="remove-item-btn" onclick="app.requestRemoveRelation('${node.id}', '${p.id}')">×</span></span>`).join('')}
-            </div>
-            <button type="button" class="primary" style="width:100%; margin-top:16px;" onclick="app.openLinkDialog('${node.id}')">+ Länka till noder</button>
           </div>
         `;
 
@@ -903,23 +527,24 @@
           <div class="item-card">
             <div class="item-top-zone">
               <div class="item-name-row">
-                <h1 class="item-name">${node.title}</h1>
+                <h1 class="item-name">
+                  <span class="node-icon creative-only" onclick="app.requestChangeIcon('${node.id}')" title="Byt ikon">${node.icon || '🏷️'}</span>
+                  <span class="node-icon readonly-only">${node.icon || '🏷️'}</span>
+                  ${node.title}
+                </h1>
                 <div class="admin-controls">
-                  <button type="button" class="btn-ghost creative-only" style="font-size:11px; padding:4px 8px; border: 1px solid var(--db-border);" onclick="app.openImportDialog('${node.id}')">📋 Importera mall</button>
                   <button type="button" class="admin-only" style="font-size:11px; padding:4px 8px;" onclick="app.requestRenameNode('${node.id}')">✎ Byt namn</button>
                   <button type="button" class="btn-danger admin-only" style="font-size:11px; padding:4px 8px;" onclick="app.requestDeleteNode('${node.id}')">🗑 Radera</button>
                 </div>
               </div>
             </div>
-            ${autoFactsHtml}
             ${freeTextZone}
-            <div class="boxes-container">${boxesHtml}${addBoxHtml}</div>
-            ${prospectsHtml}
+            ${clustersHtml}
+            ${inputZone}
           </div>
         `;
       }
 
-      /* ACTIONS */
       saveFreeText(nodeId) {
         const node = this.getNode(nodeId);
         if (node) {
@@ -930,172 +555,581 @@
         }
       }
 
-      openCreateDialog() {
-        document.getElementById('modalTitle').value = '';
-        document.getElementById('modalFreeText').value = '';
-        document.getElementById('createDialog').style.display = 'flex';
-        setTimeout(() => document.getElementById('modalTitle').focus(), 50);
+      handleSearch() {
+        const q = document.getElementById('searchInput').value.trim();
+        if (!q) return;
+        const n = this.getNodeByTitle(q);
+        if (n) this.navigateTo(n.id);
+        else {
+          if (this.checkCreative() && confirm(`"${q}" finns inte. Skapa?`)) {
+            const newNode = this.getOrCreateNode(q);
+            this.sync();
+            this.navigateTo(newNode.id);
+          } else if (!this.checkCreative()) {
+            alert(`Noden "${q}" kunde inte hittas.`);
+          }
+        }
       }
-      closeCreateDialog() { document.getElementById('createDialog').style.display = 'none'; }
-      saveNewNode() {
-        const title = document.getElementById('modalTitle').value.trim();
-        if (!title) return;
-        if (this.getNodeByTitle(title)) return alert(`Namnet är upptaget.`);
-        const newNode = { id: 'n_' + Math.random().toString(36).substr(2, 9), title, free_text: {sv:document.getElementById('modalFreeText').value, en:document.getElementById('modalFreeText').value}, boxes: [] };
-        this.nodes.push(newNode);
-        this.sync();
-        this.closeCreateDialog();
-        this.navigateTo(newNode.id);
+    }
+
+    const app = new GraphApp();
+  </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nördverket</title>
+
+  <!-- Firebase SDK Compat -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    :root {
+      --db-bg: #f6f7f8;
+      --db-content-bg: #ffffff;
+      --db-border: #a2a9b1;
+      --db-border-light: #c8ccd1;
+      --db-header-bg: #eaecf0;
+      --db-link: #3366cc;
+      --db-link-hover: #447ff5;
+      --db-text: #202122;
+      --db-muted: #54595d;
+      --status-online: #2e7d32;
+      --status-offline: #e65100;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Liberation Sans', sans-serif;
+      font-size: 14px; line-height: 1.6; color: var(--db-text);
+      background-color: var(--db-bg); display: flex; flex-direction: column;
+      min-height: 100vh; overflow-x: hidden;
+    }
+
+    /* BEHÖRIGHET */
+    body[data-mode="read"] .creative-only { display: none !important; }
+    body[data-mode="read"] .admin-only { display: none !important; }
+    body[data-mode="create"] .admin-only { display: none !important; }
+    body[data-mode="read"] .readonly-only { display: inline-block; }
+    body[data-mode="create"] .readonly-only, body[data-mode="admin"] .readonly-only { display: none; }
+
+    header {
+      background-color: #ffffff; border-bottom: 1px solid var(--db-border-light);
+      padding: 10px 16px; display: flex; flex-wrap: wrap; align-items: center;
+      justify-content: space-between; gap: 12px;
+    }
+
+    .brand { display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--db-text); font-size: 17px; font-weight: bold; cursor: pointer; flex-shrink: 0; }
+    .brand-logo { width: 26px; height: 26px; background: #202122; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; border-radius: 3px; }
+    
+    .header-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .header-left { display: flex; gap: 8px; align-items: center; }
+
+    .search-bar { display: flex; flex-wrap: nowrap; gap: 4px; align-items: stretch; flex-grow: 1; max-width: 300px; min-width: 150px; }
+    .search-bar input { flex-grow: 1; min-width: 0; width: 100%; }
+    .search-bar button { flex-shrink: 0; white-space: nowrap; }
+
+    input[type="text"], textarea, select {
+      padding: 8px 12px; font-size: 14px; border: 1px solid var(--db-border);
+      border-radius: 4px; background: #fff; color: var(--db-text); width: 100%; max-width: 100%;
+    }
+    
+    button {
+      background: var(--db-header-bg); border: 1px solid var(--db-border);
+      border-radius: 4px; padding: 8px 14px; cursor: pointer; font-size: 14px; font-weight: 500;
+      display: inline-flex; align-items: center; gap: 4px; justify-content: center;
+    }
+    button:hover { background: #dadde3; }
+    button.primary { background: var(--db-link); color: #fff; border-color: #2a4b8d; }
+    button.primary:hover { background: var(--db-link-hover); }
+    .btn-secondary { background: #54595d; color: #fff; border-color: #54595d; }
+    .btn-secondary:hover { background: #3f4346; }
+    .btn-danger { background: #fce4e4; color: #d32f2f; border-color: #f5c6c6; }
+    .btn-danger:hover { background: #f5c6c6; }
+    .btn-ghost { background: transparent; border-color: transparent; padding: 4px 8px; }
+    .btn-ghost:hover { background: #eaecf0; border-color: #c8ccd1; }
+
+    .status-badge { font-size: 11px; padding: 4px 8px; border-radius: 14px; font-weight: 500; display: inline-flex; align-items: center; }
+    .status-badge.online { background: #e8f5e9; color: var(--status-online); border: 1px solid #c8e6c9; }
+    .status-badge.offline { background: #fff3e0; color: var(--status-offline); border: 1px solid #ffe0b2; }
+
+    .viewport-container { max-width: 880px; width: 100%; margin: 16px auto; padding: 0 12px; flex-grow: 1; }
+    .breadcrumb-nav { margin-bottom: 12px; font-size: 13px; }
+    .breadcrumb-nav a { color: var(--db-link); text-decoration: none; cursor: pointer; font-weight: 500; }
+    .breadcrumb-nav a:hover { text-decoration: underline; }
+
+    .item-card { background: var(--db-content-bg); border: 1px solid var(--db-border-light); padding: 24px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); border-radius: 4px; }
+    
+    .item-top-zone { margin-bottom: 16px; border-bottom: 1px solid var(--db-border); padding-bottom: 12px; }
+    .item-name-row { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px; }
+    .item-name { font-family: 'Linux Libertine', 'Georgia', Times, serif; font-size: 32px; line-height: 1.1; letter-spacing: 0.5px; display:flex; align-items:center; gap:8px;}
+    .admin-controls { display: flex; gap: 6px; flex-wrap: wrap; }
+
+    .node-icon { cursor: pointer; padding: 4px 6px; border-radius: 4px; transition: background 0.2s; background:#f6f7f8; border:1px solid var(--db-border-light); font-size:24px;}
+    .node-icon.creative-only:hover { background: #eaecf0; border-color:var(--db-border); }
+    .node-icon.readonly-only { cursor: default; border:none; background:transparent; padding:0; }
+
+    /* FREE TEXT */
+    .free-text-frame { border: 1px solid var(--db-border-light); border-radius: 4px; padding: 12px; background: #fafafa; margin-bottom: 32px; cursor: pointer; }
+    .free-text-frame.readonly { cursor: default; }
+    .free-text-label { font-size: 11px; color: var(--db-muted); text-transform: uppercase; margin-bottom: 6px; display: flex; justify-content: space-between; }
+    .free-text-content { font-size: 14px; white-space: pre-wrap; }
+
+    /* IKON-KLUSTER */
+    .icon-cluster { margin-bottom: 24px; }
+    .cluster-header { font-size: 20px; font-weight: bold; color: var(--db-text); margin-bottom: 12px; padding-bottom: 4px; border-bottom: 1px solid var(--db-border-light); }
+    
+    /* TAGGAR / PILLS */
+    .items-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .item-pill {
+      display: inline-flex; align-items: center; padding: 4px 10px;
+      background: #ffffff; border: 1px solid var(--db-border); border-radius: 16px;
+      font-size: 13px; box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+    .item-pill a { color: var(--db-link); text-decoration: none; font-weight: 500; cursor: pointer; }
+    .remove-item-btn { color: var(--db-muted); cursor: pointer; font-weight: bold; margin-left: 6px; font-size: 14px; }
+    .remove-item-btn:hover { color: #d32f2f; }
+    .satellite-text { color: var(--db-muted); font-size: 12px; margin-left: 4px;}
+    .satellite-text a { color: var(--db-muted); text-decoration: none;}
+    .satellite-text a:hover { text-decoration: underline;}
+
+    .form-stack { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; width: 100%; }
+    .form-stack button { width: 100%; }
+
+    /* DIALOGER */
+    .dialog-backdrop {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6); align-items: flex-start; justify-content: center;
+      padding-top: 8vh; z-index: 1000; overflow-y: auto;
+    }
+    .dialog { background: #fff; border: 1px solid var(--db-border); width: 92%; max-width: 420px; padding: 20px; border-radius: 6px; margin-bottom: 40px; }
+    .dialog-actions-stacked { display: flex; flex-direction: column; gap: 8px; margin-top: 20px; }
+    .dialog-actions-stacked button { width: 100%; padding: 10px; font-size: 15px; }
+
+    @media (min-width: 600px) {
+      .form-stack { flex-direction: row; align-items: stretch; }
+      .form-stack button { width: auto; }
+      .dialog-actions-stacked { flex-direction: row; justify-content: flex-end; }
+      .dialog-actions-stacked button { width: auto; }
+      .dialog { padding: 24px; }
+    }
+  </style>
+</head>
+<body data-mode="read">
+
+  <datalist id="existingNodesList"></datalist>
+
+  <header>
+    <div class="header-left">
+      <a class="brand" onclick="app.navigateTo('overview')">
+        <div class="brand-logo">NV</div>
+        <span id="headerAppTitle">Nördverket</span>
+      </a>
+      <button type="button" class="btn-ghost" onclick="app.promptLibrarySwitch()" title="Byt bibliotek" id="btnLibSwitcher" style="font-size:12px;">📚 DnD</button>
+    </div>
+    
+    <div class="search-bar">
+      <input type="text" id="searchInput" list="existingNodesList" placeholder="Sök nod..." onkeydown="if(event.key==='Enter') { event.preventDefault(); app.handleSearch(); }">
+      <button type="button" onclick="app.handleSearch()" id="btnSearchGo">Gå till</button>
+    </div>
+    
+    <div class="header-actions">
+      <button type="button" class="btn-ghost" onclick="app.promptModeUnlock()" id="btnModeLock" title="Lås upp redigering">🔒 Läs-läge</button>
+      <span id="dbStatus" class="status-badge connecting">☁ Ansluter...</span>
+    </div>
+  </header>
+
+  <div class="viewport-container">
+    <main id="mainContent"></main>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDX3KFiW_nScowsEyNoveIC7u-u2WY2NCc",
+      authDomain: "ort-wiki.firebaseapp.com",
+      projectId: "ort-wiki",
+      storageBucket: "ort-wiki.firebasestorage.app",
+      messagingSenderId: "517699154864",
+      appId: "1:517699154864:web:bdfd53a4c6e7c520029c75"
+    };
+
+    class GraphApp {
+      constructor() {
+        this.nodes = [];
+        this.edges = [];
+        this.activeNodeId = null;
+        this.db = null;
+        this.unsubFirebase = null;
+        
+        this.mode = 'read'; 
+        this.currentLibrary = localStorage.getItem('nv_current_lib') || 'DnD';
+
+        this.updateModeUI();
+        this.initHistoryRouter();
+        this.initFirebase();
       }
 
-      openBatchDialog() {
-        document.getElementById('batchInput').value = '';
-        document.getElementById('batchDialog').style.display = 'flex';
-        setTimeout(() => document.getElementById('batchInput').focus(), 50);
+      updateModeUI() {
+        document.body.setAttribute('data-mode', this.mode);
+        const lockBtn = document.getElementById('btnModeLock');
+        if (this.mode === 'read') { lockBtn.innerHTML = '🔒 Läs-läge'; lockBtn.style.color = 'var(--db-text)'; } 
+        else if (this.mode === 'create') { lockBtn.innerHTML = '🔓 Skapar-läge'; lockBtn.style.color = '#2e7d32'; } 
+        else if (this.mode === 'admin') { lockBtn.innerHTML = '🛠️ Admin-läge'; lockBtn.style.color = '#d32f2f'; }
       }
-      closeBatchDialog() { document.getElementById('batchDialog').style.display = 'none'; }
-      
-      executeBatchCreate() {
-        const text = document.getElementById('batchInput').value;
-        const lines = text.split(/\.|\n/); 
-        
-        lines.forEach(line => {
-          if(!line.trim()) return;
-          const parts = line.split(':');
-          
-          if(parts.length > 1) {
-            const leftSide = parts[0].trim();
-            const rightSide = parts[1].trim();
-            
-            let mainParent = leftSide;
-            let implicitSat = null;
-            
-            if(leftSide.toLowerCase().includes(' of ')) {
-                const ofParts = leftSide.split(/ of /i);
-                implicitSat = ofParts[0].trim();
-                mainParent = ofParts[1].trim();
+
+      promptModeUnlock() {
+        if (this.mode !== 'read') {
+            if(confirm("Vill du låsa systemet och återgå till Läs-läge?")) {
+                this.mode = 'read';
+                this.updateModeUI();
             }
-            
-            const parentNode = this.getOrCreateNode(mainParent);
-            
-            rightSide.split(',').map(s => s.trim()).filter(Boolean).forEach(childStr => {
-              let childName = childStr;
-              let explicitSat = null;
-              
-              if(childStr.includes('(') && childStr.includes(')')) {
-                  const match = childStr.match(/(.*)\((.*)\)/);
-                  if(match) {
-                      childName = match[1].trim();
-                      explicitSat = match[2].trim();
-                  }
-              }
-              
-              const childNode = this.getOrCreateNode(childName);
-              this.addRelation(parentNode.id, childNode.id);
-              
-              if(implicitSat) this.addRelation(childNode.id, this.getOrCreateNode(implicitSat).id);
-              if(explicitSat) this.addRelation(childNode.id, this.getOrCreateNode(explicitSat).id);
-            });
-          } else {
-            line.split(',').map(s => s.trim()).filter(Boolean).forEach(n => this.getOrCreateNode(n));
+            return;
+        }
+        const pwd = prompt("Ange lösenord för att byta läge:");
+        if (pwd === "Marvei83") this.mode = 'create';
+        else if (pwd === "Oinz82") this.mode = 'admin';
+        else if (pwd !== null && pwd.trim() !== '') alert("Fel lösenord.");
+        this.updateModeUI();
+      }
+
+      checkAdmin() {
+        if (this.mode === 'admin') return true;
+        alert("Kräver Admin-läge (Lösenord: Oinz82). Klicka på låset i menyn.");
+        return false;
+      }
+      checkCreative() { return (this.mode === 'create' || this.mode === 'admin'); }
+
+      getDocName() { return (this.currentLibrary === 'DnD') ? 'nordverket_live' : 'nv_lib_' + this.currentLibrary; }
+
+      promptLibrarySwitch() {
+          const newLib = prompt("Aktuellt bibliotek: " + this.currentLibrary + "\nAnge namnet på biblioteket du vill ladda/skapa:", this.currentLibrary);
+          if (newLib && newLib.trim() && newLib.trim() !== this.currentLibrary) {
+              this.currentLibrary = newLib.trim();
+              localStorage.setItem('nv_current_lib', this.currentLibrary);
+              document.getElementById('btnLibSwitcher').innerHTML = '📚 ' + this.currentLibrary;
+              this.nodes = []; this.edges = [];
+              this.initFirebase();
+              this.navigateTo('overview');
           }
+      }
+
+      initHistoryRouter() { window.addEventListener('popstate', () => this.routeFromHash()); }
+      navigateTo(routeId) {
+        if (window.location.hash !== '#' + routeId) window.location.hash = routeId;
+        this.routeFromHash();
+      }
+      routeFromHash() {
+        const hash = window.location.hash.replace('#', '').trim();
+        if (!hash || hash === 'overview') this.renderOverview();
+        else {
+          const node = this.getNode(hash) || this.getNodeByTitle(decodeURIComponent(hash));
+          if (node) this.renderPage(node.id);
+          else this.renderOverview();
+        }
+      }
+
+      initFirebase() {
+        try {
+          if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+          this.db = firebase.firestore();
+          if (this.unsubFirebase) this.unsubFirebase(); 
+          
+          const docName = this.getDocName();
+          document.getElementById('btnLibSwitcher').innerHTML = '📚 ' + this.currentLibrary;
+
+          this.unsubFirebase = this.db.collection('simple_db').doc(docName).onSnapshot(doc => {
+            document.getElementById('dbStatus').className = "status-badge online";
+            document.getElementById('dbStatus').innerText = "☁️ Synkad";
+            if (doc.exists) {
+              const data = doc.data();
+              this.nodes = this.cleanDuplicates(data.nodes || []);
+              this.edges = this.cleanEdges(data.edges || []);
+            } else if (this.nodes.length === 0 && this.currentLibrary !== 'DnD') {
+               this.getOrCreateNode("System Hub");
+               this.sync();
+            }
+            this.updateDatalist();
+            this.routeFromHash();
+          }, err => { this.fallbackLocal(); });
+        } catch (e) { this.fallbackLocal(); }
+      }
+
+      fallbackLocal() {
+        const docName = this.getDocName();
+        document.getElementById('dbStatus').className = "status-badge offline";
+        document.getElementById('dbStatus').innerText = "☁️ Lokal";
+        const rawN = localStorage.getItem('nv_nodes_' + docName);
+        const rawE = localStorage.getItem('nv_edges_' + docName);
+        this.nodes = this.cleanDuplicates(rawN ? JSON.parse(rawN) : []);
+        this.edges = this.cleanEdges(rawE ? JSON.parse(rawE) : []);
+        this.updateDatalist();
+        this.routeFromHash();
+      }
+
+      cleanDuplicates(nodeArray) {
+        const seen = new Set();
+        return nodeArray.filter(n => {
+          const lower = n.title.toLowerCase().trim();
+          if (seen.has(lower)) return false;
+          seen.add(lower);
+          return true;
         });
-        
+      }
+      cleanEdges(edgeArray) {
+        const validIds = new Set(this.nodes.map(n => n.id));
+        return edgeArray.filter(e => validIds.has(e.a) && validIds.has(e.b));
+      }
+
+      async sync() {
+        this.updateDatalist();
+        const docName = this.getDocName();
+        this.edges = this.cleanEdges(this.edges);
+        if (this.db) {
+          try {
+            await this.db.collection('simple_db').doc(docName).set({ nodes: this.nodes, edges: this.edges, updatedAt: Date.now() });
+          } catch (e) {
+            localStorage.setItem('nv_nodes_' + docName, JSON.stringify(this.nodes));
+            localStorage.setItem('nv_edges_' + docName, JSON.stringify(this.edges));
+          }
+        } else {
+          localStorage.setItem('nv_nodes_' + docName, JSON.stringify(this.nodes));
+          localStorage.setItem('nv_edges_' + docName, JSON.stringify(this.edges));
+        }
+      }
+
+      updateDatalist() {
+        const dl = document.getElementById('existingNodesList');
+        if (dl) dl.innerHTML = this.nodes.map(n => `<option value="${n.title}">`).join('');
+      }
+
+      getNode(id) { return this.nodes.find(n => n.id === id); }
+      getNodeByTitle(title) {
+        if (!title) return null;
+        const cl = title.toLowerCase().trim();
+        return this.nodes.find(n => n.title.toLowerCase().trim() === cl);
+      }
+      getOrCreateNode(title) {
+        let node = this.getNodeByTitle(title);
+        if (!node) {
+          node = { id: 'n_' + Math.random().toString(36).substr(2, 9), title, icon: '🏷️', free_text: {sv:'', en:''} };
+          this.nodes.push(node);
+        }
+        return node;
+      }
+
+      getNeighbors(nodeId) { return this.edges.filter(e => e.a === nodeId || e.b === nodeId).map(e => e.a === nodeId ? e.b : e.a); }
+      areNeighbors(idA, idB) { return this.edges.some(e => (e.a === idA && e.b === idB) || (e.a === idB && e.b === idA)); }
+      addRelation(idA, idB) { if (idA !== idB && !this.areNeighbors(idA, idB)) this.edges.push({ a: idA, b: idB }); }
+
+      requestRemoveRelation(idA, idB) {
+        if (!this.checkCreative()) return;
+        this.edges = this.edges.filter(e => !((e.a === idA && e.b === idB) || (e.a === idB && e.b === idA)));
         this.sync();
-        this.closeBatchDialog();
         this.renderPage(this.activeNodeId);
       }
 
-      openLinkDialog(pageId) {
-        this.targetPageForLink = pageId;
-        this.pendingLinks = [];
-        document.getElementById('linkNodeInput').value = '';
-        this.renderPendingLinks();
-        document.getElementById('linkDialog').style.display = 'flex';
-        setTimeout(() => document.getElementById('linkNodeInput').focus(), 50);
-      }
-      closeLinkDialog() {
-        this.targetPageForLink = null;
-        this.pendingLinks = [];
-        document.getElementById('linkDialog').style.display = 'none';
-      }
-      addPendingLink() {
-        const input = document.getElementById('linkNodeInput');
-        const val = input.value.trim();
-        if (!val) return;
-        if (!this.pendingLinks.includes(val)) {
-            this.pendingLinks.push(val);
-            this.renderPendingLinks();
+      requestRenameNode(nodeId) {
+        if (!this.checkAdmin()) return;
+        const node = this.getNode(nodeId);
+        const newName = prompt("Ange nytt namn:", node.title);
+        if (newName && newName.trim() && newName !== node.title) {
+          if (this.getNodeByTitle(newName)) return alert("Namnet är upptaget.");
+          node.title = newName.trim();
+          this.sync();
+          this.renderPage(nodeId);
         }
-        input.value = '';
-      }
-      removePendingLink(idx) {
-          this.pendingLinks.splice(idx, 1);
-          this.renderPendingLinks();
-      }
-      renderPendingLinks() {
-          const container = document.getElementById('pendingLinksContainer');
-          container.innerHTML = this.pendingLinks.map((name, idx) => {
-              const isNew = !this.getNodeByTitle(name);
-              const nyText = isNew ? ` <span style="color:var(--db-link); font-size:11px;">(ny)</span>` : '';
-              return `<span class="item-pill" style="background:#eef2fa;">${name}${nyText} <span class="remove-item-btn" onclick="app.removePendingLink(${idx})">×</span></span>`;
-          }).join('');
-      }
-      executeLinkNodes() {
-        if (!this.targetPageForLink || this.pendingLinks.length === 0) return;
-        this.pendingLinks.forEach(name => {
-            let node = this.getOrCreateNode(name);
-            this.addRelation(this.targetPageForLink, node.id);
-        });
-        this.sync();
-        this.closeLinkDialog();
-        this.renderPage(this.targetPageForLink);
       }
 
-      inlineCreate(pageId, boxId, subboxId, rawValue) {
+      requestDeleteNode(nodeId) {
+        if (!this.checkAdmin()) return;
+        if (confirm("Är du säker på att du vill radera noden och alla dess relationer?")) {
+          this.nodes = this.nodes.filter(n => n.id !== nodeId);
+          this.edges = this.edges.filter(e => e.a !== nodeId && e.b !== nodeId);
+          this.sync();
+          this.navigateTo('overview');
+        }
+      }
+
+      requestChangeIcon(nodeId) {
+        if (!this.checkCreative()) return;
+        const node = this.getNode(nodeId);
+        const newIcon = prompt("Ange ikon/kategori (t.ex. ⚔️, 🛡️, Vapen):", node.icon || '🏷️');
+        if (newIcon !== null && newIcon.trim() !== '') {
+            node.icon = newIcon.trim();
+            this.sync();
+            this.renderPage(nodeId);
+        }
+      }
+
+      // KRAFTFULL KEDJE-PARSER: Nod1: Nod2: Nod3; Nod4, AnnanNod: Barn
+      inlineChainCreate(pageId, rawValue) {
+        if(!this.checkCreative()) return;
         const val = rawValue.trim();
-        if (!val) return;
-        const node = this.getOrCreateNode(val);
-        this.addRelation(node.id, pageId);
-        this.addRelation(node.id, boxId);
-        if (subboxId) this.addRelation(node.id, subboxId);
+        if(!val) return;
+        
+        const statements = val.split(','); // Översta nivån
+        
+        statements.forEach(statement => {
+            const chunks = statement.split(';');
+            let baseNodeId = null;
+            
+            chunks.forEach((chunk, index) => {
+                const parts = chunk.split(':').map(s => s.trim()).filter(Boolean);
+                if(parts.length === 0) return;
+                
+                if(index === 0) {
+                    const rootNode = this.getOrCreateNode(parts[0]);
+                    baseNodeId = rootNode.id;
+                    this.addRelation(pageId, rootNode.id); // Koppla till sidans kontext
+                    
+                    let prevId = rootNode.id;
+                    for(let i=1; i<parts.length; i++){
+                        const n = this.getOrCreateNode(parts[i]);
+                        this.addRelation(prevId, n.id);
+                        prevId = n.id;
+                    }
+                } else {
+                    const firstInChunk = this.getOrCreateNode(parts[0]);
+                    this.addRelation(baseNodeId, firstInChunk.id); // Koppla till baseNode
+                    
+                    let prevId = firstInChunk.id;
+                    for(let i=1; i<parts.length; i++){
+                        const n = this.getOrCreateNode(parts[i]);
+                        this.addRelation(prevId, n.id);
+                        prevId = n.id;
+                    }
+                }
+            });
+        });
+        
         this.sync();
         this.renderPage(pageId);
       }
 
-      createBoxFromInput() {
-        const targetId = document.getElementById('boxTargetLayout').value;
-        const boxName = document.getElementById('newBoxInput').value.trim();
-        if (!boxName || !targetId) return;
-        const node = this.getOrCreateNode(boxName);
-        const targetNode = this.getNode(targetId);
-        if (!targetNode.boxes) targetNode.boxes = [];
-        targetNode.boxes.push({ boxId: node.id, subboxes: [] });
-        this.sync();
-        this.renderPage(this.activeNodeId);
+      renderPill(result, pageIdContext) {
+        if (!result || !result.item) return '';
+        const sats = result.satellites && result.satellites.length > 0 
+          ? ` <span class="satellite-text">(${result.satellites.map(s => `<a onclick="app.navigateTo('${s.id}')">${s.title}</a>`).join(', ')})</span>` 
+          : '';
+        return `
+          <span class="item-pill">
+            <a onclick="app.navigateTo('${result.item.id}')">${result.item.title}</a>${sats}
+            <span class="remove-item-btn creative-only" onclick="app.requestRemoveRelation('${pageIdContext}', '${result.item.id}')" title="Kapa relation">×</span>
+          </span>
+        `;
       }
 
-      promptAddSubbox(targetId, boxIdx) {
-        const name = prompt("Namn på underbox:");
-        if (!name) return;
-        const targetNode = this.getNode(targetId);
-        targetNode.boxes[boxIdx].subboxes.push(this.getOrCreateNode(name).id);
-        this.sync();
-        this.renderPage(this.activeNodeId);
+      renderOverview() {
+        this.activeNodeId = null;
+        const main = document.getElementById('mainContent');
+        main.innerHTML = `
+          <div class="item-card">
+            <div class="item-top-zone"><h1 class="item-name">Översikt</h1></div>
+            <div>
+              <h3 style="margin-bottom: 8px; border-bottom: 1px solid var(--db-border-light); padding-bottom: 4px;">Alla Noder i Grafen (${this.nodes.length})</h3>
+              <div class="items-row">
+                ${this.nodes.map(n => `<span class="item-pill"><a onclick="app.navigateTo('${n.id}')">${n.title}</a></span>`).join('')}
+              </div>
+            </div>
+          </div>
+        `;
       }
 
-      removeBox(targetId, bIdx) {
-        const p = this.getNode(targetId);
-        if (p.boxes) p.boxes.splice(bIdx, 1);
-        this.sync();
-        this.renderPage(this.activeNodeId);
+      renderPage(nodeId, isEditingText = false) {
+        const node = this.getNode(nodeId);
+        if (!node) return this.navigateTo('overview');
+        this.activeNodeId = node.id;
+        const main = document.getElementById('mainContent');
+
+        const currentText = (node.free_text && (node.free_text['sv'] || typeof node.free_text === 'string')) ? 
+            (typeof node.free_text === 'string' ? node.free_text : node.free_text['sv']) : '';
+            
+        let freeTextZone = (isEditingText && this.checkCreative()) ? `
+          <div class="free-text-frame">
+            <div class="free-text-label"><span>Fritext</span></div>
+            <textarea id="freeTextEditor" style="width:100%; min-height:80px; margin-bottom:8px;">${currentText}</textarea>
+            <div class="form-stack" style="flex-direction:row; width:auto;">
+              <button type="button" class="primary" onclick="app.saveFreeText('${node.id}')">Spara</button>
+              <button type="button" onclick="app.renderPage('${node.id}', false)">Avbryt</button>
+            </div>
+          </div>
+        ` : `
+          <div class="free-text-frame ${this.mode==='read'?'readonly':''}" onclick="${this.checkCreative() ? `app.renderPage('${node.id}', true)` : ''}">
+            <div class="free-text-label"><span>Fritext</span><span class="creative-only" style="font-size:10px; text-decoration:underline;">Redigera</span></div>
+            <div class="free-text-content">${currentText || `<span style="color:var(--db-muted); font-style:italic;">Tomt.</span>`}</div>
+          </div>
+        `;
+
+        // SAMLA OCH KLUSTRA RELATIONER VIA IKON
+        const neighbors = this.getNeighbors(node.id).map(id => this.getNode(id)).filter(Boolean);
+        const grouped = {};
+        neighbors.forEach(n => {
+            const icon = n.icon || '🏷️';
+            if(!grouped[icon]) grouped[icon] = [];
+            grouped[icon].push(n);
+        });
+
+        const clustersHtml = Object.keys(grouped).map(icon => {
+            const items = grouped[icon];
+            const pills = items.map(item => {
+                const sats = this.getNeighbors(item.id).filter(sid => sid !== node.id).map(sid => this.getNode(sid)).filter(Boolean);
+                return this.renderPill({ item, satellites: sats }, node.id);
+            }).join('');
+            return `
+            <div class="icon-cluster">
+                <div class="cluster-header">${icon}</div>
+                <div class="items-row">${pills}</div>
+            </div>
+            `;
+        }).join('');
+
+        const inputZone = `
+          <div class="creative-only" style="margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--db-border-light);">
+            <div style="font-size:12px; color:var(--db-muted); margin-bottom:8px;">
+                <strong>Snabblänka:</strong> Ex. <em>Saving Throws: Poison: 14; Magic: 15, Weapon: Sword</em>
+            </div>
+            <div style="display:flex; gap:8px;">
+                <input type="text" id="inlineChainInput" list="existingNodesList" placeholder="Skapa relationer..." onkeydown="if(event.key==='Enter'){ event.preventDefault(); app.inlineChainCreate('${node.id}', this.value); this.value=''; }">
+                <button type="button" class="primary" onclick="app.inlineChainCreate('${node.id}', document.getElementById('inlineChainInput').value); document.getElementById('inlineChainInput').value='';">Koppla</button>
+            </div>
+          </div>
+        `;
+
+        main.innerHTML = `
+          <div class="breadcrumb-nav"><a onclick="app.navigateTo('overview')">← Tillbaka till Översikt</a></div>
+          <div class="item-card">
+            <div class="item-top-zone">
+              <div class="item-name-row">
+                <h1 class="item-name">
+                  <span class="node-icon creative-only" onclick="app.requestChangeIcon('${node.id}')" title="Byt ikon">${node.icon || '🏷️'}</span>
+                  <span class="node-icon readonly-only">${node.icon || '🏷️'}</span>
+                  ${node.title}
+                </h1>
+                <div class="admin-controls">
+                  <button type="button" class="admin-only" style="font-size:11px; padding:4px 8px;" onclick="app.requestRenameNode('${node.id}')">✎ Byt namn</button>
+                  <button type="button" class="btn-danger admin-only" style="font-size:11px; padding:4px 8px;" onclick="app.requestDeleteNode('${node.id}')">🗑 Radera</button>
+                </div>
+              </div>
+            </div>
+            ${freeTextZone}
+            ${clustersHtml}
+            ${inputZone}
+          </div>
+        `;
       }
 
-      removeSubbox(targetId, bIdx, sIdx) {
-        const p = this.getNode(targetId);
-        if (p.boxes && p.boxes[bIdx]) p.boxes[bIdx].subboxes.splice(sIdx, 1);
-        this.sync();
-        this.renderPage(this.activeNodeId);
+      saveFreeText(nodeId) {
+        const node = this.getNode(nodeId);
+        if (node) {
+          if (!node.free_text || typeof node.free_text === 'string') node.free_text = {sv:'', en:''};
+          node.free_text[this.lang] = document.getElementById('freeTextEditor').value;
+          this.sync();
+          this.renderPage(nodeId, false);
+        }
       }
 
       handleSearch() {
