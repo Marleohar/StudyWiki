@@ -88,10 +88,14 @@
       padding: 5px 12px;
       cursor: pointer;
       font-size: 13px;
+      font-weight: 500;
     }
     button:hover { background: #dadde3; }
     button.primary { background: var(--db-link); color: #fff; border-color: #2a4b8d; }
     button.primary:hover { background: var(--db-link-hover); }
+
+    .btn-secondary { background: #54595d; color: #fff; border-color: #54595d; }
+    .btn-secondary:hover { background: #3f4346; }
 
     .status-badge {
       font-size: 12px;
@@ -125,11 +129,10 @@
     }
 
     .item-top-zone {
-      margin-bottom: 20px;
+      margin-bottom: 16px;
       border-bottom: 1px solid var(--db-border);
       padding-bottom: 14px;
     }
-
     .item-name {
       font-family: 'Linux Libertine', 'Georgia', Times, serif;
       font-size: 32px;
@@ -137,6 +140,33 @@
       line-height: 1.1;
       letter-spacing: 0.5px;
     }
+
+    /* TRIANGLAR / AUTO-FACTS */
+    .auto-facts-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 20px;
+      padding: 14px 18px;
+      background: #eef2fa;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+    }
+    .auto-fact-item {
+      font-size: 14px;
+      color: var(--db-text);
+    }
+    .auto-fact-item strong a {
+      color: var(--db-text);
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .auto-fact-item strong a:hover { text-decoration: underline; }
+    .auto-fact-item a.val-link {
+      color: var(--db-link);
+      text-decoration: none;
+    }
+    .auto-fact-item a.val-link:hover { text-decoration: underline; }
 
     .free-text-frame {
       border: 1px solid var(--db-border-light);
@@ -147,13 +177,8 @@
       cursor: pointer;
     }
     .free-text-frame .free-text-label {
-      font-size: 11px;
-      color: var(--db-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 4px;
-      display: flex;
-      justify-content: space-between;
+      font-size: 11px; color: var(--db-muted); text-transform: uppercase;
+      letter-spacing: 0.5px; margin-bottom: 4px; display: flex; justify-content: space-between;
     }
     .free-text-content { font-size: 14px; line-height: 1.6; min-height: 24px; white-space: pre-wrap; }
 
@@ -213,6 +238,7 @@
         <span id="headerAppTitle">Nördverket</span>
       </a>
       <button onclick="app.openCreateDialog()" class="primary" id="btnNewNode">+ Ny Nod</button>
+      <button onclick="app.openBatchDialog()" class="btn-secondary" id="btnBatchCreate">+ Mass-skapa</button>
     </div>
     <div class="search-bar">
       <input type="text" id="searchInput" list="existingNodesList" placeholder="Sök..." onkeydown="if(event.key==='Enter') app.handleSearch()">
@@ -243,6 +269,24 @@
       <div class="dialog-actions">
         <button onclick="app.closeCreateDialog()" id="btnModalCancel">Avbryt</button>
         <button class="primary" onclick="app.saveNewNode()" id="btnModalCreate">Skapa</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mass-skapa-dialog (Franks kommandoruta) -->
+  <div class="dialog-backdrop" id="batchDialog">
+    <div class="dialog" style="width: 540px;">
+      <h2 style="font-size: 18px; margin-bottom: 12px;" id="batchHeading">Mass-skapa noder & relationer</h2>
+      <div class="form-group">
+        <label id="lblBatchInstr">Skriv rader med formatet "Huvudnod: Nod 1, Nod 2"</label>
+        <textarea id="batchInput" rows="6" placeholder="Släkte: Människa, Dvärg&#10;Yrken: Druid, Magiker" style="font-family: monospace; font-size:13px;"></textarea>
+      </div>
+      <div style="font-size: 11px; color: var(--db-muted); margin-bottom: 16px;">
+        💡 <em>Varje rad skapar noderna (om de inte finns) och kopplar ihop högernoderna med den vänstra noden automatiskt.</em>
+      </div>
+      <div class="dialog-actions">
+        <button onclick="app.closeBatchDialog()" id="btnBatchCancel">Avbryt</button>
+        <button class="primary" onclick="app.executeBatchCreate()" id="btnBatchCreateAction">Kör kommando</button>
       </div>
     </div>
   </div>
@@ -284,6 +328,7 @@
         searchPlaceholder: "Sök nod...",
         searchGo: "Gå till",
         newNode: "+ Ny Nod",
+        batchNode: "+ Mass-skapa",
         cloudSyncing: "☁️ Ansluter...",
         cloudSynced: "☁️ Synkad",
         cloudLocal: "☁️ Lokal",
@@ -307,6 +352,9 @@
         modalTextLbl: "Fritext / Anteckningar",
         modalCancelBtn: "Avbryt",
         modalCreateBtn: "Skapa",
+        batchHeading: "Mass-skapa noder & relationer",
+        batchInstr: "Skriv rader med formatet 'Huvudnod: Nod 1, Nod 2'",
+        batchCreateAction: "Kör kommando",
         createInBox: "Sök/Skapa i rutan...",
         backToOverview: "← Tillbaka till Översikt",
         layoutTargetLbl: "Spara box på:"
@@ -316,6 +364,7 @@
         searchPlaceholder: "Search node...",
         searchGo: "Go",
         newNode: "+ New Node",
+        batchNode: "+ Batch Create",
         cloudSyncing: "☁️ Connecting...",
         cloudSynced: "☁️ Synced",
         cloudLocal: "☁️ Local",
@@ -339,6 +388,9 @@
         modalTextLbl: "Free Text / Notes",
         modalCancelBtn: "Cancel",
         modalCreateBtn: "Create",
+        batchHeading: "Batch Create Nodes & Relations",
+        batchInstr: "Write rows using format 'Main Node: Node 1, Node 2'",
+        batchCreateAction: "Execute Command",
         createInBox: "Search/Create in box...",
         backToOverview: "← Back to Overview",
         layoutTargetLbl: "Save box to:"
@@ -349,7 +401,6 @@
        3. B/X DUNGEONS & DRAGONS STARTNODER
        ========================================================================= */
     const BX_NODES = [
-      // Kärnnoder / Hubbar
       { id: "hub_class", title: "Class", free_text: { sv: "Rollspelsklass.", en: "Character Class." }, boxes: [] },
       { id: "hub_monster", title: "Monster", free_text: { sv: "Varelser.", en: "Monsters." }, boxes: [] },
       { id: "hub_spell", title: "Spell", free_text: { sv: "Trollformler.", en: "Spells." }, boxes: [] },
@@ -358,7 +409,6 @@
       { id: "hub_level2", title: "Level 2", free_text: { sv: "", en: "" }, boxes: [] },
       { id: "hub_level3", title: "Level 3", free_text: { sv: "", en: "" }, boxes: [] },
       
-      // 7 Klasser
       { id: "c_fighter", title: "Fighter", free_text: { sv: "", en: "" }, boxes: [] },
       { id: "c_cleric", title: "Cleric", free_text: { sv: "", en: "" }, boxes: [] },
       { id: "c_magicuser", title: "Magic-User", free_text: { sv: "", en: "" }, boxes: [] },
@@ -367,7 +417,6 @@
       { id: "c_elf", title: "Elf", free_text: { sv: "", en: "" }, boxes: [] },
       { id: "c_halfling", title: "Halfling", free_text: { sv: "", en: "" }, boxes: [] },
 
-      // 15 Spells
       { id: "s_cure", title: "Cure Light Wounds", free_text: { sv: "", en: "" }, boxes: [] },
       { id: "s_detect", title: "Detect Magic", free_text: { sv: "", en: "" }, boxes: [] },
       { id: "s_sleep", title: "Sleep", free_text: { sv: "", en: "" }, boxes: [] },
@@ -384,7 +433,6 @@
       { id: "s_dispel", title: "Dispel Magic", free_text: { sv: "", en: "" }, boxes: [] },
       { id: "s_fly", title: "Fly", free_text: { sv: "", en: "" }, boxes: [] },
 
-      // 20 Monster
       { id: "m_goblin", title: "Goblin", free_text: { sv: "", en: "" }, boxes: [] },
       { id: "m_orc", title: "Orc", free_text: { sv: "", en: "" }, boxes: [] },
       { id: "m_skeleton", title: "Skeleton", free_text: { sv: "", en: "" }, boxes: [] },
@@ -406,7 +454,6 @@
       { id: "m_harpy", title: "Harpy", free_text: { sv: "", en: "" }, boxes: [] },
       { id: "m_kobold", title: "Kobold", free_text: { sv: "", en: "" }, boxes: [] },
 
-      // 10 Vapen
       { id: "w_sword", title: "Sword", free_text: { sv: "", en: "" }, boxes: [] },
       { id: "w_2hsword", title: "Two-Handed Sword", free_text: { sv: "", en: "" }, boxes: [] },
       { id: "w_dagger", title: "Dagger", free_text: { sv: "", en: "" }, boxes: [] },
@@ -420,16 +467,13 @@
     ];
 
     const BX_EDGES = [
-      // Koppla klasser
       { a: "c_fighter", b: "hub_class" }, { a: "c_cleric", b: "hub_class" }, { a: "c_magicuser", b: "hub_class" },
       { a: "c_thief", b: "hub_class" }, { a: "c_dwarf", b: "hub_class" }, { a: "c_elf", b: "hub_class" }, { a: "c_halfling", b: "hub_class" },
       
-      // Koppla vapen
       { a: "w_sword", b: "hub_weapon" }, { a: "w_2hsword", b: "hub_weapon" }, { a: "w_dagger", b: "hub_weapon" },
       { a: "w_mace", b: "hub_weapon" }, { a: "w_club", b: "hub_weapon" }, { a: "w_battleaxe", b: "hub_weapon" },
       { a: "w_handaxe", b: "hub_weapon" }, { a: "w_spear", b: "hub_weapon" }, { a: "w_shortbow", b: "hub_weapon" }, { a: "w_crossbow", b: "hub_weapon" },
 
-      // Koppla monster
       { a: "m_goblin", b: "hub_monster" }, { a: "m_orc", b: "hub_monster" }, { a: "m_skeleton", b: "hub_monster" },
       { a: "m_zombie", b: "hub_monster" }, { a: "m_ghoul", b: "hub_monster" }, { a: "m_gelatinous", b: "hub_monster" },
       { a: "m_owlbear", b: "hub_monster" }, { a: "m_reddragon", b: "hub_monster" }, { a: "m_greendragon", b: "hub_monster" },
@@ -438,7 +482,6 @@
       { a: "m_basilisk", b: "hub_monster" }, { a: "m_manticore", b: "hub_monster" }, { a: "m_chimera", b: "hub_monster" },
       { a: "m_harpy", b: "hub_monster" }, { a: "m_kobold", b: "hub_monster" },
 
-      // Koppla Spells (Level 1)
       { a: "s_cure", b: "hub_spell" }, { a: "s_cure", b: "hub_level1" }, { a: "s_cure", b: "c_cleric" },
       { a: "s_detect", b: "hub_spell" }, { a: "s_detect", b: "hub_level1" }, { a: "s_detect", b: "c_cleric" }, { a: "s_detect", b: "c_magicuser" },
       { a: "s_sleep", b: "hub_spell" }, { a: "s_sleep", b: "hub_level1" }, { a: "s_sleep", b: "c_magicuser" },
@@ -447,14 +490,12 @@
       { a: "s_read", b: "hub_spell" }, { a: "s_read", b: "hub_level1" }, { a: "s_read", b: "c_magicuser" },
       { a: "s_light", b: "hub_spell" }, { a: "s_light", b: "hub_level1" }, { a: "s_light", b: "c_cleric" }, { a: "s_light", b: "c_magicuser" },
 
-      // Koppla Spells (Level 2)
       { a: "s_web", b: "hub_spell" }, { a: "s_web", b: "hub_level2" }, { a: "s_web", b: "c_magicuser" },
       { a: "s_invis", b: "hub_spell" }, { a: "s_invis", b: "hub_level2" }, { a: "s_invis", b: "c_magicuser" },
       { a: "s_phantasmal", b: "hub_spell" }, { a: "s_phantasmal", b: "hub_level2" }, { a: "s_phantasmal", b: "c_magicuser" },
       { a: "s_bless", b: "hub_spell" }, { a: "s_bless", b: "hub_level2" }, { a: "s_bless", b: "c_cleric" },
       { a: "s_hold", b: "hub_spell" }, { a: "s_hold", b: "hub_level2" }, { a: "s_hold", b: "c_cleric" },
 
-      // Koppla Spells (Level 3)
       { a: "s_fireball", b: "hub_spell" }, { a: "s_fireball", b: "hub_level3" }, { a: "s_fireball", b: "c_magicuser" },
       { a: "s_dispel", b: "hub_spell" }, { a: "s_dispel", b: "hub_level3" }, { a: "s_dispel", b: "c_cleric" }, { a: "s_dispel", b: "c_magicuser" },
       { a: "s_fly", b: "hub_spell" }, { a: "s_fly", b: "hub_level3" }, { a: "s_fly", b: "c_magicuser" }
@@ -488,13 +529,21 @@
       applyLanguage() {
         document.getElementById('headerAppTitle').innerText = this.t('appTitle');
         document.getElementById('btnNewNode').innerText = this.t('newNode');
+        document.getElementById('btnBatchCreate').innerText = this.t('batchNode');
         document.getElementById('searchInput').placeholder = this.t('searchPlaceholder');
         document.getElementById('btnSearchGo').innerText = this.t('searchGo');
+
         document.getElementById('modalHeading').innerText = this.t('modalCreateHeading');
         document.getElementById('lblModalTitle').innerText = this.t('modalNameLbl');
         document.getElementById('lblModalText').innerText = this.t('modalTextLbl');
         document.getElementById('btnModalCancel').innerText = this.t('modalCancelBtn');
         document.getElementById('btnModalCreate').innerText = this.t('modalCreateBtn');
+        
+        document.getElementById('batchHeading').innerText = this.t('batchHeading');
+        document.getElementById('lblBatchInstr').innerText = this.t('batchInstr');
+        document.getElementById('btnBatchCancel').innerText = this.t('cancel');
+        document.getElementById('btnBatchCreateAction').innerText = this.t('batchCreateAction');
+
         document.getElementById('linkHeading').innerText = this.t('linkDialogHeading');
       }
 
@@ -543,7 +592,6 @@
         try {
           firebase.initializeApp(firebaseConfig);
           this.db = firebase.firestore();
-          // Låst till "nordverket_live" för att behålla data permanent
           this.db.collection('simple_db').doc('nordverket_live').onSnapshot(doc => {
             this.updateCloudBadge('online');
             if (doc.exists) {
@@ -622,10 +670,23 @@
         return this.nodes.find(n => n.title.toLowerCase().trim() === cl);
       }
 
+      getOrCreateNode(title) {
+        let node = this.getNodeByTitle(title);
+        if (!node) {
+          node = { id: 'n_' + Math.random().toString(36).substr(2, 9), title, free_text: {sv:'', en:''}, boxes: [] };
+          this.nodes.push(node);
+        }
+        return node;
+      }
+
       getNeighbors(nodeId) {
         return this.edges
           .filter(e => e.a === nodeId || e.b === nodeId)
           .map(e => e.a === nodeId ? e.b : e.a);
+      }
+
+      areNeighbors(idA, idB) {
+        return this.edges.some(e => (e.a === idA && e.b === idB) || (e.a === idB && e.b === idA));
       }
 
       addRelation(idA, idB) {
@@ -633,7 +694,7 @@
         const exists = this.edges.some(e => (e.a === idA && e.b === idB) || (e.a === idB && e.b === idA));
         if (!exists) {
           this.edges.push({ a: idA, b: idB });
-          this.sync();
+          // Note: syncing is usually batched if doing multiple additions
         }
       }
 
@@ -642,15 +703,13 @@
         this.sync();
       }
 
-      /* NY LAYOUT-LOGIK (Lånar från Hub-Noden) */
+      /* LAYOUT ARV */
       getEffectiveLayout(nodeId) {
         const node = this.getNode(nodeId);
-        // 1. Om noden har egna boxar, använd dem.
         if (node.boxes && node.boxes.length > 0) {
           return { boxes: node.boxes, inheritedFrom: null, targetId: node.id };
         }
         
-        // 2. Annars, kika på grannarna (Hubbar). Om en granne har boxar, låna den layouten.
         const neighbors = this.getNeighbors(nodeId);
         let bestNeighbor = null;
         let maxBoxes = 0;
@@ -693,10 +752,10 @@
         }).filter(res => res.item);
       }
 
-      /* PROSPECTS */
-      getProspects(pageId, effectiveBoxes) {
+      /* PROSPECTS (Filtrerar även bort noder som klustrats som Trianglar) */
+      getProspects(pageId, effectiveBoxes, triangulatedIds) {
         const allNeighbors = this.getNeighbors(pageId);
-        const handledIds = new Set();
+        const handledIds = new Set(triangulatedIds);
 
         effectiveBoxes.forEach(b => {
           handledIds.add(b.boxId);
@@ -740,6 +799,45 @@
         this.activeNodeId = node.id;
         const main = document.getElementById('mainContent');
 
+        // TRIANGULERING: Auto-Facts (Franks klusterlogik)
+        const neighbors = this.getNeighbors(node.id);
+        const triangles = [];
+        const triangulatedIds = new Set();
+
+        for(let i=0; i<neighbors.length; i++) {
+          for(let j=i+1; j<neighbors.length; j++) {
+            if(this.areNeighbors(neighbors[i], neighbors[j])) {
+              const bId = neighbors[i];
+              const cId = neighbors[j];
+              
+              const degB = this.getNeighbors(bId).length;
+              const degC = this.getNeighbors(cId).length;
+              
+              // Noden med flest relationer blir rubrik (Etikett)
+              const labelId = degB >= degC ? bId : cId;
+              const valId = degB >= degC ? cId : bId;
+              
+              triangles.push({ label: this.getNode(labelId), val: this.getNode(valId) });
+              triangulatedIds.add(bId);
+              triangulatedIds.add(cId);
+            }
+          }
+        }
+
+        let autoFactsHtml = '';
+        if (triangles.length > 0) {
+          autoFactsHtml = `
+            <div class="auto-facts-row">
+              ${triangles.map(t => `
+                <div class="auto-fact-item">
+                  <strong><a onclick="app.navigateTo('${t.label.id}')">${t.label.title}</a>:</strong> 
+                  <a class="val-link" onclick="app.navigateTo('${t.val.id}')">${t.val.title}</a>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }
+
         // Fritext
         const currentText = this.getFreeText(node);
         let freeTextZone = '';
@@ -767,7 +865,9 @@
         }
 
         const layout = this.getEffectiveLayout(node.id);
-        const prospects = this.getProspects(node.id, layout.boxes);
+        
+        // Skicka triangulatedIds till getProspects så de inte dyker upp i botten
+        const prospects = this.getProspects(node.id, layout.boxes, triangulatedIds);
 
         let boxesHtml = '';
         if (layout.inheritedFrom) {
@@ -829,7 +929,6 @@
           `;
         }).join('');
 
-        // Skapa Box-sektion (Där man väljer var layouten sparas)
         const possibleTargets = [{ id: node.id, title: node.title + " (Denna sida)" }];
         this.getNeighbors(node.id).forEach(nid => {
            const n = this.getNode(nid);
@@ -850,7 +949,6 @@
           </div>
         `;
 
-        // PROSPECTS
         const prospectsHtml = `
           <div class="prospects-zone">
             <div class="prospects-header">
@@ -879,6 +977,7 @@
             <div class="item-top-zone">
               <h1 class="item-name">${node.title}</h1>
             </div>
+            ${autoFactsHtml}
             ${freeTextZone}
             <div class="boxes-container">
               ${boxesHtml}
@@ -928,7 +1027,7 @@
         
         const existing = this.getNodeByTitle(title);
         if (existing) {
-          alert(`Namnet "${existing.title}" är redan upptaget. Klicka på "Länka till nod" om du vill koppla den.`);
+          alert(`Namnet "${existing.title}" är upptaget.`);
           return;
         }
 
@@ -937,6 +1036,46 @@
         this.sync();
         this.closeCreateDialog();
         this.navigateTo(newNode.id);
+      }
+
+      /* MASS-SKAPA (Franks Kommandoruta) */
+      openBatchDialog() {
+        document.getElementById('batchInput').value = '';
+        document.getElementById('batchDialog').style.display = 'flex';
+        setTimeout(() => document.getElementById('batchInput').focus(), 50);
+      }
+      closeBatchDialog() {
+        document.getElementById('batchDialog').style.display = 'none';
+      }
+      executeBatchCreate() {
+        const text = document.getElementById('batchInput').value;
+        const lines = text.split('\n');
+        
+        lines.forEach(line => {
+          if(!line.trim()) return;
+          const parts = line.split(':');
+          
+          if(parts.length > 1) {
+            // Format: "Huvudnod: Barn 1, Barn 2"
+            const parentName = parts[0].trim();
+            const parentNode = this.getOrCreateNode(parentName);
+            
+            const children = parts[1].split(',').map(s => s.trim()).filter(Boolean);
+            children.forEach(childName => {
+              const childNode = this.getOrCreateNode(childName);
+              this.addRelation(parentNode.id, childNode.id);
+            });
+          } else {
+            // Bara kommatecken-separerad lista: "Nod 1, Nod 2"
+            const nodes = line.split(',').map(s => s.trim()).filter(Boolean);
+            nodes.forEach(n => this.getOrCreateNode(n));
+          }
+        });
+        
+        this.sync();
+        this.closeBatchDialog();
+        if (this.activeNodeId) this.renderPage(this.activeNodeId);
+        else this.renderOverview();
       }
 
       openLinkDialog(pageId) {
@@ -955,12 +1094,7 @@
         const val = document.getElementById('linkNodeInput').value.trim();
         if (!val) return;
         
-        let node = this.getNodeByTitle(val);
-        if (!node) {
-          node = { id: 'n_' + Math.random().toString(36).substr(2, 9), title: val, free_text: {sv:'', en:''}, boxes: [] };
-          this.nodes.push(node);
-        }
-        
+        let node = this.getOrCreateNode(val);
         this.addRelation(this.targetPageForLink, node.id);
         this.closeLinkDialog();
         this.renderPage(this.targetPageForLink);
@@ -969,15 +1103,14 @@
       inlineCreate(pageId, boxId, subboxId, rawValue) {
         const val = rawValue.trim();
         if (!val) return;
-        let node = this.getNodeByTitle(val);
-        if (!node) {
-          node = { id: 'n_' + Math.random().toString(36).substr(2, 9), title: val, free_text: {sv:'', en:''}, boxes: [] };
-          this.nodes.push(node);
-        }
-        // Skapa relations-triangeln!
+        
+        let node = this.getOrCreateNode(val);
+        
         this.addRelation(node.id, pageId);
         this.addRelation(node.id, boxId);
         if (subboxId) this.addRelation(node.id, subboxId);
+        
+        this.sync();
         this.renderPage(pageId);
       }
 
@@ -986,13 +1119,9 @@
         const boxName = document.getElementById('newBoxInput').value.trim();
         if (!boxName || !targetId) return;
 
-        let node = this.getNodeByTitle(boxName);
-        if (!node) {
-          node = { id: 'n_' + Math.random().toString(36).substr(2, 9), title: boxName, free_text: {sv:'', en:''}, boxes: [] };
-          this.nodes.push(node);
-        }
-
+        let node = this.getOrCreateNode(boxName);
         const targetNode = this.getNode(targetId);
+        
         if (!targetNode.boxes) targetNode.boxes = [];
         targetNode.boxes.push({ boxId: node.id, subboxes: [] });
         
@@ -1003,13 +1132,10 @@
       promptAddSubbox(targetId, boxIdx) {
         const name = prompt(this.lang === 'sv' ? "Namn på underbox:" : "Subbox name:");
         if (!name) return;
-        let node = this.getNodeByTitle(name);
-        if (!node) {
-          node = { id: 'n_' + Math.random().toString(36).substr(2, 9), title: name, free_text: {sv:'', en:''}, boxes: [] };
-          this.nodes.push(node);
-        }
         
+        let node = this.getOrCreateNode(name);
         const targetNode = this.getNode(targetId);
+        
         targetNode.boxes[boxIdx].subboxes.push(node.id);
         this.sync();
         this.renderPage(this.activeNodeId);
@@ -1036,8 +1162,7 @@
         if (n) this.navigateTo(n.id);
         else {
           if (confirm(`"${q}" finns inte. Skapa?`)) {
-            const newNode = { id: 'n_' + Math.random().toString(36).substr(2, 9), title: q, free_text: {sv:'', en:''}, boxes: [] };
-            this.nodes.push(newNode);
+            const newNode = this.getOrCreateNode(q);
             this.sync();
             this.navigateTo(newNode.id);
           }
