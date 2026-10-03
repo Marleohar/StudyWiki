@@ -30,14 +30,9 @@
     
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Liberation Sans', sans-serif;
-      font-size: 14px;
-      line-height: 1.6;
-      color: var(--db-text);
-      background-color: var(--db-bg);
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-      overflow-x: hidden;
+      font-size: 14px; line-height: 1.6; color: var(--db-text);
+      background-color: var(--db-bg); display: flex; flex-direction: column;
+      min-height: 100vh; overflow-x: hidden;
     }
 
     header {
@@ -46,17 +41,8 @@
       justify-content: space-between; gap: 12px;
     }
 
-    .brand {
-      display: flex; align-items: center; gap: 8px; text-decoration: none;
-      color: var(--db-text); font-size: 17px; font-weight: bold; cursor: pointer;
-    }
-
-    .brand-logo {
-      width: 26px; height: 26px; background: #202122; color: #fff;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 12px; font-weight: bold; border-radius: 3px;
-    }
-
+    .brand { display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--db-text); font-size: 17px; font-weight: bold; cursor: pointer; }
+    .brand-logo { width: 26px; height: 26px; background: #202122; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; border-radius: 3px; }
     .header-actions, .header-left, .search-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
     input[type="text"], textarea, select {
@@ -73,47 +59,35 @@
     button.primary:hover { background: var(--db-link-hover); }
     .btn-secondary { background: #54595d; color: #fff; border-color: #54595d; }
     .btn-secondary:hover { background: #3f4346; }
+    .btn-danger { background: #fce4e4; color: #d32f2f; border-color: #f5c6c6; }
+    .btn-danger:hover { background: #f5c6c6; }
 
-    .status-badge {
-      font-size: 11px; padding: 4px 8px; border-radius: 14px; font-weight: 500;
-      display: inline-flex; align-items: center;
-    }
+    .status-badge { font-size: 11px; padding: 4px 8px; border-radius: 14px; font-weight: 500; display: inline-flex; align-items: center; }
     .status-badge.online { background: #e8f5e9; color: var(--status-online); border: 1px solid #c8e6c9; }
     .status-badge.offline { background: #fff3e0; color: var(--status-offline); border: 1px solid #ffe0b2; }
 
     .viewport-container { max-width: 880px; width: 100%; margin: 16px auto; padding: 0 12px; flex-grow: 1; }
-
     .breadcrumb-nav { margin-bottom: 12px; font-size: 13px; }
     .breadcrumb-nav a { color: var(--db-link); text-decoration: none; cursor: pointer; font-weight: 500; }
     .breadcrumb-nav a:hover { text-decoration: underline; }
 
-    .item-card {
-      background: var(--db-content-bg); border: 1px solid var(--db-border-light);
-      padding: 24px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); border-radius: 4px;
-    }
-
+    .item-card { background: var(--db-content-bg); border: 1px solid var(--db-border-light); padding: 24px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); border-radius: 4px; }
+    
     .item-top-zone { margin-bottom: 16px; border-bottom: 1px solid var(--db-border); padding-bottom: 12px; }
-    .item-name { font-family: 'Linux Libertine', 'Georgia', Times, serif; font-size: 28px; line-height: 1.1; }
+    .item-name-row { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px; }
+    .item-name { font-family: 'Linux Libertine', 'Georgia', Times, serif; font-size: 32px; line-height: 1.1; letter-spacing: 0.5px; }
+    .admin-controls { display: flex; gap: 6px; }
 
     /* FAKTARUTOR (Triangulering) */
-    .auto-facts-row {
-      display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px;
-      padding: 12px 16px; background: #eef2fa; border: 1px solid #cbd5e1; border-radius: 4px;
-    }
+    .auto-facts-row { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; padding: 12px 16px; background: #eef2fa; border: 1px solid #cbd5e1; border-radius: 4px; }
     .auto-fact-item { font-size: 14px; display: inline-flex; align-items: center; gap: 4px; }
     .auto-fact-item strong a { color: var(--db-text); text-decoration: none; font-weight: bold; }
     .auto-fact-item a.val-link { color: var(--db-link); text-decoration: none; }
-    .flip-btn {
-      background: transparent; border: none; padding: 0 4px; font-size: 14px;
-      color: var(--db-muted); cursor: pointer; border-radius: 2px;
-    }
-    .flip-btn:hover { background: #cbd5e1; color: #000; }
+    .action-icon-btn { background: transparent; border: none; padding: 0 4px; font-size: 14px; color: var(--db-muted); cursor: pointer; border-radius: 2px; }
+    .action-icon-btn:hover { background: #cbd5e1; color: #000; }
 
     /* FREE TEXT */
-    .free-text-frame {
-      border: 1px solid var(--db-border-light); border-radius: 4px;
-      padding: 12px; background: #fafafa; margin-bottom: 24px; cursor: pointer;
-    }
+    .free-text-frame { border: 1px solid var(--db-border-light); border-radius: 4px; padding: 12px; background: #fafafa; margin-bottom: 24px; cursor: pointer; }
     .free-text-label { font-size: 11px; color: var(--db-muted); text-transform: uppercase; margin-bottom: 6px; display: flex; justify-content: space-between; }
     .free-text-content { font-size: 14px; white-space: pre-wrap; }
 
@@ -131,37 +105,38 @@
     /* TAGGAR / PILLS */
     .items-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
     .item-pill {
-      display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px;
+      display: inline-flex; align-items: center; padding: 4px 10px;
       background: #ffffff; border: 1px solid var(--db-border); border-radius: 16px;
       font-size: 13px; box-shadow: 0 1px 2px rgba(0,0,0,0.03);
     }
     .item-pill a { color: var(--db-link); text-decoration: none; font-weight: 500; cursor: pointer; }
-    .satellite-text { color: var(--db-muted); font-size: 12px; margin-left: 2px;}
+    .remove-item-btn { color: var(--db-muted); cursor: pointer; font-weight: bold; margin-left: 6px; font-size: 14px; }
+    .remove-item-btn:hover { color: #d32f2f; }
+    .satellite-text { color: var(--db-muted); font-size: 12px; margin-left: 4px;}
     .satellite-text a { color: var(--db-muted); text-decoration: none;}
     .satellite-text a:hover { text-decoration: underline;}
 
-    /* MOBILVÄNLIGA FORMULÄR */
+    .inline-item-add { display: inline-flex; gap: 4px; align-items: center; margin-top: 6px; }
+    .inline-item-add input { width: 170px; padding: 3px 8px; font-size: 12px; border-radius: 12px; }
+    .inline-item-add button { padding: 3px 8px; font-size: 11px; border-radius: 10px; }
+
+    /* FORM STACK & ZONES */
     .form-stack { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; width: 100%; }
     .form-stack button { width: 100%; }
-    
     .add-box-zone { margin-top: 24px; padding: 16px; background: #fafafa; border: 1px dashed var(--db-border); border-radius: 4px; }
     .prospects-zone { margin-top: 24px; padding: 16px; background: #fafafa; border: 1px dashed var(--db-border); border-radius: 4px; }
     .prospects-header { font-size: 12px; text-transform: uppercase; font-weight: bold; color: var(--db-muted); margin-bottom: 12px; }
 
-    /* DIALOGER OCH FÖNSTER */
+    /* DIALOGER */
     .dialog-backdrop {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0,0,0,0.6); align-items: flex-start; justify-content: center;
       padding-top: 8vh; z-index: 1000; overflow-y: auto;
     }
-    .dialog {
-      background: #fff; border: 1px solid var(--db-border); width: 92%; max-width: 420px;
-      padding: 20px; border-radius: 6px; margin-bottom: 40px;
-    }
+    .dialog { background: #fff; border: 1px solid var(--db-border); width: 92%; max-width: 420px; padding: 20px; border-radius: 6px; margin-bottom: 40px; }
     .dialog-actions-stacked { display: flex; flex-direction: column; gap: 8px; margin-top: 20px; }
     .dialog-actions-stacked button { width: 100%; padding: 10px; font-size: 15px; }
 
-    /* Layout för surfplatta/desktop */
     @media (min-width: 600px) {
       .form-stack { flex-direction: row; align-items: stretch; }
       .form-stack button { width: auto; }
@@ -232,7 +207,7 @@
     </div>
   </div>
 
-  <!-- Multilänk-dialog (Ersätter gamla Länka Nod) -->
+  <!-- Multilänk-dialog -->
   <div class="dialog-backdrop" id="linkDialog">
     <div class="dialog">
       <h2 style="font-size: 18px; margin-bottom: 12px;" id="linkHeading">Länka till noder</h2>
@@ -240,12 +215,28 @@
         <label style="font-weight: bold; font-size: 12px; display: block; margin-bottom: 4px;" id="lblLinkSearch">Skriv namn och tryck Enter för att lägga i lista</label>
         <input type="text" id="linkNodeInput" list="existingNodesList" placeholder="Börja skriva..." onkeydown="if(event.key==='Enter') { event.preventDefault(); app.addPendingLink(); }">
       </div>
-      <!-- Här listas alla noder man håller på att lägga till -->
       <div id="pendingLinksContainer" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px;"></div>
-      
       <div class="dialog-actions-stacked">
         <button type="button" class="primary" onclick="app.executeLinkNodes()" id="btnLinkSubmit">Länka alla</button>
         <button type="button" onclick="app.closeLinkDialog()" id="btnLinkCancel">Avbryt</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Byt Värde-dialog (Swap) -->
+  <div class="dialog-backdrop" id="swapDialog">
+    <div class="dialog">
+      <h2 style="font-size: 18px; margin-bottom: 12px;">Byt ut värde</h2>
+      <div style="margin-bottom: 12px;">
+        <label style="font-weight: bold; font-size: 12px; display: block; margin-bottom: 4px;">Välj ny prospect att byta mot:</label>
+        <select id="swapSelect"></select>
+      </div>
+      <div style="font-size: 11px; color: var(--db-muted); margin-bottom: 16px;">
+        💡 Det gamla värdet rensas och det nya tar över relationen till etiketten.
+      </div>
+      <div class="dialog-actions-stacked">
+        <button type="button" class="primary" onclick="app.executeSwap()">Genomför byte</button>
+        <button type="button" onclick="app.closeSwapDialog()">Avbryt</button>
       </div>
     </div>
   </div>
@@ -275,11 +266,12 @@
         modalTextLbl: "Fritext / Anteckningar", modalCancelBtn: "Avbryt", modalCreateBtn: "Skapa", 
         batchHeading: "Mass-skapa noder", batchInstr: "Skriv rader med formatet 'Huvudnod: Nod 1, Nod 2'", 
         batchCreateAction: "Kör", createInBox: "Sök/Skapa i rutan...", backToOverview: "← Tillbaka till Översikt", 
-        layoutTargetLbl: "Spara box på:", flipWeight: "Byt ordning (Spara vikt)"
+        layoutTargetLbl: "Spara box på:", flipWeight: "Vänd ordning", swapVal: "Byt ut värde med prospect",
+        renameNode: "✎ Byt namn", deleteNode: "🗑 Radera nod"
       },
       en: {
         appTitle: "Nerd Network", searchPlaceholder: "Search node...", searchGo: "Go",
-        newNode: "+ New Node", batchNode: "+ Batch Create", cloudSyncing: "☁️️ Connecting...",
+        newNode: "+ New Node", batchNode: "+ Batch Create", cloudSyncing: "☁ Connecting...",
         cloudSynced: "☁️ Synced", cloudLocal: "☁️ Local", overview: "Overview",
         allNodes: "All Nodes in Graph", freeTextTag: "[ Free Text ]", clickToEdit: "Click to edit",
         freeTextEmpty: "Empty free text zone. Click to write...", saveText: "Save Text", cancel: "Cancel",
@@ -291,7 +283,8 @@
         modalTextLbl: "Free Text / Notes", modalCancelBtn: "Cancel", modalCreateBtn: "Create", 
         batchHeading: "Batch Create", batchInstr: "Write rows using format 'Main Node: Node 1, Node 2'", 
         batchCreateAction: "Execute", createInBox: "Search/Create in box...", backToOverview: "← Back to Overview", 
-        layoutTargetLbl: "Save box to:", flipWeight: "Swap direction (Save weight)"
+        layoutTargetLbl: "Save box to:", flipWeight: "Swap direction", swapVal: "Swap value with prospect",
+        renameNode: "✎ Rename", deleteNode: "🗑 Delete Node"
       }
     };
 
@@ -302,8 +295,9 @@
         this.edges = [];
         this.activeNodeId = null;
         this.targetPageForLink = null;
-        this.pendingLinks = []; // Håller koll på noder som ska multilänkas
+        this.pendingLinks = [];
         this.db = null;
+        this.isAdmin = false; // Security State
 
         this.applyLanguage();
         this.initHistoryRouter();
@@ -315,6 +309,18 @@
         if (!node || !node.free_text) return '';
         if (typeof node.free_text === 'string') return node.free_text;
         return node.free_text[this.lang] || node.free_text['sv'] || '';
+      }
+
+      // SÄKERHET - ADMINISTRATÖR
+      checkAdmin() {
+        if (this.isAdmin) return true;
+        const pwd = prompt(this.lang === 'sv' ? "Administrativ handling. Ange lösenord:" : "Admin action. Enter password:");
+        if (pwd === "Oinz82") {
+          this.isAdmin = true;
+          return true;
+        }
+        if (pwd !== null) alert(this.lang === 'sv' ? "Fel lösenord." : "Wrong password.");
+        return false;
       }
 
       applyLanguage() {
@@ -357,19 +363,14 @@
       initHistoryRouter() {
         window.addEventListener('popstate', () => this.routeFromHash());
       }
-
       navigateTo(routeId) {
-        if (window.location.hash !== '#' + routeId) {
-            window.location.hash = routeId;
-        }
+        if (window.location.hash !== '#' + routeId) window.location.hash = routeId;
         this.routeFromHash();
       }
-
       routeFromHash() {
         const hash = window.location.hash.replace('#', '').trim();
-        if (!hash || hash === 'overview') {
-          this.renderOverview();
-        } else {
+        if (!hash || hash === 'overview') this.renderOverview();
+        else {
           const node = this.getNode(hash) || this.getNodeByTitle(decodeURIComponent(hash));
           if (node) this.renderPage(node.id);
           else this.renderOverview();
@@ -386,11 +387,9 @@
               const data = doc.data();
               this.nodes = this.cleanDuplicates(data.nodes || []);
               this.edges = data.edges || [];
-            } else {
-              this.sync();
-            }
+            } else { this.sync(); }
             this.updateDatalist();
-            this.routeFromHash(); // Update UI
+            this.routeFromHash();
           }, err => {
             this.updateCloudBadge('offline');
             this.fallbackLocal();
@@ -457,12 +456,8 @@
         return node;
       }
 
-      getNeighbors(nodeId) {
-        return this.edges.filter(e => e.a === nodeId || e.b === nodeId).map(e => e.a === nodeId ? e.b : e.a);
-      }
-      areNeighbors(idA, idB) {
-        return this.edges.some(e => (e.a === idA && e.b === idB) || (e.a === idB && e.b === idA));
-      }
+      getNeighbors(nodeId) { return this.edges.filter(e => e.a === nodeId || e.b === nodeId).map(e => e.a === nodeId ? e.b : e.a); }
+      areNeighbors(idA, idB) { return this.edges.some(e => (e.a === idA && e.b === idB) || (e.a === idB && e.b === idA)); }
 
       addRelation(idA, idB) {
         if (idA === idB) return;
@@ -471,10 +466,37 @@
         }
       }
 
-      removeRelation(idA, idB) {
+      // Administrativ funktion
+      requestRemoveRelation(idA, idB) {
+        if (!this.checkAdmin()) return;
         this.edges = this.edges.filter(e => !((e.a === idA && e.b === idB) || (e.a === idB && e.b === idA)));
         this.sync();
         this.renderPage(this.activeNodeId);
+      }
+
+      requestRenameNode(nodeId) {
+        if (!this.checkAdmin()) return;
+        const node = this.getNode(nodeId);
+        const newName = prompt(this.lang === 'sv' ? "Ange nytt namn:" : "Enter new name:", node.title);
+        if (newName && newName.trim() && newName !== node.title) {
+          if (this.getNodeByTitle(newName)) {
+            alert(this.lang === 'sv' ? "Namnet är upptaget." : "Name already in use.");
+            return;
+          }
+          node.title = newName.trim();
+          this.sync();
+          this.renderPage(nodeId);
+        }
+      }
+
+      requestDeleteNode(nodeId) {
+        if (!this.checkAdmin()) return;
+        if (confirm(this.lang === 'sv' ? "Är du säker på att du vill radera noden och alla dess relationer?" : "Are you sure you want to completely delete this node?")) {
+          this.nodes = this.nodes.filter(n => n.id !== nodeId);
+          this.edges = this.edges.filter(e => e.a !== nodeId && e.b !== nodeId);
+          this.sync();
+          this.navigateTo('overview');
+        }
       }
 
       getEffectiveLayout(nodeId) {
@@ -509,32 +531,64 @@
         }).filter(res => res.item);
       }
 
-      /* ÄNDRAD: Nu sparar vi även labelFirst för triangeln för att tvinga fram ordning */
       flipAutoFact(bId, cId) {
         let edge = this.edges.find(e => (e.a === bId && e.b === cId) || (e.a === cId && e.b === bId));
         if (!edge) return;
-        
         let currentLabelId;
-        if (edge.labelFirst) {
-            currentLabelId = edge.labelFirst;
-        } else {
+        if (edge.labelFirst) currentLabelId = edge.labelFirst;
+        else {
             const degB = this.getNeighbors(bId).length;
             const degC = this.getNeighbors(cId).length;
             currentLabelId = degB >= degC ? bId : cId;
         }
-        
         edge.labelFirst = (currentLabelId === bId) ? cId : bId;
         this.sync();
         this.renderPage(this.activeNodeId);
       }
 
-      renderPill(result) {
+      // SWAP-LOGIK
+      openSwapDialog(pageId, labelId, oldValId) {
+        this.swapContext = { pageId, labelId, oldValId };
+        
+        // Hämta prospects för att fylla rullgardin
+        const layout = this.getEffectiveLayout(pageId);
+        // Tillfällig snabb-hämtning av alla prospects (förenklad)
+        const allNeighbors = this.getNeighbors(pageId);
+        // Filtrera bort boxar etc om vi vill, men här kan de välja vilken granne som helst
+        const prospects = allNeighbors.filter(id => id !== labelId && id !== oldValId).map(id => this.getNode(id)).filter(Boolean);
+
+        const sel = document.getElementById('swapSelect');
+        sel.innerHTML = '<option value="">-- Välj nod att byta mot --</option>' + prospects.map(p => `<option value="${p.id}">${p.title}</option>`).join('');
+        
+        document.getElementById('swapDialog').style.display = 'flex';
+      }
+      closeSwapDialog() { document.getElementById('swapDialog').style.display = 'none'; }
+      executeSwap() {
+        const newValId = document.getElementById('swapSelect').value;
+        if (!newValId) return;
+        
+        const { pageId, labelId, oldValId } = this.swapContext;
+        
+        // Kapa page -> oldVal
+        this.edges = this.edges.filter(e => !((e.a === pageId && e.b === oldValId) || (e.a === oldValId && e.b === pageId)));
+        // Lägg till page -> newVal (Ska redan finnas då det är en prospect, men säkrar)
+        this.addRelation(pageId, newValId);
+        // Lägg till label -> newVal (Bevarar triangeln!)
+        this.addRelation(labelId, newValId);
+
+        this.sync();
+        this.closeSwapDialog();
+        this.renderPage(pageId);
+      }
+
+      renderPill(result, pageIdContext) {
         const sats = result.satellites && result.satellites.length > 0 
           ? ` <span class="satellite-text">(${result.satellites.map(s => `<a onclick="app.navigateTo('${s.id}')">${s.title}</a>`).join(', ')})</span>` 
           : '';
         return `
           <span class="item-pill">
             <a onclick="app.navigateTo('${result.item.id}')">${result.item.title}</a>${sats}
+            <span class="remove-item-btn" onclick="app.requestRemoveRelation('${pageIdContext}', '${result.item.id}')" title="Kapa relation">×</span>
           </span>
         `;
       }
@@ -548,7 +602,7 @@
             <div>
               <h3 style="margin-bottom: 8px; border-bottom: 1px solid var(--db-border-light); padding-bottom: 4px;">${this.t('allNodes')} (${this.nodes.length})</h3>
               <div class="items-row">
-                ${this.nodes.map(n => `<span class="item-pill"><a onclick="app.navigateTo('${n.id}')">${n.title}</a></span>`).join('')}
+                ${this.nodes.map(n => `<span class="item-pill" style="padding-right:10px;"><a onclick="app.navigateTo('${n.id}')">${n.title}</a></span>`).join('')}
               </div>
             </div>
           </div>
@@ -576,7 +630,6 @@
 
         const unhandledIds = allNeighbors.filter(id => !explicitlyHandled.has(id));
         const umbrellas = {};
-        const edgeLookups = {};
 
         for(let i=0; i<unhandledIds.length; i++) {
           for(let j=i+1; j<unhandledIds.length; j++) {
@@ -586,7 +639,6 @@
             let edge = this.edges.find(e => (e.a === idA && e.b === idB) || (e.a === idB && e.b === idA));
             if(edge) {
               let parentId, childId;
-              
               if (edge.labelFirst) {
                 parentId = edge.labelFirst;
                 childId = (parentId === idA) ? idB : idA;
@@ -596,7 +648,6 @@
                 parentId = degA >= degB ? idA : idB;
                 childId = degA >= degB ? idB : idA;
               }
-              
               if (!umbrellas[parentId]) umbrellas[parentId] = new Set();
               umbrellas[parentId].add(childId);
             }
@@ -643,12 +694,14 @@
             ${autoFacts.map(t => `<div class="auto-fact-item">
               <strong><a onclick="app.navigateTo('${t.label.id}')">${t.label.title}</a>:</strong> 
               <a class="val-link" onclick="app.navigateTo('${t.val.id}')">${t.val.title}</a>
-              <button type="button" class="flip-btn" onclick="app.flipAutoFact('${t.label.id}', '${t.val.id}')" title="${this.t('flipWeight')}">⇄</button>
+              <button type="button" class="action-icon-btn" onclick="app.flipAutoFact('${t.label.id}', '${t.val.id}')" title="${this.t('flipWeight')}">⇄</button>
+              <button type="button" class="action-icon-btn" onclick="app.openSwapDialog('${node.id}', '${t.label.id}', '${t.val.id}')" title="${this.t('swapVal')}">🔄</button>
+              <button type="button" class="action-icon-btn" style="color:#d32f2f;" onclick="app.requestRemoveRelation('${node.id}', '${t.val.id}')" title="Kapa">×</button>
             </div>`).join('')}
           </div>`;
         }
 
-        let boxesHtml = layout.inheritedFrom ? `<div style="font-size:12px; color:var(--db-link); margin-bottom:12px; background: #eef2fa; padding: 8px 12px; border-radius: 4px; border: 1px solid #cbd5e1;">💡 <strong>${this.t('inheritedLayout')}: <a onclick="app.navigateTo('${layout.inheritedFrom.id}')">${layout.inheritedFrom.title}</a></strong></div>` : '';
+        let boxesHtml = layout.inheritedFrom ? `<div style="font-size:12px; color:var(--db-link); margin-bottom:12px; background: #eef2fa; padding: 8px 12px; border-radius: 4px; border: 1px solid #cbd5e1;">💡 <strong>${this.t('inheritedLayout')} <a onclick="app.navigateTo('${layout.inheritedFrom.id}')">${layout.inheritedFrom.title}</a></strong></div>` : '';
         boxesHtml += layout.boxes.map((b, bIdx) => {
           const boxNode = this.getNode(b.boxId);
           if (!boxNode) return '';
@@ -666,7 +719,7 @@
                   <button type="button" style="font-size:11px; padding:4px 8px;" onclick="app.removeSubbox('${layout.targetId}', ${bIdx}, ${sIdx})">${this.t('removeSubbox')}</button>
                 </div>
                 <div class="items-row">
-                  ${subItems.map(res => this.renderPill(res)).join('')}
+                  ${subItems.map(res => this.renderPill(res, node.id)).join('')}
                 </div>
                 <div class="form-stack">
                   <input type="text" id="inline-${b.boxId}-${subId}" list="existingNodesList" placeholder="${this.t('createInBox')}" onkeydown="if(event.key==='Enter'){ event.preventDefault(); app.inlineCreate('${node.id}', '${b.boxId}', '${subId}', this.value); }">
@@ -682,7 +735,7 @@
                 <a class="graph-title" onclick="app.navigateTo('${boxNode.id}')"># ${boxNode.title}</a>
                 <button type="button" style="font-size:11px; padding:4px 8px;" onclick="app.removeBox('${layout.targetId}', ${bIdx})">${this.t('removeBox')}</button>
               </div>
-              <div class="items-row">${directItems.map(res => this.renderPill(res)).join('')}</div>
+              <div class="items-row">${directItems.map(res => this.renderPill(res, node.id)).join('')}</div>
               <div class="form-stack">
                 <input type="text" id="inline-${b.boxId}" list="existingNodesList" placeholder="${this.t('createInBox')}" onkeydown="if(event.key==='Enter'){ event.preventDefault(); app.inlineCreate('${node.id}', '${b.boxId}', null, this.value); }">
                 <button type="button" onclick="app.inlineCreate('${node.id}', '${b.boxId}', null, document.getElementById('inline-${b.boxId}').value)">+</button>
@@ -696,13 +749,10 @@
         boxesHtml += autoBoxes.map(ab => `
           <div class="graph-box auto-umbrella">
             <div class="graph-header" style="border-bottom-color: #cbd5e1;">
-              <div>
-                <a class="graph-title" onclick="app.navigateTo('${ab.parent.id}')"># ${ab.parent.title}</a>
-                <span style="font-size:12px; color:var(--db-muted); margin-left:6px;">(Auto)</span>
-              </div>
+              <div><a class="graph-title" onclick="app.navigateTo('${ab.parent.id}')"># ${ab.parent.title}</a><span style="font-size:12px; color:var(--db-muted); margin-left:6px;">(Auto)</span></div>
             </div>
             <div class="items-row">
-              ${ab.children.map(child => this.renderPill({ item: child, satellites: [] })).join('')}
+              ${ab.children.map(child => this.renderPill({ item: child, satellites: [] }, node.id)).join('')}
             </div>
             <div class="form-stack">
               <input type="text" id="autoInline-${ab.parent.id}" list="existingNodesList" placeholder="${this.t('createInBox')}" onkeydown="if(event.key==='Enter'){ event.preventDefault(); app.inlineCreate('${node.id}', '${ab.parent.id}', null, this.value); }">
@@ -718,7 +768,7 @@
             <div style="font-weight:bold; margin-bottom:8px;">${this.t('addBoxBtn')}</div>
             <div class="form-stack">
               <select id="boxTargetLayout">${possibleTargets.map(tgt => `<option value="${tgt.id}" ${tgt.id === layout.targetId ? 'selected' : ''}>${tgt.title}</option>`).join('')}</select>
-              <input type="text" id="newBoxInput" list="existingNodesList" placeholder="Sök/skapa klass...">
+              <input type="text" id="newBoxInput" list="existingNodesList" placeholder="Klass för boxen...">
               <button type="button" class="primary" onclick="app.createBoxFromInput()">${this.t('addBoxBtn')}</button>
             </div>
           </div>
@@ -729,7 +779,7 @@
           <div class="prospects-zone">
             <div class="prospects-header"><span>${this.t('prospectsHeader')} (${prospects.length})</span></div>
             <div class="items-row">
-              ${prospects.map(p => `<span class="item-pill"><a onclick="app.navigateTo('${p.id}')">${p.title}</a><span style="color:var(--db-muted); cursor:pointer; font-weight:bold; margin-left:4px;" onclick="app.removeRelation('${node.id}', '${p.id}')">×</span></span>`).join('')}
+              ${prospects.map(p => `<span class="item-pill"><a onclick="app.navigateTo('${p.id}')">${p.title}</a><span class="remove-item-btn" onclick="app.requestRemoveRelation('${node.id}', '${p.id}')">×</span></span>`).join('')}
             </div>
             <button type="button" class="primary" style="width:100%; margin-top:16px;" onclick="app.openLinkDialog('${node.id}')">+ ${this.t('linkBtn')}</button>
           </div>
@@ -738,7 +788,15 @@
         main.innerHTML = `
           <div class="breadcrumb-nav"><a onclick="app.navigateTo('overview')">${this.t('backToOverview')}</a></div>
           <div class="item-card">
-            <div class="item-top-zone"><h1 class="item-name">${node.title}</h1></div>
+            <div class="item-top-zone">
+              <div class="item-name-row">
+                <h1 class="item-name">${node.title}</h1>
+                <div class="admin-controls">
+                  <button type="button" style="font-size:11px; padding:4px 8px;" onclick="app.requestRenameNode('${node.id}')">${this.t('renameNode')}</button>
+                  <button type="button" class="btn-danger" style="font-size:11px; padding:4px 8px;" onclick="app.requestDeleteNode('${node.id}')">${this.t('deleteNode')}</button>
+                </div>
+              </div>
+            </div>
             ${autoFactsHtml}
             ${freeTextZone}
             <div class="boxes-container">${boxesHtml}${addBoxHtml}</div>
@@ -748,16 +806,6 @@
       }
 
       /* ACTIONS */
-      saveFreeText(nodeId) {
-        const node = this.getNode(nodeId);
-        if (node) {
-          if (!node.free_text || typeof node.free_text === 'string') node.free_text = {sv:'', en:''};
-          node.free_text[this.lang] = document.getElementById('freeTextEditor').value;
-          this.sync();
-          this.renderPage(nodeId, false);
-        }
-      }
-
       openCreateDialog() {
         document.getElementById('modalTitle').value = '';
         document.getElementById('modalFreeText').value = '';
@@ -768,7 +816,7 @@
       saveNewNode() {
         const title = document.getElementById('modalTitle').value.trim();
         if (!title) return;
-        if (this.getNodeByTitle(title)) return alert(`Namnet "${title}" är upptaget.`);
+        if (this.getNodeByTitle(title)) return alert(`Namnet är upptaget.`);
         const newNode = { id: 'n_' + Math.random().toString(36).substr(2, 9), title, free_text: {sv:document.getElementById('modalFreeText').value, en:document.getElementById('modalFreeText').value}, boxes: [] };
         this.nodes.push(newNode);
         this.sync();
@@ -801,7 +849,7 @@
         this.renderPage(this.activeNodeId);
       }
 
-      // MULTILÄNK DIALOG
+      // MULTILÄNK
       openLinkDialog(pageId) {
         this.targetPageForLink = pageId;
         this.pendingLinks = [];
@@ -834,7 +882,7 @@
           container.innerHTML = this.pendingLinks.map((name, idx) => {
               const isNew = !this.getNodeByTitle(name);
               const nyText = isNew ? ` <span style="color:var(--db-link); font-size:11px;">(${this.t('newText')})</span>` : '';
-              return `<span class="item-pill" style="background:#eef2fa;">${name}${nyText} <span style="cursor:pointer; color:var(--db-muted); margin-left:4px;" onclick="app.removePendingLink(${idx})">×</span></span>`;
+              return `<span class="item-pill" style="background:#eef2fa;">${name}${nyText} <span class="remove-item-btn" onclick="app.removePendingLink(${idx})">×</span></span>`;
           }).join('');
       }
       executeLinkNodes() {
