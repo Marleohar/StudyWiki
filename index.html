@@ -113,17 +113,8 @@
       flex-grow: 1;
     }
 
-    /* Brödsmulor / Tillbaka */
-    .breadcrumb-nav {
-      margin-bottom: 12px;
-      font-size: 13px;
-    }
-    .breadcrumb-nav a {
-      color: var(--db-link);
-      text-decoration: none;
-      cursor: pointer;
-      font-weight: 500;
-    }
+    .breadcrumb-nav { margin-bottom: 12px; font-size: 13px; }
+    .breadcrumb-nav a { color: var(--db-link); text-decoration: none; cursor: pointer; font-weight: 500; }
     .breadcrumb-nav a:hover { text-decoration: underline; }
 
     .item-card {
@@ -164,157 +155,48 @@
       display: flex;
       justify-content: space-between;
     }
-    .free-text-content {
-      font-size: 14px;
-      line-height: 1.6;
-      min-height: 24px;
-      white-space: pre-wrap;
-    }
+    .free-text-content { font-size: 14px; line-height: 1.6; min-height: 24px; white-space: pre-wrap; }
 
     /* GRAPH BOXES */
-    .boxes-container {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-    .graph-box {
-      border: 2px solid var(--db-border);
-      border-radius: 4px;
-      background: #ffffff;
-      padding: 16px;
-    }
-    .graph-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-      padding-bottom: 6px;
-      border-bottom: 1px solid var(--db-border-light);
-    }
-    .graph-title {
-      font-size: 17px;
-      font-weight: bold;
-      color: var(--db-text);
-      text-decoration: none;
-      cursor: pointer;
-    }
+    .boxes-container { display: flex; flex-direction: column; gap: 20px; }
+    .graph-box { border: 2px solid var(--db-border); border-radius: 4px; background: #ffffff; padding: 16px; }
+    .graph-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid var(--db-border-light); }
+    .graph-title { font-size: 17px; font-weight: bold; color: var(--db-text); text-decoration: none; cursor: pointer; }
     .graph-title:hover { color: var(--db-link); text-decoration: underline; }
 
-    .subbox-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-top: 12px;
-    }
-    .graph-subbox {
-      border: 1px solid var(--db-border);
-      border-radius: 4px;
-      background: var(--db-subbox-bg);
-      padding: 12px 14px;
-    }
-    .graph-subbox-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-    }
-    .graph-subbox-title {
-      font-size: 13px;
-      font-weight: bold;
-      color: var(--db-muted);
-      text-decoration: none;
-      cursor: pointer;
-    }
+    .subbox-list { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+    .graph-subbox { border: 1px solid var(--db-border); border-radius: 4px; background: var(--db-subbox-bg); padding: 12px 14px; }
+    .graph-subbox-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .graph-subbox-title { font-size: 13px; font-weight: bold; color: var(--db-muted); text-decoration: none; cursor: pointer; }
     .graph-subbox-title:hover { color: var(--db-link); text-decoration: underline; }
 
     /* ITEMS / SATELLITES */
-    .items-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: center;
-    }
+    .items-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
     .item-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 10px;
-      background: #ffffff;
-      border: 1px solid var(--db-border);
-      border-radius: 14px;
-      font-size: 13px;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+      display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px;
+      background: #ffffff; border: 1px solid var(--db-border); border-radius: 14px;
+      font-size: 13px; box-shadow: 0 1px 2px rgba(0,0,0,0.03);
     }
-    .item-pill a {
-      color: var(--db-link);
-      text-decoration: none;
-      font-weight: 500;
-      cursor: pointer;
-    }
+    .item-pill a { color: var(--db-link); text-decoration: none; font-weight: 500; cursor: pointer; }
     .item-pill a:hover { text-decoration: underline; }
-
-    .satellite-text {
-      color: var(--db-muted);
-      font-size: 12px;
-    }
+    .satellite-text { color: var(--db-muted); font-size: 12px; }
     .satellite-text a { color: var(--db-muted); }
 
-    .inline-item-add {
-      display: inline-flex;
-      gap: 4px;
-      align-items: center;
-      margin-top: 6px;
-    }
-    .inline-item-add input {
-      width: 170px;
-      padding: 3px 8px;
-      font-size: 12px;
-      border-radius: 12px;
-    }
-    .inline-item-add button {
-      padding: 3px 8px;
-      font-size: 11px;
-      border-radius: 10px;
-    }
+    .inline-item-add { display: inline-flex; gap: 4px; align-items: center; margin-top: 6px; }
+    .inline-item-add input { width: 170px; padding: 3px 8px; font-size: 12px; border-radius: 12px; }
+    .inline-item-add button { padding: 3px 8px; font-size: 11px; border-radius: 10px; }
 
     /* PROSPECTS & RELATION ZONE */
-    .prospects-zone {
-      margin-top: 32px;
-      padding: 16px;
-      background: #fafafa;
-      border: 1px dashed var(--db-border);
-      border-radius: 4px;
-    }
-    .prospects-header {
-      font-size: 12px;
-      text-transform: uppercase;
-      font-weight: bold;
-      color: var(--db-muted);
-      margin-bottom: 12px;
-      display: flex;
-      justify-content: space-between;
-    }
+    .prospects-zone { margin-top: 32px; padding: 16px; background: #fafafa; border: 1px dashed var(--db-border); border-radius: 4px; }
+    .prospects-header { font-size: 12px; text-transform: uppercase; font-weight: bold; color: var(--db-muted); margin-bottom: 12px; display: flex; justify-content: space-between; }
 
     /* DIALOGER OCH FÖNSTER */
     .dialog-backdrop {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.5);
-      /* FRANK: Placerar popups högt upp istället för i mitten */
-      align-items: flex-start; 
-      justify-content: center;
-      padding-top: 10vh;
-      z-index: 1000;
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5); align-items: flex-start; justify-content: center;
+      padding-top: 10vh; z-index: 1000;
     }
-    .dialog {
-      background: #fff;
-      border: 1px solid var(--db-border);
-      width: 480px;
-      padding: 20px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-      border-radius: 4px;
-    }
+    .dialog { background: #fff; border: 1px solid var(--db-border); width: 480px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); border-radius: 4px; }
     .form-group { margin-bottom: 12px; }
     .form-group label { display: block; font-weight: bold; font-size: 12px; margin-bottom: 4px; }
     .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
@@ -322,7 +204,6 @@
 </head>
 <body>
 
-  <!-- Databas för autokorrekt/förslag -->
   <datalist id="existingNodesList"></datalist>
 
   <header>
@@ -353,7 +234,7 @@
       <h2 style="font-size: 18px; margin-bottom: 12px;" id="modalHeading">Skapa ny nod</h2>
       <div class="form-group">
         <label id="lblModalTitle">Namn / Titel (Måste vara unikt)</label>
-        <input type="text" id="modalTitle" list="existingNodesList" placeholder="t.ex. Fireball, Level 3, Undead...">
+        <input type="text" id="modalTitle" list="existingNodesList" placeholder="t.ex. Fireball...">
       </div>
       <div class="form-group">
         <label id="lblModalText">Fritext / Anteckningar</label>
@@ -366,13 +247,12 @@
     </div>
   </div>
 
-  <!-- Länka nod-dialog (Ersätter tidigare inline-fält) -->
+  <!-- Länka nod-dialog -->
   <div class="dialog-backdrop" id="linkDialog">
     <div class="dialog">
       <h2 style="font-size: 18px; margin-bottom: 12px;" id="linkHeading">Länka till nod</h2>
       <div class="form-group">
         <label>Sök befintlig eller skapa ny</label>
-        <!-- Frank: Autokorrekt via datalist -->
         <input type="text" id="linkNodeInput" list="existingNodesList" placeholder="Börja skriva namnet...">
       </div>
       <div class="dialog-actions">
@@ -416,22 +296,23 @@
         cancel: "Avbryt",
         prospectsHeader: "Osorterade relationer / Prospects",
         addBoxBtn: "Skapa Box",
-        selectProspect: "-- Välj från prospects --",
+        boxNamePlaceholder: "Sök/skapa klass för boxen...",
         linkBtn: "Länka till nod",
         linkDialogHeading: "Länka nod",
         removeBox: "Ta bort box",
         removeSubbox: "Ta bort",
-        inheritedLayout: "Layout ärvd via",
+        inheritedLayout: "Layout ärvd från grannen",
         modalCreateHeading: "Skapa ny nod",
         modalNameLbl: "Namn / Titel (Måste vara unikt)",
         modalTextLbl: "Fritext / Anteckningar",
         modalCancelBtn: "Avbryt",
         modalCreateBtn: "Skapa",
         createInBox: "Sök/Skapa i rutan...",
-        backToOverview: "← Tillbaka till Översikt"
+        backToOverview: "← Tillbaka till Översikt",
+        layoutTargetLbl: "Spara box på:"
       },
       en: {
-        appTitle: "Nördverket",
+        appTitle: "Nerd Network",
         searchPlaceholder: "Search node...",
         searchGo: "Go",
         newNode: "+ New Node",
@@ -447,47 +328,136 @@
         cancel: "Cancel",
         prospectsHeader: "Unsorted Relations / Prospects",
         addBoxBtn: "Create Box",
-        selectProspect: "-- Select from prospects --",
+        boxNamePlaceholder: "Search/create box class...",
         linkBtn: "Link to node",
         linkDialogHeading: "Link Node",
         removeBox: "Remove box",
         removeSubbox: "Remove",
-        inheritedLayout: "Layout inherited via",
+        inheritedLayout: "Layout inherited from neighbor",
         modalCreateHeading: "Create new node",
         modalNameLbl: "Name / Title (Must be unique)",
         modalTextLbl: "Free Text / Notes",
         modalCancelBtn: "Cancel",
         modalCreateBtn: "Create",
         createInBox: "Search/Create in box...",
-        backToOverview: "← Back to Overview"
+        backToOverview: "← Back to Overview",
+        layoutTargetLbl: "Save box to:"
       }
     };
 
     /* =========================================================================
-       3. DEN RENA GRAF-MODELLEN
+       3. B/X DUNGEONS & DRAGONS STARTNODER
        ========================================================================= */
-    let INIT_NODES = [
-      { id: "n_monster", title: "Monster", free_text: { sv: "Odjur och bestar.", en: "Beasts and monsters." }, boxes: [] },
-      { id: "n_owlbear", title: "Owlbear", free_text: { sv: "Björnuggla.", en: "Bear-owl." }, boxes: [] },
-      { id: "n_dragon", title: "Green Dragon", free_text: { sv: "Grön drake.", en: "Green dragon." }, boxes: [] },
-      { id: "n_attacks", title: "Attacks", free_text: { sv: "", en: "" }, boxes: [] },
-      { id: "n_claws", title: "Claws", free_text: { sv: "", en: "" }, boxes: [] },
-      { id: "n_bite", title: "Bite", free_text: { sv: "", en: "" }, boxes: [] },
-      { id: "n_2d6", title: "2d6", free_text: { sv: "", en: "" }, boxes: [] },
-      { id: "n_1d8", title: "1d8", free_text: { sv: "", en: "" }, boxes: [] }
+    const BX_NODES = [
+      // Kärnnoder / Hubbar
+      { id: "hub_class", title: "Class", free_text: { sv: "Rollspelsklass.", en: "Character Class." }, boxes: [] },
+      { id: "hub_monster", title: "Monster", free_text: { sv: "Varelser.", en: "Monsters." }, boxes: [] },
+      { id: "hub_spell", title: "Spell", free_text: { sv: "Trollformler.", en: "Spells." }, boxes: [] },
+      { id: "hub_weapon", title: "Weapon", free_text: { sv: "Vapen.", en: "Weapons." }, boxes: [] },
+      { id: "hub_level1", title: "Level 1", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "hub_level2", title: "Level 2", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "hub_level3", title: "Level 3", free_text: { sv: "", en: "" }, boxes: [] },
+      
+      // 7 Klasser
+      { id: "c_fighter", title: "Fighter", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "c_cleric", title: "Cleric", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "c_magicuser", title: "Magic-User", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "c_thief", title: "Thief", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "c_dwarf", title: "Dwarf", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "c_elf", title: "Elf", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "c_halfling", title: "Halfling", free_text: { sv: "", en: "" }, boxes: [] },
+
+      // 15 Spells
+      { id: "s_cure", title: "Cure Light Wounds", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "s_detect", title: "Detect Magic", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "s_sleep", title: "Sleep", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "s_missile", title: "Magic Missile", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "s_charm", title: "Charm Person", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "s_read", title: "Read Magic", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "s_light", title: "Light", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "s_web", title: "Web", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "s_invis", title: "Invisibility", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "s_phantasmal", title: "Phantasmal Force", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "s_bless", title: "Bless", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "s_hold", title: "Hold Person", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "s_fireball", title: "Fireball", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "s_dispel", title: "Dispel Magic", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "s_fly", title: "Fly", free_text: { sv: "", en: "" }, boxes: [] },
+
+      // 20 Monster
+      { id: "m_goblin", title: "Goblin", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "m_orc", title: "Orc", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "m_skeleton", title: "Skeleton", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "m_zombie", title: "Zombie", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "m_ghoul", title: "Ghoul", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "m_gelatinous", title: "Gelatinous Cube", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "m_owlbear", title: "Owlbear", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "m_reddragon", title: "Red Dragon", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "m_greendragon", title: "Green Dragon", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "m_troll", title: "Troll", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "m_hillgiant", title: "Hill Giant", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "m_vampire", title: "Vampire", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "m_werewolf", title: "Werewolf", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "m_minotaur", title: "Minotaur", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "m_medusa", title: "Medusa", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "m_basilisk", title: "Basilisk", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "m_manticore", title: "Manticore", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "m_chimera", title: "Chimera", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "m_harpy", title: "Harpy", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "m_kobold", title: "Kobold", free_text: { sv: "", en: "" }, boxes: [] },
+
+      // 10 Vapen
+      { id: "w_sword", title: "Sword", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "w_2hsword", title: "Two-Handed Sword", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "w_dagger", title: "Dagger", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "w_mace", title: "Mace", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "w_club", title: "Club", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "w_battleaxe", title: "Battle Axe", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "w_handaxe", title: "Hand Axe", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "w_spear", title: "Spear", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "w_shortbow", title: "Short Bow", free_text: { sv: "", en: "" }, boxes: [] },
+      { id: "w_crossbow", title: "Crossbow", free_text: { sv: "", en: "" }, boxes: [] }
     ];
 
-    let INIT_EDGES = [
-      { a: "n_owlbear", b: "n_monster" },
-      { a: "n_owlbear", b: "n_claws" },
-      { a: "n_owlbear", b: "n_bite" },
-      { a: "n_dragon", b: "n_monster" },
-      { a: "n_dragon", b: "n_bite" },
-      { a: "n_dragon", b: "n_claws" },
-      { a: "n_claws", b: "n_attacks" },
-      { a: "n_claws", b: "n_2d6" },
-      { a: "n_bite", b: "n_attacks" },
-      { a: "n_bite", b: "n_1d8" }
+    const BX_EDGES = [
+      // Koppla klasser
+      { a: "c_fighter", b: "hub_class" }, { a: "c_cleric", b: "hub_class" }, { a: "c_magicuser", b: "hub_class" },
+      { a: "c_thief", b: "hub_class" }, { a: "c_dwarf", b: "hub_class" }, { a: "c_elf", b: "hub_class" }, { a: "c_halfling", b: "hub_class" },
+      
+      // Koppla vapen
+      { a: "w_sword", b: "hub_weapon" }, { a: "w_2hsword", b: "hub_weapon" }, { a: "w_dagger", b: "hub_weapon" },
+      { a: "w_mace", b: "hub_weapon" }, { a: "w_club", b: "hub_weapon" }, { a: "w_battleaxe", b: "hub_weapon" },
+      { a: "w_handaxe", b: "hub_weapon" }, { a: "w_spear", b: "hub_weapon" }, { a: "w_shortbow", b: "hub_weapon" }, { a: "w_crossbow", b: "hub_weapon" },
+
+      // Koppla monster
+      { a: "m_goblin", b: "hub_monster" }, { a: "m_orc", b: "hub_monster" }, { a: "m_skeleton", b: "hub_monster" },
+      { a: "m_zombie", b: "hub_monster" }, { a: "m_ghoul", b: "hub_monster" }, { a: "m_gelatinous", b: "hub_monster" },
+      { a: "m_owlbear", b: "hub_monster" }, { a: "m_reddragon", b: "hub_monster" }, { a: "m_greendragon", b: "hub_monster" },
+      { a: "m_troll", b: "hub_monster" }, { a: "m_hillgiant", b: "hub_monster" }, { a: "m_vampire", b: "hub_monster" },
+      { a: "m_werewolf", b: "hub_monster" }, { a: "m_minotaur", b: "hub_monster" }, { a: "m_medusa", b: "hub_monster" },
+      { a: "m_basilisk", b: "hub_monster" }, { a: "m_manticore", b: "hub_monster" }, { a: "m_chimera", b: "hub_monster" },
+      { a: "m_harpy", b: "hub_monster" }, { a: "m_kobold", b: "hub_monster" },
+
+      // Koppla Spells (Level 1)
+      { a: "s_cure", b: "hub_spell" }, { a: "s_cure", b: "hub_level1" }, { a: "s_cure", b: "c_cleric" },
+      { a: "s_detect", b: "hub_spell" }, { a: "s_detect", b: "hub_level1" }, { a: "s_detect", b: "c_cleric" }, { a: "s_detect", b: "c_magicuser" },
+      { a: "s_sleep", b: "hub_spell" }, { a: "s_sleep", b: "hub_level1" }, { a: "s_sleep", b: "c_magicuser" },
+      { a: "s_missile", b: "hub_spell" }, { a: "s_missile", b: "hub_level1" }, { a: "s_missile", b: "c_magicuser" },
+      { a: "s_charm", b: "hub_spell" }, { a: "s_charm", b: "hub_level1" }, { a: "s_charm", b: "c_magicuser" },
+      { a: "s_read", b: "hub_spell" }, { a: "s_read", b: "hub_level1" }, { a: "s_read", b: "c_magicuser" },
+      { a: "s_light", b: "hub_spell" }, { a: "s_light", b: "hub_level1" }, { a: "s_light", b: "c_cleric" }, { a: "s_light", b: "c_magicuser" },
+
+      // Koppla Spells (Level 2)
+      { a: "s_web", b: "hub_spell" }, { a: "s_web", b: "hub_level2" }, { a: "s_web", b: "c_magicuser" },
+      { a: "s_invis", b: "hub_spell" }, { a: "s_invis", b: "hub_level2" }, { a: "s_invis", b: "c_magicuser" },
+      { a: "s_phantasmal", b: "hub_spell" }, { a: "s_phantasmal", b: "hub_level2" }, { a: "s_phantasmal", b: "c_magicuser" },
+      { a: "s_bless", b: "hub_spell" }, { a: "s_bless", b: "hub_level2" }, { a: "s_bless", b: "c_cleric" },
+      { a: "s_hold", b: "hub_spell" }, { a: "s_hold", b: "hub_level2" }, { a: "s_hold", b: "c_cleric" },
+
+      // Koppla Spells (Level 3)
+      { a: "s_fireball", b: "hub_spell" }, { a: "s_fireball", b: "hub_level3" }, { a: "s_fireball", b: "c_magicuser" },
+      { a: "s_dispel", b: "hub_spell" }, { a: "s_dispel", b: "hub_level3" }, { a: "s_dispel", b: "c_cleric" }, { a: "s_dispel", b: "c_magicuser" },
+      { a: "s_fly", b: "hub_spell" }, { a: "s_fly", b: "hub_level3" }, { a: "s_fly", b: "c_magicuser" }
     ];
 
     /* =========================================================================
@@ -499,7 +469,7 @@
         this.nodes = [];
         this.edges = [];
         this.activeNodeId = null;
-        this.targetPageForLink = null; // För popup-länken
+        this.targetPageForLink = null;
         this.db = null;
 
         this.applyLanguage();
@@ -520,7 +490,6 @@
         document.getElementById('btnNewNode').innerText = this.t('newNode');
         document.getElementById('searchInput').placeholder = this.t('searchPlaceholder');
         document.getElementById('btnSearchGo').innerText = this.t('searchGo');
-
         document.getElementById('modalHeading').innerText = this.t('modalCreateHeading');
         document.getElementById('lblModalTitle').innerText = this.t('modalNameLbl');
         document.getElementById('lblModalText').innerText = this.t('modalTextLbl');
@@ -574,15 +543,16 @@
         try {
           firebase.initializeApp(firebaseConfig);
           this.db = firebase.firestore();
-          this.db.collection('simple_db').doc('nordverket_graph_v1').onSnapshot(doc => {
+          // Låst till "nordverket_live" för att behålla data permanent
+          this.db.collection('simple_db').doc('nordverket_live').onSnapshot(doc => {
             this.updateCloudBadge('online');
             if (doc.exists) {
               const data = doc.data();
-              this.nodes = this.cleanDuplicates(data.nodes || INIT_NODES);
-              this.edges = data.edges || INIT_EDGES;
+              this.nodes = this.cleanDuplicates(data.nodes || BX_NODES);
+              this.edges = data.edges || BX_EDGES;
             } else {
-              this.nodes = INIT_NODES;
-              this.edges = INIT_EDGES;
+              this.nodes = BX_NODES;
+              this.edges = BX_EDGES;
               this.sync();
             }
             this.updateDatalist();
@@ -600,15 +570,14 @@
       }
 
       fallbackLocal() {
-        const rawN = localStorage.getItem('nordverket_nodes');
-        const rawE = localStorage.getItem('nordverket_edges');
-        this.nodes = this.cleanDuplicates(rawN ? JSON.parse(rawN) : INIT_NODES);
-        this.edges = rawE ? JSON.parse(rawE) : INIT_EDGES;
+        const rawN = localStorage.getItem('nv_nodes_live');
+        const rawE = localStorage.getItem('nv_edges_live');
+        this.nodes = this.cleanDuplicates(rawN ? JSON.parse(rawN) : BX_NODES);
+        this.edges = rawE ? JSON.parse(rawE) : BX_EDGES;
         this.updateDatalist();
         this.routeFromHash();
       }
 
-      // Rensar om det smugit sig in dubbletter från förut
       cleanDuplicates(nodeArray) {
         const seen = new Set();
         return nodeArray.filter(n => {
@@ -623,22 +592,21 @@
         this.updateDatalist();
         if (this.db) {
           try {
-            await this.db.collection('simple_db').doc('nordverket_graph_v1').set({
+            await this.db.collection('simple_db').doc('nordverket_live').set({
               nodes: this.nodes,
               edges: this.edges,
               updatedAt: Date.now()
             });
           } catch (e) {
-            localStorage.setItem('nordverket_nodes', JSON.stringify(this.nodes));
-            localStorage.setItem('nordverket_edges', JSON.stringify(this.edges));
+            localStorage.setItem('nv_nodes_live', JSON.stringify(this.nodes));
+            localStorage.setItem('nv_edges_live', JSON.stringify(this.edges));
           }
         } else {
-          localStorage.setItem('nordverket_nodes', JSON.stringify(this.nodes));
-          localStorage.setItem('nordverket_edges', JSON.stringify(this.edges));
+          localStorage.setItem('nv_nodes_live', JSON.stringify(this.nodes));
+          localStorage.setItem('nv_edges_live', JSON.stringify(this.edges));
         }
       }
 
-      // Uppdaterar <datalist> för autoförslag
       updateDatalist() {
         const dl = document.getElementById('existingNodesList');
         if (!dl) return;
@@ -648,7 +616,6 @@
       /* KÄRNAN I GRAFEN */
       getNode(id) { return this.nodes.find(n => n.id === id); }
       
-      // Helt okänslig för gemener/versaler - garanterar att namn är upptagna
       getNodeByTitle(title) {
         if (!title) return null;
         const cl = title.toLowerCase().trim();
@@ -675,28 +642,35 @@
         this.sync();
       }
 
-      /* LAYOUT ARV */
+      /* NY LAYOUT-LOGIK (Lånar från Hub-Noden) */
       getEffectiveLayout(nodeId) {
         const node = this.getNode(nodeId);
+        // 1. Om noden har egna boxar, använd dem.
         if (node.boxes && node.boxes.length > 0) {
-          return { boxes: node.boxes, inheritedFrom: null };
+          return { boxes: node.boxes, inheritedFrom: null, targetId: node.id };
         }
+        
+        // 2. Annars, kika på grannarna (Hubbar). Om en granne har boxar, låna den layouten.
         const neighbors = this.getNeighbors(nodeId);
-        for (let n of neighbors) {
-          const siblings = this.getNeighbors(n);
-          for (let s of siblings) {
-            if (s !== nodeId) {
-              const siblingNode = this.getNode(s);
-              if (siblingNode && siblingNode.boxes && siblingNode.boxes.length > 0) {
-                return { boxes: siblingNode.boxes, inheritedFrom: this.getNode(n) };
-              }
-            }
+        let bestNeighbor = null;
+        let maxBoxes = 0;
+
+        for (let nId of neighbors) {
+          const neighborNode = this.getNode(nId);
+          if (neighborNode && neighborNode.boxes && neighborNode.boxes.length > maxBoxes) {
+            maxBoxes = neighborNode.boxes.length;
+            bestNeighbor = neighborNode;
           }
         }
-        return { boxes: [], inheritedFrom: null };
+
+        if (bestNeighbor) {
+          return { boxes: bestNeighbor.boxes, inheritedFrom: bestNeighbor, targetId: bestNeighbor.id };
+        }
+
+        return { boxes: [], inheritedFrom: null, targetId: node.id };
       }
 
-      /* BOX MATEMATIK */
+      /* BOX MATEMATIK (Snittmängd) */
       getBoxItems(pageId, boxId, subboxId = null) {
         const pageNeighbors = new Set(this.getNeighbors(pageId));
         const boxNeighbors = new Set(this.getNeighbors(boxId));
@@ -797,7 +771,9 @@
 
         let boxesHtml = '';
         if (layout.inheritedFrom) {
-          boxesHtml += `<div style="font-size:11px; color:var(--db-muted); margin-bottom:8px;">💡 ${this.t('inheritedLayout')} <strong>${layout.inheritedFrom.title}</strong></div>`;
+          boxesHtml += `<div style="font-size:12px; color:var(--db-link); margin-bottom:12px; background: #eef2fa; padding: 6px 12px; border-radius: 4px; border: 1px solid #cbd5e1;">
+            💡 <strong>${this.t('inheritedLayout')}: <a onclick="app.navigateTo('${layout.inheritedFrom.id}')">${layout.inheritedFrom.title}</a></strong>
+          </div>`;
         }
 
         boxesHtml += layout.boxes.map((b, bIdx) => {
@@ -817,7 +793,7 @@
               <div class="graph-subbox">
                 <div class="graph-subbox-header">
                   <a class="graph-subbox-title" onclick="app.navigateTo('${subNode.id}')"># ${subNode.title}</a>
-                  <button style="font-size:11px; padding:2px 6px;" onclick="app.removeSubbox('${node.id}', ${bIdx}, ${sIdx})">${this.t('removeSubbox')}</button>
+                  <button style="font-size:11px; padding:2px 6px;" onclick="app.removeSubbox('${layout.targetId}', ${bIdx}, ${sIdx})">${this.t('removeSubbox')}</button>
                 </div>
                 <div class="items-row">
                   ${subItems.map(res => this.renderPill(res)).join('')}
@@ -836,7 +812,7 @@
             <div class="graph-box">
               <div class="graph-header">
                 <div><a class="graph-title" onclick="app.navigateTo('${boxNode.id}')"># ${boxNode.title}</a></div>
-                <button style="font-size:11px; padding:2px 6px;" onclick="app.removeBox('${node.id}', ${bIdx})">${this.t('removeBox')}</button>
+                <button style="font-size:11px; padding:2px 6px;" onclick="app.removeBox('${layout.targetId}', ${bIdx})">${this.t('removeBox')}</button>
               </div>
               <div class="items-row">
                 ${directItems.map(res => this.renderPill(res)).join('')}
@@ -847,11 +823,32 @@
               </div>
               ${subboxesHtml ? `<div class="subbox-list">${subboxesHtml}</div>` : ''}
               <div style="margin-top:8px;">
-                <button style="font-size:11px;" onclick="app.promptAddSubbox('${node.id}', ${bIdx})">+ Underbox</button>
+                <button style="font-size:11px;" onclick="app.promptAddSubbox('${layout.targetId}', ${bIdx})">+ Underbox</button>
               </div>
             </div>
           `;
         }).join('');
+
+        // Skapa Box-sektion (Där man väljer var layouten sparas)
+        const possibleTargets = [{ id: node.id, title: node.title + " (Denna sida)" }];
+        this.getNeighbors(node.id).forEach(nid => {
+           const n = this.getNode(nid);
+           possibleTargets.push({ id: n.id, title: n.title + " (Gemensam hubb)" });
+        });
+
+        const addBoxHtml = `
+          <div style="margin-top:16px; padding:16px; background:#fafafa; border:1px solid var(--db-border-light); border-radius:4px;">
+            <div style="font-weight:bold; margin-bottom:8px;">${this.t('addBoxBtn')}</div>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              <span style="font-size:12px;">${this.t('layoutTargetLbl')}</span>
+              <select id="boxTargetLayout">
+                ${possibleTargets.map(tgt => `<option value="${tgt.id}" ${tgt.id === layout.targetId ? 'selected' : ''}>${tgt.title}</option>`).join('')}
+              </select>
+              <input type="text" id="newBoxInput" list="existingNodesList" placeholder="${this.t('boxNamePlaceholder')}">
+              <button class="primary" onclick="app.createBoxFromInput()">${this.t('addBoxBtn')}</button>
+            </div>
+          </div>
+        `;
 
         // PROSPECTS
         const prospectsHtml = `
@@ -871,14 +868,6 @@
             <div style="margin-top:16px; padding-top:12px; border-top:1px solid var(--db-border-light); display:flex; gap:12px;">
               <button class="primary" onclick="app.openLinkDialog('${node.id}')">+ ${this.t('linkBtn')}</button>
             </div>
-
-            <div style="margin-top:16px; border-top:1px dashed var(--db-border-light); padding-top:12px;">
-              <select id="prospectToBoxSelect">
-                <option value="">${this.t('selectProspect')}</option>
-                ${prospects.map(p => `<option value="${p.id}">${p.title}</option>`).join('')}
-              </select>
-              <button onclick="app.turnProspectIntoBox('${node.id}')">${this.t('addBoxBtn')}</button>
-            </div>
           </div>
         `;
 
@@ -893,6 +882,7 @@
             ${freeTextZone}
             <div class="boxes-container">
               ${boxesHtml}
+              ${addBoxHtml}
             </div>
             ${prospectsHtml}
           </div>
@@ -923,7 +913,6 @@
         }
       }
 
-      // Dialoger för att skapa och länka
       openCreateDialog() {
         document.getElementById('modalTitle').value = '';
         document.getElementById('modalFreeText').value = '';
@@ -937,7 +926,6 @@
         const text = document.getElementById('modalFreeText').value;
         if (!title) return;
         
-        // Stenhård dubblettkontroll (Frank's regel: Upptagna namn är upptagna)
         const existing = this.getNodeByTitle(title);
         if (existing) {
           alert(`Namnet "${existing.title}" är redan upptaget. Klicka på "Länka till nod" om du vill koppla den.`);
@@ -986,49 +974,59 @@
           node = { id: 'n_' + Math.random().toString(36).substr(2, 9), title: val, free_text: {sv:'', en:''}, boxes: [] };
           this.nodes.push(node);
         }
+        // Skapa relations-triangeln!
         this.addRelation(node.id, pageId);
         this.addRelation(node.id, boxId);
         if (subboxId) this.addRelation(node.id, subboxId);
         this.renderPage(pageId);
       }
 
-      turnProspectIntoBox(pageId) {
-        const boxId = document.getElementById('prospectToBoxSelect').value;
-        if (!boxId) return;
-        const page = this.getNode(pageId);
-        if (!page.boxes) page.boxes = [];
-        page.boxes.push({ boxId, subboxes: [] });
+      createBoxFromInput() {
+        const targetId = document.getElementById('boxTargetLayout').value;
+        const boxName = document.getElementById('newBoxInput').value.trim();
+        if (!boxName || !targetId) return;
+
+        let node = this.getNodeByTitle(boxName);
+        if (!node) {
+          node = { id: 'n_' + Math.random().toString(36).substr(2, 9), title: boxName, free_text: {sv:'', en:''}, boxes: [] };
+          this.nodes.push(node);
+        }
+
+        const targetNode = this.getNode(targetId);
+        if (!targetNode.boxes) targetNode.boxes = [];
+        targetNode.boxes.push({ boxId: node.id, subboxes: [] });
+        
         this.sync();
-        this.renderPage(pageId);
+        this.renderPage(this.activeNodeId);
       }
 
-      promptAddSubbox(pageId, boxIdx) {
-        const name = prompt(this.lang === 'sv' ? "Namn på underbox (måste finnas i prospects):" : "Subbox name (must be a prospect):");
+      promptAddSubbox(targetId, boxIdx) {
+        const name = prompt(this.lang === 'sv' ? "Namn på underbox:" : "Subbox name:");
         if (!name) return;
         let node = this.getNodeByTitle(name);
         if (!node) {
           node = { id: 'n_' + Math.random().toString(36).substr(2, 9), title: name, free_text: {sv:'', en:''}, boxes: [] };
           this.nodes.push(node);
         }
-        this.addRelation(pageId, node.id);
-        const page = this.getNode(pageId);
-        page.boxes[boxIdx].subboxes.push(node.id);
+        
+        const targetNode = this.getNode(targetId);
+        targetNode.boxes[boxIdx].subboxes.push(node.id);
         this.sync();
-        this.renderPage(pageId);
+        this.renderPage(this.activeNodeId);
       }
 
-      removeBox(pageId, bIdx) {
-        const p = this.getNode(pageId);
+      removeBox(targetId, bIdx) {
+        const p = this.getNode(targetId);
         if (p.boxes) p.boxes.splice(bIdx, 1);
         this.sync();
-        this.renderPage(pageId);
+        this.renderPage(this.activeNodeId);
       }
 
-      removeSubbox(pageId, bIdx, sIdx) {
-        const p = this.getNode(pageId);
+      removeSubbox(targetId, bIdx, sIdx) {
+        const p = this.getNode(targetId);
         if (p.boxes && p.boxes[bIdx]) p.boxes[bIdx].subboxes.splice(sIdx, 1);
         this.sync();
-        this.renderPage(pageId);
+        this.renderPage(this.activeNodeId);
       }
 
       handleSearch() {
