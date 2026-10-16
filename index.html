@@ -424,13 +424,38 @@
         return node;
       }
 
-      getNeighbors(nodeId) { return this.edges.filter(e => e.a === nodeId || e.b === nodeId).map(e => e.a === nodeId ? e.b : e.a); }
-      areNeighbors(idA, idB) { return this.edges.some(e => (e.a === idA && e.b === idB) || (e.a === idB && e.b === idA)); }
-      addRelation(idA, idB) { if (idA !== idB && !this.areNeighbors(idA, idB)) this.edges.push({ a: idA, b: idB }); }
+      relationMatches(edge, idA, idB) { return (edge.a === idA && edge.b === idB) || (edge.a === idB && edge.b === idA); }
+      getNeighbors(nodeId, paused = false) { return [...new Set(this.edges.filter(e => (e.paused === true) === paused && (e.a === nodeId || e.b === nodeId)).map(e => e.a === nodeId ? e.b : e.a))]; }
+      areNeighbors(idA, idB) { return this.edges.some(e => e.paused !== true && this.relationMatches(e, idA, idB)); }
+      addRelation(idA, idB) {
+        if (!this.checkCreative() || idA === idB) return false;
+        const existing = this.edges.filter(e => this.relationMatches(e, idA, idB));
+        if (existing.length) return this.setRelationPaused(idA, idB, false);
+        this.edges.push({ a: idA, b: idB });
+        return true;
+      }
+
+      setRelationPaused(idA, idB, paused) {
+        if (!this.checkCreative()) return false;
+        let changed = false;
+        this.edges.forEach(edge => {
+          if (this.relationMatches(edge, idA, idB) && (edge.paused === true) !== paused) {
+            if (paused) edge.paused = true;
+            else delete edge.paused;
+            changed = true;
+          }
+        });
+        return changed;
+      }
 
       requestRemoveRelation(idA, idB) {
-        if (!this.checkCreative()) return;
-        this.edges = this.edges.filter(e => !((e.a === idA && e.b === idB) || (e.a === idB && e.b === idA)));
+        if (!this.setRelationPaused(idA, idB, true)) return;
+        this.sync();
+        this.renderPage(this.activeNodeId);
+      }
+
+      requestRestoreRelation(idA, idB) {
+        if (!this.setRelationPaused(idA, idB, false)) return;
         this.sync();
         this.renderPage(this.activeNodeId);
       }
@@ -484,6 +509,7 @@
 
       // CORE PARSER FÖR KEDJOR (Nod1: Nod2: Nod3; Nod4)
       parseChain(rootId, text) {
+        if (!this.checkCreative()) return;
         const statements = text.split(','); 
         statements.forEach(statement => {
             const chunks = statement.split(';');
@@ -582,7 +608,7 @@
                   <span class="list-symbol" style="color: ${color};">${icon}</span>
                   <a class="list-title" onclick="app.navigateTo('${item.id}')">${item.title}</a>
                 </div>
-                <button class="unlink-btn creative-only" onclick="app.requestRemoveRelation('${node.id}', '${item.id}')" title="Koppla bort relation">×</button>
+                <button class="unlink-btn creative-only" onclick="app.requestRemoveRelation('${node.id}', '${item.id}')" title="Pausa relation" aria-label="Pausa relation">×</button>
               </div>
             `).join('');
         }).join('');
@@ -645,8 +671,39 @@
             </div>
 
             ${inputZone}
+            <section aria-label="Vilande relationer" style="margin-top: 24px;">
+              <h2>Vilande relationer</h2>
+              <div class="flat-list-container" id="pausedRelationsList"></div>
+            </section>
           </div>
         `;
+        const pausedList = document.getElementById('pausedRelationsList');
+        const pausedNeighbors = this.getNeighbors(node.id, true).map(id => this.getNode(id)).filter(Boolean)
+          .sort((a, b) => a.title.localeCompare(b.title));
+        if (!pausedNeighbors.length) {
+          const empty = document.createElement('p');
+          empty.textContent = 'Inga vilande relationer.';
+          pausedList.appendChild(empty);
+        }
+        pausedNeighbors.forEach(item => {
+          const row = document.createElement('div');
+          row.className = 'list-row';
+          const left = document.createElement('div');
+          left.className = 'list-row-left';
+          const link = document.createElement('a');
+          link.className = 'list-title';
+          link.textContent = item.title;
+          link.addEventListener('click', () => this.navigateTo(item.id));
+          const restore = document.createElement('button');
+          restore.type = 'button';
+          restore.className = 'creative-only';
+          restore.textContent = 'Återställ relation';
+          restore.addEventListener('click', () => this.requestRestoreRelation(node.id, item.id));
+          left.appendChild(link);
+          row.appendChild(left);
+          row.appendChild(restore);
+          pausedList.appendChild(row);
+        });
       }
 
       /* ACTIONS */
@@ -733,14 +790,15 @@
           }).join('');
       }
       executeLinkNodes() {
-        if (!this.targetPageForLink || this.pendingLinks.length === 0) return;
+        if (!this.checkCreative() || !this.targetPageForLink || this.pendingLinks.length === 0) return;
+        const pageId = this.targetPageForLink;
         this.pendingLinks.forEach(name => {
             let node = this.getOrCreateNode(name);
             this.addRelation(this.targetPageForLink, node.id);
         });
         this.sync();
         this.closeLinkDialog();
-        this.renderPage(this.targetPageForLink);
+        this.renderPage(pageId);
       }
 
       handleSearch() {
