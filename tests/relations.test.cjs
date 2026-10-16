@@ -10,11 +10,12 @@ function fixture() {
   const storage = new Map();
   function element(tag = 'div') {
     return { tag, innerHTML: '', textContent: '', value: '', style: {}, children: [], listeners: {},
+      setAttribute(name, value) { this[name] = value; },
       appendChild(child) { this.children.push(child); },
       addEventListener(type, listener) { this.listeners[type] = listener; } };
   }
   const context = vm.createContext({
-    document: { createElement: element, getElementById(id) { if (!elements.has(id)) elements.set(id, element()); return elements.get(id); } },
+    document: { createElement: element, querySelectorAll: () => [], getElementById(id) { if (!elements.has(id)) elements.set(id, element()); return elements.get(id); } },
     localStorage: { getItem: k => storage.get(k) ?? null, setItem: (k, v) => storage.set(k, v) },
     confirm: () => true,
   });

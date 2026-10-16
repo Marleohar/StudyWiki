@@ -266,6 +266,8 @@
       constructor() {
         this.nodes = [];
         this.edges = [];
+        this.categoryState = { version: 1, categories: [], modifications: [] };
+        this.activeCategorySymbol = null;
         this.activeNodeId = null;
         this.appearanceTargetId = null; // För ikon/färg redigering
         this.targetPageForLink = null;
@@ -283,6 +285,8 @@
 
       updateModeUI() {
         document.body.setAttribute('data-mode', this.mode);
+        const categoryEditor = document.getElementById('categoryNotes');
+        if (categoryEditor) categoryEditor.readOnly = !this.checkCreative();
         const lockBtn = document.getElementById('btnModeLock');
         if (this.mode === 'read') { lockBtn.innerHTML = '🔒 Läs-läge'; lockBtn.style.color = 'var(--db-text)'; } 
         else if (this.mode === 'create') { lockBtn.innerHTML = '🔓 Skapar-läge'; lockBtn.style.color = '#2e7d32'; } 
@@ -314,6 +318,7 @@
               localStorage.setItem('nv_current_lib', this.currentLibrary);
               document.getElementById('btnLibSwitcher').innerHTML = '📚 ' + this.currentLibrary;
               this.nodes = []; this.edges = [];
+              this.categoryState = { version: 1, categories: [], modifications: [] };
               this.initFirebase();
               this.navigateTo('overview');
           }
@@ -326,6 +331,10 @@
       }
       routeFromHash() {
         const hash = window.location.hash.replace('#', '').trim();
+        if (hash.startsWith('category/')) {
+          try { return this.renderCategory(decodeURIComponent(hash.slice(9))); }
+          catch (error) { if (error instanceof URIError) return this.renderOverview(); throw error; }
+        }
         if (!hash || hash === 'overview') this.renderOverview();
         else {
           const node = this.getNode(hash) || this.getNodeByTitle(decodeURIComponent(hash));
@@ -350,6 +359,7 @@
               const data = doc.data();
               this.nodes = this.cleanDuplicates(data.nodes || []);
               this.edges = this.cleanEdges(data.edges || []);
+              this.categoryState = data.symbolCategories || { version: 1, categories: [], modifications: [] };
             } else {
                this.nodes = BX_NODES;
                this.edges = BX_EDGES;
@@ -369,6 +379,8 @@
         const rawE = localStorage.getItem('nv_edges_' + docName);
         this.nodes = this.cleanDuplicates(rawN ? JSON.parse(rawN) : BX_NODES);
         this.edges = this.cleanEdges(rawE ? JSON.parse(rawE) : BX_EDGES);
+        const rawCategories = localStorage.getItem('nv_categories_' + docName);
+        this.categoryState = rawCategories ? JSON.parse(rawCategories) : { version: 1, categories: [], modifications: [] };
         this.updateDatalist();
         this.routeFromHash();
       }
@@ -393,14 +405,16 @@
         this.edges = this.cleanEdges(this.edges);
         if (this.db) {
           try {
-            await this.db.collection('simple_db').doc(docName).set({ nodes: this.nodes, edges: this.edges, updatedAt: Date.now() });
+            await this.db.collection('simple_db').doc(docName).set({ nodes: this.nodes, edges: this.edges, updatedAt: Date.now(), ...(this.categoryState ? { symbolCategories: this.categoryState } : {}) }, { merge: true });
           } catch (e) {
             localStorage.setItem('nv_nodes_' + docName, JSON.stringify(this.nodes));
             localStorage.setItem('nv_edges_' + docName, JSON.stringify(this.edges));
+            if (this.categoryState) localStorage.setItem('nv_categories_' + docName, JSON.stringify(this.categoryState));
           }
         } else {
           localStorage.setItem('nv_nodes_' + docName, JSON.stringify(this.nodes));
           localStorage.setItem('nv_edges_' + docName, JSON.stringify(this.edges));
+          if (this.categoryState) localStorage.setItem('nv_categories_' + docName, JSON.stringify(this.categoryState));
         }
       }
 
@@ -420,11 +434,129 @@
         if (!node) {
           node = { id: 'n_' + Math.random().toString(36).substr(2, 9), title, icon: '&', color: '#202122', free_text: {sv:'', en:''} };
           this.nodes.push(node);
+          this.touchNodes([node.id]);
         }
         return node;
       }
 
       relationMatches(edge, idA, idB) { return (edge.a === idA && edge.b === idB) || (edge.a === idB && edge.b === idA); }
+      symbolOf(node) { return node.icon || '&'; }
+      categoryMembers(symbol) { return this.nodes.filter(node => this.symbolOf(node) === symbol); }
+      categoryRoute(symbol) { return 'category/' + encodeURIComponent(symbol); }
+      touchNodes(ids) {
+        // Constructor-owned metadata; do not retrofit timestamps while reading legacy records.
+        if (!this.categoryState) return;
+        const records = this.categoryState.modifications || (this.categoryState.modifications = []);
+        const time = Math.max(Date.now(), ...records.map(record => record.at + 1));
+        [...new Set(ids)].forEach(id => {
+          if (!this.getNode(id)) return;
+          const record = records.find(record => record.id === id);
+          if (record) record.at = time;
+          else records.push({ id, at: time });
+        });
+      }
+      templateFor(symbol) {
+        const compareId = (a, b) => a < b ? -1 : a > b ? 1 : 0;
+        const candidates = this.categoryMembers(symbol).map(node => ({
+          node,
+          symbols: [...new Set(this.getNeighbors(node.id).map(id => this.getNode(id)).filter(Boolean).map(node => this.symbolOf(node)))].sort(compareId),
+          modified: this.categoryState?.modifications?.find(record => record.id === node.id)?.at || 0
+        })).sort((a, b) => b.symbols.length - a.symbols.length || b.modified - a.modified || compareId(a.node.id, b.node.id));
+        const winner = candidates[0];
+        return { version: 1, sourceId: winner?.node.id ?? null, rows: (winner?.symbols || []).map(symbol => ({ symbol })) };
+      }
+      makeElement(tag, text, className) {
+        const element = document.createElement(tag);
+        if (text !== undefined) element.textContent = text;
+        if (className) element.className = className;
+        return element;
+      }
+      symbolButton(symbol, className = 'list-symbol') {
+        const button = this.makeElement('button', symbol, className);
+        button.type = 'button';
+        button.title = 'Öppna kategori';
+        button.addEventListener('click', () => this.navigateTo(this.categoryRoute(symbol)));
+        return button;
+      }
+      bindRelationSymbols(nodes) {
+        document.querySelectorAll('#mainContent .category-symbol-slot').forEach((slot, index) => {
+          const node = nodes[index];
+          const button = this.symbolButton(this.symbolOf(node));
+          button.style.color = node.color || '#202122';
+          slot.appendChild(button);
+        });
+      }
+      appendTemplate(parent, symbol) {
+        const section = this.makeElement('section');
+        section.setAttribute('aria-label', 'Standardmall');
+        section.appendChild(this.makeElement('h2', 'Standardmall'));
+        const template = this.templateFor(symbol);
+        section.appendChild(this.makeElement('p', template.sourceId ? 'Mall från: ' + this.getNode(template.sourceId).title : 'Ingen mall ännu.'));
+        template.rows.forEach(row => {
+          const element = this.makeElement('div', row.symbol, 'list-row');
+          element.setAttribute('aria-label', 'Tom mallrad: ' + row.symbol);
+          section.appendChild(element);
+        });
+        parent.appendChild(section);
+      }
+      saveCategoryNotes(symbol, text) {
+        if (!this.checkCreative()) return false;
+        if ([...text].length > 280) return false;
+        const categories = this.categoryState.categories;
+        const record = categories.find(record => record.symbol === symbol);
+        if ((record?.notes || '') === text) return true;
+        if (record) record.notes = text;
+        else categories.push({ symbol, notes: text });
+        this.sync();
+        return true;
+      }
+      renderCategory(symbol) {
+        this.activeNodeId = null;
+        this.activeCategorySymbol = symbol;
+        const main = document.getElementById('mainContent');
+        main.innerHTML = '';
+        const back = this.makeElement('button', 'Tillbaka till Översikt');
+        back.type = 'button'; back.addEventListener('click', () => this.navigateTo('overview'));
+        main.appendChild(back);
+        const card = this.makeElement('div', undefined, 'item-card');
+        card.appendChild(this.makeElement('h1', symbol.toUpperCase(), 'item-name'));
+        const notes = this.categoryState?.categories?.find(record => record.symbol === symbol)?.notes || '';
+        const noteText = this.makeElement('p', notes || 'Inga kategorianteckningar.');
+        noteText.setAttribute('aria-label', 'Kategorianteckningar');
+        card.appendChild(noteText);
+        const editor = this.makeElement('textarea', undefined, 'creative-only');
+        editor.id = 'categoryNotes'; editor.value = notes;
+        editor.setAttribute('aria-label', 'Kategorianteckningar, högst 280 tecken');
+        editor.readOnly = !this.checkCreative();
+        const error = this.makeElement('p'); error.setAttribute('role', 'alert');
+        const save = this.makeElement('button', 'Spara kategorianteckningar', 'creative-only');
+        save.type = 'button'; save.id = 'saveCategoryNotes';
+        save.addEventListener('click', () => {
+          if (!this.checkCreative()) return;
+          if (!this.saveCategoryNotes(symbol, editor.value)) {
+            error.textContent = 'Högst 280 tecken. Texten har inte sparats.';
+            return;
+          }
+          noteText.textContent = editor.value || 'Inga kategorianteckningar.';
+          error.textContent = 'Sparat.';
+        });
+        card.appendChild(editor); card.appendChild(save); card.appendChild(error);
+        const create = this.makeElement('button', 'Skapa objekt i kategorin', 'creative-only');
+        create.type = 'button'; create.id = 'createCategoryNode';
+        create.addEventListener('click', () => { if (this.checkCreative()) this.openCreateDialog(); });
+        card.appendChild(create);
+        const list = this.makeElement('div', undefined, 'flat-list-container');
+        list.id = 'categoryMembers';
+        this.categoryMembers(symbol).sort((a, b) => a.title.localeCompare(b.title)).forEach(node => {
+          const row = this.makeElement('div', undefined, 'list-row');
+          const link = this.makeElement('a', node.title, 'list-title');
+          link.addEventListener('click', () => this.navigateTo(node.id));
+          row.appendChild(link); list.appendChild(row);
+        });
+        card.appendChild(list);
+        this.appendTemplate(card, symbol);
+        main.appendChild(card);
+      }
       getNeighbors(nodeId, paused = false) { return [...new Set(this.edges.filter(e => (e.paused === true) === paused && (e.a === nodeId || e.b === nodeId)).map(e => e.a === nodeId ? e.b : e.a))]; }
       areNeighbors(idA, idB) { return this.edges.some(e => e.paused !== true && this.relationMatches(e, idA, idB)); }
       addRelation(idA, idB) {
@@ -432,6 +564,7 @@
         const existing = this.edges.filter(e => this.relationMatches(e, idA, idB));
         if (existing.length) return this.setRelationPaused(idA, idB, false);
         this.edges.push({ a: idA, b: idB });
+        this.touchNodes([idA, idB]);
         return true;
       }
 
@@ -445,6 +578,7 @@
             changed = true;
           }
         });
+        if (changed) this.touchNodes([idA, idB]);
         return changed;
       }
 
@@ -467,6 +601,7 @@
         if (newName && newName.trim() && newName !== node.title) {
           if (this.getNodeByTitle(newName)) return alert("Namnet är upptaget.");
           node.title = newName.trim();
+          this.touchNodes([node.id]);
           this.sync();
           this.renderPage(nodeId);
         }
@@ -475,6 +610,7 @@
       requestDeleteNode(nodeId) {
         if (!this.checkCreative()) return; // Ändrad till Creative Mode från Admin
         if (confirm("Är du säker på att du vill radera noden och alla dess relationer helt?")) {
+          this.touchNodes([...this.getNeighbors(nodeId), ...this.getNeighbors(nodeId, true)]);
           this.nodes = this.nodes.filter(n => n.id !== nodeId);
           this.edges = this.edges.filter(e => e.a !== nodeId && e.b !== nodeId);
           this.sync();
@@ -496,11 +632,15 @@
         document.getElementById('appearanceDialog').style.display = 'none';
       }
       saveAppearance() {
-        if (!this.appearanceTargetId) return;
+        if (!this.checkCreative() || !this.appearanceTargetId) return;
         const node = this.getNode(this.appearanceTargetId);
         if (node) {
-            node.icon = document.getElementById('appIconInput').value.trim() || '&';
-            node.color = document.getElementById('appColorInput').value;
+            const icon = document.getElementById('appIconInput').value.trim() || '&';
+            const color = document.getElementById('appColorInput').value;
+            if (node.icon === icon && node.color === color) return this.closeAppearanceDialog();
+            node.icon = icon;
+            node.color = color;
+            this.touchNodes([node.id, ...this.getNeighbors(node.id)]);
             this.sync();
             this.renderPage(this.activeNodeId || this.appearanceTargetId);
         }
@@ -547,6 +687,7 @@
       }
 
       renderOverview() {
+        this.activeCategorySymbol = null;
         this.activeNodeId = null;
         const main = document.getElementById('mainContent');
         
@@ -556,7 +697,7 @@
         const listRows = sortedNodes.map(n => `
           <div class="list-row">
             <div class="list-row-left">
-              <span class="list-symbol" style="color: ${n.color || '#202122'};">${n.icon || '&'}</span>
+              <span class="category-symbol-slot"></span>
               <a class="list-title" onclick="app.navigateTo('${n.id}')">${n.title}</a>
             </div>
             <button class="unlink-btn creative-only" onclick="app.requestDeleteNode('${n.id}')" title="Radera Nod">🗑</button>
@@ -574,9 +715,11 @@
             </div>
           </div>
         `;
+        this.bindRelationSymbols(sortedNodes);
       }
 
       renderPage(nodeId, isEditingText = false) {
+        this.activeCategorySymbol = null;
         const node = this.getNode(nodeId);
         if (!node) return this.navigateTo('overview');
         this.activeNodeId = node.id;
@@ -605,7 +748,7 @@
             return items.map(item => `
               <div class="list-row">
                 <div class="list-row-left">
-                  <span class="list-symbol" style="color: ${color};">${icon}</span>
+                  <span class="category-symbol-slot"></span>
                   <a class="list-title" onclick="app.navigateTo('${item.id}')">${item.title}</a>
                 </div>
                 <button class="unlink-btn creative-only" onclick="app.requestRemoveRelation('${node.id}', '${item.id}')" title="Pausa relation" aria-label="Pausa relation">×</button>
@@ -653,11 +796,11 @@
             <div class="item-top-zone">
               <div class="item-name-row">
                 <h1 class="item-name">
-                  <span class="node-icon creative-only" style="color: ${node.color || '#202122'}" onclick="app.openAppearanceDialog('${node.id}')" title="Ändra Ikon & Färg">${node.icon || '&'}</span>
-                  <span class="node-icon readonly-only" style="color: ${node.color || '#202122'}">${node.icon || '&'}</span>
+                  <span id="nodeCategorySymbol"></span>
                   ${node.title}
                 </h1>
                 <div class="creative-controls">
+                  <button type="button" id="editNodeAppearance" class="creative-only btn-ghost">Ändra symbol & färg</button>
                   <button type="button" class="creative-only btn-ghost" style="font-size:11px; padding:4px 8px; border: 1px solid var(--db-border);" onclick="app.requestRenameNode('${node.id}')">✎ Byt namn</button>
                   <button type="button" class="btn-danger creative-only" style="font-size:11px; padding:4px 8px;" onclick="app.requestDeleteNode('${node.id}')">🗑 Radera</button>
                 </div>
@@ -671,12 +814,20 @@
             </div>
 
             ${inputZone}
+            <div id="objectTemplate"></div>
             <section aria-label="Vilande relationer" style="margin-top: 24px;">
               <h2>Vilande relationer</h2>
               <div class="flat-list-container" id="pausedRelationsList"></div>
             </section>
           </div>
         `;
+        const symbolControl = this.symbolButton(this.symbolOf(node), 'node-icon');
+        symbolControl.style.color = node.color || '#202122';
+        document.getElementById('nodeCategorySymbol').appendChild(symbolControl);
+        document.getElementById('editNodeAppearance').addEventListener('click', () => this.openAppearanceDialog(node.id));
+        const orderedNeighbors = Object.keys(grouped).sort().flatMap(key => grouped[key].sort((a, b) => a.title.localeCompare(b.title)));
+        this.bindRelationSymbols(orderedNeighbors);
+        this.appendTemplate(document.getElementById('objectTemplate'), this.symbolOf(node));
         const pausedList = document.getElementById('pausedRelationsList');
         const pausedNeighbors = this.getNeighbors(node.id, true).map(id => this.getNode(id)).filter(Boolean)
           .sort((a, b) => a.title.localeCompare(b.title));
@@ -708,16 +859,23 @@
 
       /* ACTIONS */
       saveFreeText(nodeId) {
+        if (!this.checkCreative()) return;
         const node = this.getNode(nodeId);
         if (node) {
-          if (!node.free_text || typeof node.free_text === 'string') node.free_text = {sv:'', en:''};
-          node.free_text[this.lang] = document.getElementById('freeTextEditor').value;
+          const text = document.getElementById('freeTextEditor').value;
+          const language = this.lang || 'sv';
+          const previous = typeof node.free_text === 'string' ? node.free_text : (node.free_text?.[language] || '');
+          if (previous === text) return this.renderPage(nodeId, false);
+          if (!node.free_text || typeof node.free_text === 'string') node.free_text = {sv: typeof node.free_text === 'string' ? node.free_text : '', en:''};
+          node.free_text[language] = text;
+          this.touchNodes([node.id]);
           this.sync();
           this.renderPage(nodeId, false);
         }
       }
 
       openCreateDialog() {
+        this.creationCategorySymbol = this.activeCategorySymbol;
         document.getElementById('modalTitle').value = '';
         document.getElementById('modalFreeText').value = '';
         document.getElementById('createDialog').style.display = 'flex';
@@ -725,11 +883,13 @@
       }
       closeCreateDialog() { document.getElementById('createDialog').style.display = 'none'; }
       saveNewNode() {
+        if (!this.checkCreative()) return;
         const title = document.getElementById('modalTitle').value.trim();
         if (!title) return;
         if (this.getNodeByTitle(title)) return alert(`Namnet är upptaget.`);
-        const newNode = { id: 'n_' + Math.random().toString(36).substr(2, 9), title, icon: '&', color: '#202122', free_text: {sv:document.getElementById('modalFreeText').value, en:document.getElementById('modalFreeText').value} };
+        const newNode = { id: 'n_' + Math.random().toString(36).substr(2, 9), title, icon: this.creationCategorySymbol ?? '&', color: '#202122', free_text: {sv:document.getElementById('modalFreeText').value, en:document.getElementById('modalFreeText').value} };
         this.nodes.push(newNode);
+        this.touchNodes([newNode.id]);
         this.sync();
         this.closeCreateDialog();
         this.navigateTo(newNode.id);
