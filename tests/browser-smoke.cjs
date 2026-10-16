@@ -88,7 +88,58 @@ let proc, socket;
   await evaluate("document.getElementById('searchInput').value='Standalone'");
   await click('button[onclick="app.handleSearch()"]');
   assert.equal(await evaluate('testApp.activeNodeId'), 'Standalone');
+  // Keep hostile titles out of the inherited active/header rendering surfaces.
+  // This scenario tests only the newly introduced paused list.
+  const hostileTitle = '<img src=x onerror="window.pausedInjected=true"><script>window.pausedInjected=true</script><span onclick="window.pausedInjected=true">literal</span>';
+  await evaluate(`(() => {
+    testApp.nodes = [{id:'safe-root',title:'Safe root'}, {id:'hostile-title',title:${JSON.stringify(hostileTitle)}}];
+    testApp.edges = [{a:'safe-root',b:'hostile-title',paused:true,custom:{keep:true}}];
+    window.pausedInjected = false;
+    window.hostileBefore = JSON.stringify({nodes:testApp.nodes,edges:testApp.edges});
+    testApp.renderPage('safe-root');
+  })()`);
+  assert.equal(await evaluate("document.querySelector('#pausedRelationsList a').textContent"), hostileTitle);
+  assert.equal(await evaluate("document.querySelectorAll('#pausedRelationsList img, #pausedRelationsList script, #pausedRelationsList span, #pausedRelationsList [onclick], #pausedRelationsList [onerror]').length"), 0);
+  assert.equal(await evaluate("[...document.querySelectorAll('#pausedRelationsList *')].some(e => [...e.attributes].some(a => /^on/i.test(a.name)))"), false);
+  assert.equal(await evaluate('window.pausedInjected'), false);
+  assert.equal(await evaluate('JSON.stringify({nodes:testApp.nodes,edges:testApp.edges}) === window.hostileBefore'), true);
+
+  await evaluate('window.originalSync = testApp.sync');
+  for (const specialId of ["apostrophe's", 'double"quote', '雪å🧙', 'percent%25%']) {
+    await evaluate(`(() => {
+      testApp.nodes = [{id:'root',title:'Root',custom:{keep:true}}, {id:${JSON.stringify(specialId)},title:'Special endpoint',custom:{keep:true}}];
+      testApp.edges = [{a:${JSON.stringify(specialId)},b:'root',paused:true,custom:{keep:true}}];
+      testApp.mode='create'; testApp.updateModeUI();
+      window.specialBefore = JSON.stringify({nodes:testApp.nodes,edges:testApp.edges});
+      window.persistCount = 0;
+      testApp.sync = () => { window.persistCount++; return window.originalSync.call(testApp); };
+      window.originalNavigate = testApp.navigateTo;
+      // Capture the raw navigation argument at the router boundary. Existing hash
+      // decoding of arbitrary IDs is outside this paused-list correction.
+      testApp.navigateTo = id => { window.clickedId = id; testApp.renderPage(id); };
+      testApp.renderPage('root');
+    })()`);
+    await click('#pausedRelationsList a');
+    assert.equal(await evaluate('window.clickedId'), specialId);
+    assert.equal(await evaluate('testApp.activeNodeId'), specialId);
+    assert.equal(await evaluate('JSON.stringify({nodes:testApp.nodes,edges:testApp.edges}) === window.specialBefore'), true);
+    assert.equal(await evaluate('window.persistCount'), 0);
+    assert.equal(await evaluate("document.querySelectorAll('#pausedRelationsList [onclick], #pausedRelationsList [onerror], #pausedRelationsList script').length"), 0);
+    await click('#pausedRelationsList button');
+    assert.equal(await evaluate('window.persistCount'), 1);
+    await evaluate(`testApp.requestRestoreRelation('root',${JSON.stringify(specialId)})`);
+    assert.equal(await evaluate('window.persistCount'), 1);
+    await evaluate(`testApp.requestRemoveRelation('root',${JSON.stringify(specialId)}); testApp.renderPage('root')`);
+    assert.equal(await evaluate('window.persistCount'), 2);
+    await click('#pausedRelationsList button');
+    assert.equal(await evaluate('window.persistCount'), 3);
+    assert.equal(await evaluate(`(() => { const expected=JSON.parse(window.specialBefore); delete expected.edges[0].paused; return JSON.stringify({nodes:testApp.nodes,edges:testApp.edges})===JSON.stringify(expected); })()`), true);
+    await evaluate(`testApp.requestRestoreRelation('root',${JSON.stringify(specialId)}); testApp.requestRestoreRelation(${JSON.stringify(specialId)},'root')`);
+    assert.equal(await evaluate('window.persistCount'), 3);
+    await evaluate('testApp.navigateTo = window.originalNavigate');
+  }
   console.log('PASS: browser clicks pause from A, navigate to B, restore from B, pause/reload, read mode, isolated overview/search. External page requests blocked; synthetic disposable localStorage only.');
+  console.log('PASS: literal hostile title, no injected paused-list elements/handlers, mouse navigation with original special IDs at router boundary, restoration from both endpoints, metadata preservation and zero no-op persistence.');
 })().catch(e => { console.error(e.message); process.exitCode = 1; }).finally(async () => {
   if (socket) socket.close();
   if (proc) { proc.kill(); await delay(500); }

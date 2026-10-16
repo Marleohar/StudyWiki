@@ -8,8 +8,13 @@ const source = html.slice(html.indexOf('    class GraphApp {'), html.indexOf('  
 function fixture() {
   const elements = new Map();
   const storage = new Map();
+  function element(tag = 'div') {
+    return { tag, innerHTML: '', textContent: '', value: '', style: {}, children: [], listeners: {},
+      appendChild(child) { this.children.push(child); },
+      addEventListener(type, listener) { this.listeners[type] = listener; } };
+  }
   const context = vm.createContext({
-    document: { getElementById(id) { if (!elements.has(id)) elements.set(id, { innerHTML: '', value: '', style: {} }); return elements.get(id); } },
+    document: { createElement: element, getElementById(id) { if (!elements.has(id)) elements.set(id, element()); return elements.get(id); } },
     localStorage: { getItem: k => storage.get(k) ?? null, setItem: (k, v) => storage.set(k, v) },
     confirm: () => true,
   });
@@ -47,7 +52,7 @@ test('pause is bidirectional, preserves B-C, restores from B, and is idempotent'
   for (const id of ['A', 'B']) {
     app.renderPage(id);
     assert.match(elements.get('mainContent').innerHTML, /Vilande relationer/);
-    assert.match(elements.get('mainContent').innerHTML, /requestRestoreRelation/);
+    assert.ok(elements.get('pausedRelationsList').children.some(row => row.children[1]?.textContent === 'Återställ relation'));
   }
   app.requestRestoreRelation('B', 'A'); app.requestRestoreRelation('A', 'B');
   assert.equal(saves, 2);
@@ -124,4 +129,32 @@ test('failed synthetic Firestore save uses existing local fallback', async () =>
   app.db = { collection: () => ({ doc: () => ({ set: async () => { throw Error('synthetic offline'); } }) }) };
   await app.sync();
   assert.equal(JSON.parse(storage.get('nv_edges_nv_lib_synthetic-task001'))[0].paused, true);
+});
+test('paused DOM controls preserve hostile IDs/titles, restore either endpoint and skip no-op persistence', () => {
+  for (const id of ["apostrophe's", 'double"quote', '雪å🧙', 'percent%25%']) {
+    const { app, elements } = fixture();
+    const title = '<img src=x onerror="globalThis.injected=true"><script>bad()</script>';
+    app.nodes[0].id = id; app.nodes[0].title = title;
+    app.edges[0].b = id; app.edges[0].paused = true;
+    const before = plain({ nodes: app.nodes, edges: app.edges });
+    let saves = 0; app.sync = () => saves++;
+    app.renderPage('B');
+    const row = elements.get('pausedRelationsList').children[0];
+    const link = row.children[0].children[0];
+    assert.equal(link.textContent, title); assert.equal(link.innerHTML, '');
+    link.listeners.click(); assert.equal(app.lastNavigation, id);
+    assert.deepEqual(plain({ nodes: app.nodes, edges: app.edges }), before);
+    row.children[1].listeners.click(); assert.equal(saves, 1);
+    row.children[1].listeners.click(); assert.equal(saves, 1);
+    assert.equal(app.edges[0].paused, undefined);
+    app.requestRemoveRelation(id, 'B'); assert.equal(saves, 2);
+    app.requestRemoveRelation('B', id); assert.equal(saves, 2);
+    elements.get('pausedRelationsList').children = [];
+    app.renderPage(id);
+    const reverse = elements.get('pausedRelationsList').children[0].children[1];
+    app.mode = 'read'; reverse.listeners.click(); assert.equal(saves, 2);
+    app.mode = 'create'; reverse.listeners.click(); assert.equal(saves, 3);
+    const expected = plain(before); delete expected.edges[0].paused;
+    assert.deepEqual(plain({ nodes: app.nodes, edges: app.edges }), expected);
+  }
 });

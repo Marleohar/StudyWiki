@@ -613,14 +613,6 @@
             `).join('');
         }).join('');
 
-        const pausedHtml = this.getNeighbors(node.id, true).map(id => this.getNode(id)).filter(Boolean)
-          .sort((a, b) => a.title.localeCompare(b.title)).map(item => `
-            <div class="list-row">
-              <div class="list-row-left"><a class="list-title" onclick="app.navigateTo('${item.id}')">${item.title}</a></div>
-              <button type="button" class="creative-only" onclick="app.requestRestoreRelation('${node.id}', '${item.id}')">Återställ relation</button>
-            </div>
-          `).join('');
-
         // Fritext
         const currentText = (node.free_text && (node.free_text['sv'] || typeof node.free_text === 'string')) ? 
             (typeof node.free_text === 'string' ? node.free_text : node.free_text['sv']) : '';
@@ -681,10 +673,37 @@
             ${inputZone}
             <section aria-label="Vilande relationer" style="margin-top: 24px;">
               <h2>Vilande relationer</h2>
-              <div class="flat-list-container">${pausedHtml || '<p>Inga vilande relationer.</p>'}</div>
+              <div class="flat-list-container" id="pausedRelationsList"></div>
             </section>
           </div>
         `;
+        const pausedList = document.getElementById('pausedRelationsList');
+        const pausedNeighbors = this.getNeighbors(node.id, true).map(id => this.getNode(id)).filter(Boolean)
+          .sort((a, b) => a.title.localeCompare(b.title));
+        if (!pausedNeighbors.length) {
+          const empty = document.createElement('p');
+          empty.textContent = 'Inga vilande relationer.';
+          pausedList.appendChild(empty);
+        }
+        pausedNeighbors.forEach(item => {
+          const row = document.createElement('div');
+          row.className = 'list-row';
+          const left = document.createElement('div');
+          left.className = 'list-row-left';
+          const link = document.createElement('a');
+          link.className = 'list-title';
+          link.textContent = item.title;
+          link.addEventListener('click', () => this.navigateTo(item.id));
+          const restore = document.createElement('button');
+          restore.type = 'button';
+          restore.className = 'creative-only';
+          restore.textContent = 'Återställ relation';
+          restore.addEventListener('click', () => this.requestRestoreRelation(node.id, item.id));
+          left.appendChild(link);
+          row.appendChild(left);
+          row.appendChild(restore);
+          pausedList.appendChild(row);
+        });
       }
 
       /* ACTIONS */
