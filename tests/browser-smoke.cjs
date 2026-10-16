@@ -138,6 +138,77 @@ let proc, socket;
     assert.equal(await evaluate('window.persistCount'), 3);
     await evaluate('testApp.navigateTo = window.originalNavigate');
   }
+  await evaluate(`(() => {
+    testApp.sync = window.originalSync;
+    testApp.categoryState = {version:1,categories:[],modifications:[],future:{keep:true}};
+    testApp.nodes = [{id:'cat-A',title:'A',icon:'x',custom:{keep:true}}, {id:'cat-B',title:'B',icon:'x'},
+      {id:'cat-C',title:'C',icon:'sword'}, {id:'cat-D',title:'D',icon:'shield'}];
+    testApp.edges = [{a:'cat-A',b:'cat-C',unknown:1},{a:'cat-B',b:'cat-C'}, {a:'cat-B',b:'cat-D'},
+      {a:'cat-A',b:'cat-D',paused:true,unknown:{keep:true}}];
+    window.categoryOriginalNodes=JSON.stringify(testApp.nodes);
+    window.categoryOriginalEdges=JSON.stringify(testApp.edges);
+    testApp.mode='create';testApp.updateModeUI();testApp.navigateTo('cat-A');
+  })()`);
+  assert.equal(await evaluate("document.querySelectorAll('#objectTemplate .list-row').length"), 2);
+  assert.deepEqual(await evaluate("testApp.getNeighbors('cat-A')"), ['cat-C']);
+  await click('#nodeCategorySymbol button');
+  assert.equal(await evaluate('location.hash'), '#category/x');
+  assert.equal(await evaluate("document.querySelector('#mainContent h1').textContent"), 'X');
+  assert.deepEqual(await evaluate("[...document.querySelectorAll('#categoryMembers a')].map(e=>e.textContent)"), ['A','B']);
+  assert.equal(await evaluate("[...document.querySelectorAll('#categoryMembers .list-row')].every(e=>e.children.length===1)"), true);
+  const categoryNotes = '雪 "notes" <img src=x onerror="window.categoryInjected=true"><script>bad()</script>';
+  await evaluate(`window.categoryInjected=false;document.getElementById('categoryNotes').value=${JSON.stringify(categoryNotes)}`);
+  await click('#saveCategoryNotes');
+  assert.equal(await evaluate("document.querySelector('[aria-label=Kategorianteckningar]').textContent"), categoryNotes);
+  assert.equal(await evaluate("document.querySelectorAll('#mainContent img,#mainContent script,#mainContent [onerror]').length"), 0);
+  await evaluate("document.getElementById('categoryNotes').value='a'.repeat(281)");
+  await click('#saveCategoryNotes');
+  assert.equal(await evaluate("document.querySelector('[role=alert]').textContent"), 'Högst 280 tecken. Texten har inte sparats.');
+  assert.equal(await evaluate('testApp.categoryState.categories[0].notes'), categoryNotes);
+  await click('#createCategoryNode');
+  await evaluate("document.getElementById('modalTitle').value='Created in category';document.getElementById('modalFreeText').value='Object notes'");
+  await click('button[onclick="app.saveNewNode()"]');
+  assert.equal(await evaluate("testApp.getNode(testApp.activeNodeId).icon"), 'x');
+  assert.deepEqual(await evaluate('testApp.getNeighbors(testApp.activeNodeId)'), []);
+  await click('#nodeCategorySymbol button');
+  await click('#categoryMembers .list-row:nth-child(2) a');
+  assert.equal(await evaluate('testApp.activeNodeId'), 'cat-B');
+  await click('#editNodeAppearance');
+  await evaluate("document.getElementById('appIconInput').value='y';document.getElementById('appColorInput').value='#123456'");
+  await click('button[onclick="app.saveAppearance()"]');
+  await click('#nodeCategorySymbol button');
+  assert.equal(await evaluate("document.querySelector('#mainContent h1').textContent"), 'Y');
+  assert.deepEqual(await evaluate("[...document.querySelectorAll('#categoryMembers a')].map(e=>e.textContent)"), ['B']);
+  await click('#mainContent > button');
+  await click('#mainContent .category-symbol-slot button');
+  assert.equal(await evaluate('location.hash'), '#category/x');
+  assert.deepEqual(await evaluate("[...document.querySelectorAll('#categoryMembers a')].map(e=>e.textContent)"), ['A','Created in category']);
+  assert.equal(await evaluate("testApp.templateFor('x').sourceId"), 'cat-A');
+  assert.equal(await evaluate("JSON.stringify(testApp.edges)===window.categoryOriginalEdges"), true);
+  assert.equal(await evaluate("(() => { const expected=JSON.parse(window.categoryOriginalNodes);expected[1].icon='y';expected[1].color='#123456';return JSON.stringify(testApp.nodes.slice(0,4))===JSON.stringify(expected); })()"), true);
+  const categoryBeforeReload = await evaluate("JSON.stringify({nodes:testApp.nodes,edges:testApp.edges,state:testApp.categoryState})");
+  await send('Page.reload'); await delay(500);
+  assert.equal(await evaluate('JSON.stringify({nodes:testApp.nodes,edges:testApp.edges,state:testApp.categoryState})'),
+    categoryBeforeReload);
+  assert.equal(await evaluate("document.querySelector('[aria-label=Kategorianteckningar]').textContent"), categoryNotes);
+  assert.equal(await evaluate("getComputedStyle(document.getElementById('saveCategoryNotes')).display"), 'none');
+  assert.equal(await evaluate('window.categoryInjected === true'), false);
+  assert.equal(await evaluate('testApp.categoryState.future.keep'), true);
+  const hostileSymbol = '\'"%雪<svg onload="window.categoryInjected=true">';
+  const hostileCategoryTitle = '<img src=x onerror="window.categoryInjected=true">雪 "title"';
+  await evaluate(`(() => {
+    testApp.nodes=[{id:'safe-category-node',title:'Safe',icon:${JSON.stringify(hostileSymbol)}},
+      {id:'hostile-category-title',title:${JSON.stringify(hostileCategoryTitle)},icon:${JSON.stringify(hostileSymbol)}}];
+    testApp.edges=[];window.categoryInjected=false;testApp.navigateTo('safe-category-node');
+  })()`);
+  await click('#nodeCategorySymbol button');
+  assert.equal(await evaluate("document.querySelector('#mainContent h1').textContent"), hostileSymbol.toUpperCase());
+  assert.equal(await evaluate('decodeURIComponent(location.hash.slice(10))'), hostileSymbol);
+  assert.equal(await evaluate("[...document.querySelectorAll('#categoryMembers a')].some(e=>e.textContent===" + JSON.stringify(hostileCategoryTitle) + ")"), true);
+  assert.equal(await evaluate("document.querySelectorAll('#mainContent img,#mainContent svg,#mainContent script').length"), 0);
+  assert.equal(await evaluate("[...document.querySelectorAll('#mainContent *')].some(e=>[...e.attributes].some(a=>/^on/i.test(a.name)))"), false);
+  assert.equal(await evaluate('window.categoryInjected'), false);
+  console.log('PASS: category mouse navigation, exact membership/uppercase heading, shared templates, safe notes/limit, category creation, appearance changes, template recalculation and local reload/read mode.');
   console.log('PASS: browser clicks pause from A, navigate to B, restore from B, pause/reload, read mode, isolated overview/search. External page requests blocked; synthetic disposable localStorage only.');
   console.log('PASS: literal hostile title, no injected paused-list elements/handlers, mouse navigation with original special IDs at router boundary, restoration from both endpoints, metadata preservation and zero no-op persistence.');
 })().catch(e => { console.error(e.message); process.exitCode = 1; }).finally(async () => {
