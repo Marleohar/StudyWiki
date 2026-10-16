@@ -440,7 +440,7 @@
       }
 
       relationMatches(edge, idA, idB) { return (edge.a === idA && edge.b === idB) || (edge.a === idB && edge.b === idA); }
-      symbolOf(node) { return node.icon ?? '&'; }
+      symbolOf(node) { return node.icon || '&'; }
       categoryMembers(symbol) { return this.nodes.filter(node => this.symbolOf(node) === symbol); }
       categoryRoute(symbol) { return 'category/' + encodeURIComponent(symbol); }
       touchNodes(ids) {

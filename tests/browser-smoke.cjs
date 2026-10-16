@@ -208,6 +208,36 @@ let proc, socket;
   assert.equal(await evaluate("document.querySelectorAll('#mainContent img,#mainContent svg,#mainContent script').length"), 0);
   assert.equal(await evaluate("[...document.querySelectorAll('#mainContent *')].some(e=>[...e.attributes].some(a=>/^on/i.test(a.name)))"), false);
   assert.equal(await evaluate('window.categoryInjected'), false);
+  await evaluate(`(() => {
+    testApp.nodes=[{id:'legacy-empty',title:'Empty',icon:'',unknown:{keep:[1,2]}},
+      {id:'legacy-null',title:'Null',icon:null},{id:'legacy-missing',title:'Missing'},
+      {id:'legacy-default',title:'Default',icon:'&'},
+      {id:'legacy-special',title:'Special',icon:"'\\\"%雪"}];
+    testApp.edges=[{a:'legacy-empty',b:'legacy-null',unknown:{keep:true}},
+      {a:'legacy-empty',b:'legacy-missing'},{a:'legacy-empty',b:'legacy-default'},
+      {a:'legacy-empty',b:'legacy-special'}];
+    window.legacyBefore=JSON.stringify({nodes:testApp.nodes,edges:testApp.edges,state:testApp.categoryState});
+    window.legacyStorageBefore=JSON.stringify(Object.entries(localStorage).sort());
+    window.legacyWrites=0;window.legacySyncs=0;
+    const originalSetItem=Storage.prototype.setItem;
+    Storage.prototype.setItem=function(...args){window.legacyWrites++;return originalSetItem.apply(this,args);};
+    const originalSync=testApp.sync.bind(testApp);
+    testApp.sync=()=>{window.legacySyncs++;return originalSync();};
+    testApp.navigateTo('legacy-empty');
+  })()`);
+  assert.equal(await evaluate("document.querySelector('#nodeCategorySymbol button').textContent"), '&');
+  await click('#nodeCategorySymbol button');
+  assert.equal(await evaluate('location.hash'), '#category/%26');
+  assert.equal(await evaluate("document.querySelector('#mainContent h1').textContent"), '&');
+  assert.deepEqual(await evaluate("[...document.querySelectorAll('#categoryMembers a')].map(e=>e.textContent)"), ['Default','Empty','Missing','Null']);
+  assert.deepEqual(await evaluate("testApp.templateFor('&').rows.map(row=>row.symbol)"), ['&', '\'"%雪']);
+  await click('#categoryMembers .list-row:nth-child(2) a');
+  assert.equal(await evaluate('testApp.activeNodeId'), 'legacy-empty');
+  await click('#nodeCategorySymbol button');
+  assert.equal(await evaluate('JSON.stringify({nodes:testApp.nodes,edges:testApp.edges,state:testApp.categoryState})===window.legacyBefore'), true);
+  assert.equal(await evaluate('JSON.stringify(Object.entries(localStorage).sort())===window.legacyStorageBefore'), true);
+  assert.deepEqual(await evaluate('[window.legacyWrites,window.legacySyncs]'), [0,0]);
+  console.log('PASS: legacy empty/null/missing icon default category and real mouse navigation; exact records/metadata preserved with zero storage writes or sync calls.');
   console.log('PASS: category mouse navigation, exact membership/uppercase heading, shared templates, safe notes/limit, category creation, appearance changes, template recalculation and local reload/read mode.');
   console.log('PASS: browser clicks pause from A, navigate to B, restore from B, pause/reload, read mode, isolated overview/search. External page requests blocked; synthetic disposable localStorage only.');
   console.log('PASS: literal hostile title, no injected paused-list elements/handlers, mouse navigation with original special IDs at router boundary, restoration from both endpoints, metadata preservation and zero no-op persistence.');

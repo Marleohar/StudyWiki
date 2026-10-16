@@ -32,6 +32,30 @@ function fixture() {
   app.navigateTo = id => { app.lastRoute = id; }; app.routeFromHash = () => {};
   return { app, document, elements, storage, context, writes: () => writes };
 }
+test('legacy empty, null and missing icons share the visible default without data or persistence changes', () => {
+  const { app, elements, writes } = fixture();
+  app.nodes = [{ id: 'empty', title: 'Empty', icon: '', unknown: { keep: [1, 2] } },
+    { id: 'null', title: 'Null', icon: null }, { id: 'missing', title: 'Missing' },
+    { id: 'default', title: 'Default', icon: '&' },
+    { id: 'special', title: 'Special', icon: '\'"%雪' },
+    { id: 'space', title: 'Space', icon: ' ' }];
+  app.edges = [{ a: 'empty', b: 'null', metadata: 'keep' }, { a: 'empty', b: 'missing' },
+    { a: 'empty', b: 'default' }, { a: 'empty', b: 'special' }];
+  const before = plain({ nodes: app.nodes, edges: app.edges, state: app.categoryState });
+  assert.deepEqual(plain(app.categoryMembers('&').map(n => n.id)), ['empty', 'null', 'missing', 'default']);
+  assert.equal(app.categoryMembers('').length, 0);
+  assert.equal(app.categoryMembers('\'"%雪')[0].id, 'special');
+  assert.equal(app.categoryMembers(' ')[0].id, 'space');
+  assert.deepEqual(plain(app.templateFor('&').rows), [{ symbol: '&' }, { symbol: '\'"%雪' }]);
+  app.renderPage('empty');
+  const button = elements.get('nodeCategorySymbol').children[0];
+  assert.equal(button.textContent, '&'); button.listeners.click();
+  assert.equal(app.lastRoute, 'category/%26');
+  app.renderCategory('&');
+  assert.equal(elements.get('mainContent').children[1].children[0].textContent, '&');
+  assert.deepEqual(plain({ nodes: app.nodes, edges: app.edges, state: app.categoryState }), before);
+  assert.equal(writes(), 0);
+});
 test('exact symbol membership and uppercase headings do not convert legacy names', () => {
   const { app, elements } = fixture(); const before = plain(app.nodes);
   app.renderCategory('x');

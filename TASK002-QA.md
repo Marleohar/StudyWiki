@@ -8,7 +8,7 @@ Branch: `task002/symbol-categories-templates`.
 
 ## Product decisions and representation
 
-The owner explicitly selected the symbol itself as the category heading. There is no inferred category name and no conversion of uppercase legacy object titles. A category is an exact `node.icon` identity; a missing/null icon uses the existing default `&`. Uppercasing applies to the heading only. Colors do not distinguish categories. Category routes encode the entire symbol after `#category/` and decode it once, supporting quotes, percent signs, Unicode, slashes and markup-like symbols.
+The owner explicitly selected the symbol itself as the category heading. There is no inferred category name and no conversion of uppercase legacy object titles. A category is an exact `node.icon` identity; a missing/null/empty-string icon uses the existing default `&`. Uppercasing applies to the heading only. Colors do not distinguish categories. Category routes encode the entire symbol after `#category/` and decode it once, supporting quotes, percent signs, Unicode, slashes and markup-like symbols.
 
 Categories are views, not new nodes or edges. Each category lists only members of its symbol, using one full-width row per member. Object, overview and active-relation symbols open categories. A separate **Ändra symbol & färg** control retains appearance editing. Category creation uses the existing dialog/record shape and assigns the exact originating category symbol. An existing object with a duplicate title is rejected rather than reassigned.
 
@@ -52,7 +52,7 @@ node tests/browser-smoke.cjs
 git diff --check
 ```
 
-Results: **26 Node tests passed, 0 failed**, including all ten original relationship cases. The relationship fixture gained only DOM-stub support for attributes and symbol-slot queries; its ten cases/assertions remain intact. Sixteen category tests cover exact membership, uppercase presentation, safe symbol callbacks, distinct-symbol selection, legacy/new-edit ties, derived propagation, retained mixed/paused relations, note limits/editing/read mode, category creation, text and symbol edits, complete metadata preservation, local and mocked Firestore reload, merged payloads, per-library isolation and unchanged deletion results with timestamp tracking.
+Results: **27 Node tests passed, 0 failed**, including all ten original relationship cases. The relationship fixture gained only DOM-stub support for attributes and symbol-slot queries; its ten cases/assertions remain intact. Seventeen category tests cover exact membership, uppercase presentation, safe symbol callbacks, distinct-symbol selection, legacy/new-edit ties, derived propagation, retained mixed/paused relations, note limits/editing/read mode, category creation, text and symbol edits, complete metadata preservation, local and mocked Firestore reload, merged payloads, per-library isolation and unchanged deletion results with timestamp tracking.
 
 The isolated Chromium smoke test passes the original Task 001 scenarios and new real mouse interactions: symbol/category navigation, category/free-page switching, member filtering, indivisible rows, notes save/rejection, category object creation, accessible appearance editing, symbol movement, template recalculation and reload/read mode. Complete original node/edge snapshots are compared against only the intended icon/color/new-object changes; complete nodes/edges/category metadata match the pre-reload snapshot. Hostile notes, symbols and member titles remain text with no injected scripts/images/SVG or executable attributes in the new category UI. Original special-ID callbacks/restoration tests remain intact.
 
@@ -68,3 +68,9 @@ Tests use synthetic records only. The browser serves an in-memory test copy, rem
 - No production Firestore validation, paid services, deployment, merge, auto-merge or other repository changes.
 
 Changed files: `index.html`, `tests/relations.test.cjs`, `tests/categories.test.cjs`, `tests/browser-smoke.cjs`, `TASK002-QA.md`.
+
+## Scoped legacy symbol compatibility correction
+
+The shared resolver uses the established `node.icon || '&'` fallback. Empty-string, null and missing icons therefore share the visible default category in object controls, membership, navigation and template symbol counting. Stored icon values are not normalized. Non-empty symbols, including whitespace and special-character strings, retain exact identity.
+
+The added Node regression compares complete nodes, edges and category metadata before/after rendering and navigation and asserts zero writes. The Chromium regression clicks the empty-icon object symbol through the real router to `#category/%26`, checks the default-category heading/members/template, returns to the object and reopens the category, and asserts zero sync calls, zero localStorage writes and unchanged complete records/storage. All prior regressions remain intact. Final correction checks: 27 Node tests passed, complete Chromium smoke test passed, `git diff --check` passed.
