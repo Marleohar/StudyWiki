@@ -841,8 +841,13 @@
         const order = new Intl.Collator('sv', {numeric:true, sensitivity:'base'}).compare(a.title, b.title);
         return order || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
       }
-      categoryRelationGroups(symbol, criterionIds = []) {
+      canonicalRelationCriteria(criterionIds) {
         const ids = [...new Set(criterionIds)].filter(id => !!this.getNode(id));
+        if (ids.length > 6) throw new RangeError('Högst sex relationer kan väljas.');
+        return ids.sort((a,b) => this.compareCategoryTitles(this.getNode(a),this.getNode(b)));
+      }
+      categoryRelationGroups(symbol, criterionIds = []) {
+        const ids = this.canonicalRelationCriteria(criterionIds);
         const groups = new Map();
         this.categoryMembers(symbol).forEach(node => {
           const matched = ids.map((id,index) => this.areNeighbors(node.id,id) ? index : -1).filter(index => index >= 0);
@@ -852,10 +857,19 @@
         });
         return [...groups.values()].sort((a,b) => {
           if (a.matched.length !== b.matched.length) return b.matched.length - a.matched.length;
-          for (let i=0; i<a.matched.length; i++) if (a.matched[i] !== b.matched[i]) return a.matched[i]-b.matched[i];
+          const collator = new Intl.Collator('sv', {numeric:true, sensitivity:'base'});
+          for (let i=0; i<a.matched.length; i++) {
+            const order = collator.compare(this.getNode(ids[a.matched[i]]).title, this.getNode(ids[b.matched[i]]).title);
+            if (order) return order;
+          }
+          // Compare the complete name sequences before resolving equivalent titles by ID.
+          for (let i=0; i<a.matched.length; i++) {
+            const left=ids[a.matched[i]], right=ids[b.matched[i]];
+            if (left !== right) return left < right ? -1 : 1;
+          }
           return 0;
         }).map(group => ({ids:group.matched.map(index => ids[index]),
-          heading:group.matched.length ? group.matched.map(index => this.getNode(ids[index]).title).join('; ') : '\u00d6vriga objekt',
+          heading:group.matched.length ? group.matched.map(index => this.getNode(ids[index]).title).join(', ') : '\u00d6vriga objekt',
           nodes:group.nodes.sort((a,b) => this.compareCategoryTitles(a,b))}));
       }
       categorySortIsCurrent(state) {
@@ -892,7 +906,7 @@
         add.addEventListener('click', () => {
           if (!this.categorySortIsCurrent(state)) return;
           const id=select.value;
-          if (!this.getNode(id) || state.ids.includes(id)) return;
+          if (state.ids.length >= 6 || !this.getNode(id) || state.ids.includes(id)) return;
           state.ids.push(id); refresh();
         });
         clear.addEventListener('click', () => { if (!this.categorySortIsCurrent(state)) return; state.ids=[]; refresh(); });
@@ -913,11 +927,11 @@
         });
         if (candidates.some(node=>node.id===selected)) state.select.value=selected;
         if (!candidates.length) { const empty=this.makeElement('option','Inga matchande objekt.'); empty.value=''; empty.disabled=true; empty.selected=true; state.select.appendChild(empty); }
-        state.add.disabled=!candidates.length;
+        state.add.disabled=!candidates.length || state.ids.length >= 6;
       }
       renderSortedCategory(state) {
         if (!this.categorySortIsCurrent(state)) return;
-        state.ids=state.ids.filter(id=>!!this.getNode(id));
+        state.ids=this.canonicalRelationCriteria(state.ids);
         this.cancelLongPress(true);
         state.list.innerHTML=''; state.chips.innerHTML='';
         state.ids.forEach(id => {
@@ -936,7 +950,7 @@
             const row=this.makeElement('div',undefined,'list-row');row.appendChild(this.titleLink(node));state.list.appendChild(row);
           });
         });
-        state.status.textContent=state.ids.length ? state.ids.length+' valda relationer' : 'Välj ett eller flera relationsobjekt.';
+        state.status.textContent=state.ids.length >= 6 ? 'Högst sex relationer. Ta bort en relation för att lägga till en annan.' : state.ids.length ? state.ids.length+' av 6 valda relationer' : 'Välj upp till sex relationsobjekt.';
       }
       getNeighbors(nodeId, paused = false) { return [...new Set(this.edges.filter(e => (e.paused === true) === paused && (e.a === nodeId || e.b === nodeId)).map(e => e.a === nodeId ? e.b : e.a))]; }
       areNeighbors(idA, idB) { return this.edges.some(e => e.paused !== true && this.relationMatches(e, idA, idB)); }
