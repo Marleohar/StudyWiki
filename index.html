@@ -38,21 +38,34 @@
     body[data-mode="read"] .readonly-only { display: inline-block; }
     body[data-mode="create"] .readonly-only { display: none; }
 
-    header {
-      background-color: #ffffff; border-bottom: 1px solid var(--db-border-light);
-      padding: 10px 16px; display: flex; flex-wrap: wrap; align-items: center;
-      justify-content: space-between; gap: 12px;
-    }
-
-    .brand { display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--db-text); font-size: 17px; font-weight: bold; cursor: pointer; flex-shrink: 0; }
-    .brand-logo { width: 26px; height: 26px; background: #202122; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; border-radius: 3px; }
-    
-    .header-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-    .header-left { display: flex; gap: 8px; align-items: center; }
-
-    .search-bar { display: flex; flex-wrap: nowrap; gap: 4px; align-items: stretch; flex-grow: 1; max-width: 300px; min-width: 150px; }
-    .search-bar input { flex-grow: 1; min-width: 0; width: 100%; }
-    .search-bar button { flex-shrink: 0; white-space: nowrap; }
+    [hidden] { display: none !important; }
+    .header-shell { position: relative; background: #fff; border-bottom: 1px solid var(--db-border-light); }
+    header { display: grid; grid-template-columns: auto minmax(0, 1fr) 40px 40px; align-items: center; gap: 6px; padding: 8px 12px; }
+    .brand { display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--db-text); font-size: 17px; font-weight: bold; white-space: nowrap; }
+    .brand-logo { width: 26px; height: 26px; background: #202122; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; border-radius: 3px; }
+    #btnLibSwitcher { min-width: 0; justify-self: start; max-width: 100%; gap: 6px; }
+    #libraryName { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; min-width: 0; }
+    .icon-button { width: 40px; height: 40px; padding: 0; }
+    #btnMenu { font-size: 28px; line-height: 1; font-weight: bold; }
+    .header-menu { position: absolute; z-index: 100; right: 8px; top: 100%; width: min(280px, calc(100vw - 16px)); background: #fff; border: 1px solid var(--db-border); border-radius: 6px; box-shadow: 0 3px 12px #0002; padding: 8px; }
+    .header-menu > button { width: 100%; }
+    .menu-status { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; padding: 10px 4px 2px; font-size: 12px; color: var(--db-muted); }
+    .connection-dot { width: 8px; height: 8px; border-radius: 50%; background: #a2a9b1; flex-shrink: 0; }
+    .connection-dot[data-state="online"] { background: var(--status-online); }
+    .connection-dot[data-state="offline"] { background: var(--status-offline); }
+    #searchPanel { padding: 0 12px 10px; }
+    .search-bar { display: flex; gap: 6px; width: 100%; max-width: 640px; margin: auto; }
+    .search-input-wrap { position: relative; flex: 1; min-width: 0; }
+    #searchInput { width: 100%; }
+    #btnSearchGo { flex-shrink: 0; white-space: nowrap; }
+    #btnSearchGo[aria-disabled="true"] { color: var(--db-muted); background: #f6f7f8; }
+    .search-suggestions { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid var(--db-border); box-shadow: 0 3px 10px #0002; max-height: 260px; overflow-y: auto; z-index: 90; }
+    .search-suggestion { display: block; width: 100%; text-align: left; border: 0; border-radius: 0; background: #fff; overflow-wrap: anywhere; }
+    .search-suggestion[aria-selected="true"] { background: #eaf0ff; outline: 2px solid var(--db-link); outline-offset: -2px; }
+    .search-empty { padding: 8px; color: var(--db-muted); }
+    #searchHint { max-width: 640px; margin: 4px auto 0; font-size: 12px; color: var(--db-muted); }
+    :focus-visible { outline: 2px solid var(--db-link); outline-offset: 2px; }
+    @media (max-width: 480px) { header { padding: 6px 8px; gap: 4px; } .brand-logo { display: none; } .brand { font-size: 16px; } #btnLibSwitcher { padding: 8px 6px; font-size: 12px; } }
 
     input[type="text"], input[type="color"], textarea, select {
       padding: 8px 12px; font-size: 14px; border: 1px solid var(--db-border);
@@ -142,42 +155,54 @@
 
   <datalist id="existingNodesList"></datalist>
 
-  <header>
-    <div class="header-left">
-      <a class="brand" onclick="app.navigateTo('overview')">
-        <div class="brand-logo">NV</div>
-        <span id="headerAppTitle">Nördverket</span>
+  <div class="header-shell">
+    <header id="topBar">
+      <a class="brand" href="#overview" onclick="event.preventDefault(); app.navigateTo('overview')">
+        <span class="brand-logo" aria-hidden="true">NV</span><span id="headerAppTitle">Nördverket</span>
       </a>
-      <button type="button" class="btn-ghost" onclick="app.promptLibrarySwitch()" title="Byt bibliotek" id="btnLibSwitcher" style="font-size:12px;">📚 DnD</button>
-    </div>
-    
-    <div class="search-bar">
-      <input type="text" id="searchInput" list="existingNodesList" placeholder="Sök nod..." onkeydown="if(event.key==='Enter') { event.preventDefault(); app.handleSearch(); }">
-      <button type="button" onclick="app.handleSearch()" id="btnSearchGo">Gå till</button>
-    </div>
-    
-    <div class="header-actions">
-      <button type="button" class="creative-only primary" onclick="app.openCreateDialog()" id="btnNewNode">+ Ny Nod</button>
-      <button type="button" class="creative-only btn-secondary" onclick="app.openBatchDialog()" id="btnBatchCreate">+ Mass-skapa</button>
-      <button type="button" class="btn-ghost" onclick="app.promptModeUnlock()" id="btnModeLock" title="Lås upp redigering">🔒 Läs-läge</button>
-      <span id="dbStatus" class="status-badge connecting">☁ Ansluter...</span>
-    </div>
-  </header>
+      <button type="button" class="btn-ghost" onclick="app.promptLibrarySwitch()" id="btnLibSwitcher" aria-label="Byt bibliotek">
+        <span aria-hidden="true">📚</span><span id="libraryName">DnD</span>
+      </button>
+      <button type="button" class="icon-button btn-ghost" id="btnSearchToggle" onclick="app.toggleSearch()" aria-label="Sök objekt" aria-expanded="false" aria-controls="searchPanel"><span aria-hidden="true">🔍</span></button>
+      <button type="button" class="icon-button btn-ghost" id="btnMenu" onclick="app.toggleHeaderMenu()" aria-label="Öppna meny" aria-expanded="false" aria-controls="headerMenu"><span aria-hidden="true">⋮</span></button>
+    </header>
+    <section id="headerMenu" class="header-menu" aria-label="Biblioteksmeny" hidden>
+      <button type="button" id="btnModeLock" onclick="app.chooseModeAction()">Lås upp skaparläge</button>
+      <div class="menu-status" role="status">
+        <span class="connection-dot" id="connectionDot" aria-hidden="true"></span>
+        <span id="dbStatus">Ansluter…</span><span id="menuMode" hidden>Skapar-läge</span>
+      </div>
+    </section>
+    <section id="searchPanel" aria-label="Objektsökning" hidden>
+      <div class="search-bar">
+        <div class="search-input-wrap">
+          <input type="text" id="searchInput" placeholder="Sök objekt..." autocomplete="off" role="combobox" aria-label="Sök objekt" aria-autocomplete="list" aria-expanded="false" aria-controls="searchSuggestions">
+          <div id="searchSuggestions" class="search-suggestions" role="listbox" aria-label="Sökförslag" hidden></div>
+        </div>
+        <button type="button" onclick="app.handleSearch()" id="btnSearchGo" disabled>Gå till</button>
+      </div>
+      <p id="searchHint" role="status"></p>
+    </section>
+  </div>
 
   <div class="viewport-container">
     <main id="mainContent"></main>
   </div>
 
   <!-- Skapa ny nod-dialog -->
-  <div class="dialog-backdrop" id="createDialog">
+  <div class="dialog-backdrop" id="createDialog" role="dialog" aria-modal="true" aria-labelledby="createDialogHeading">
     <div class="dialog">
-      <h2 style="font-size: 18px; margin-bottom: 16px;">Skapa ny nod</h2>
+      <h2 id="createDialogHeading" style="font-size: 18px; margin-bottom: 16px;">Skapa ny nod</h2>
+      <div style="margin-bottom:12px;">
+        <label for="creationCategory">Kategori / symbol</label>
+        <select id="creationCategory" aria-label="Kategori / symbol"></select>
+      </div>
       <div style="margin-bottom: 12px;">
-        <label style="font-weight: bold; font-size: 12px; display: block; margin-bottom: 4px;">Namn / Titel</label>
+        <label for="modalTitle" style="font-weight: bold; font-size: 12px; display: block; margin-bottom: 4px;">Namn / Titel</label>
         <input type="text" id="modalTitle" list="existingNodesList" placeholder="t.ex. Fireball...">
       </div>
       <div style="margin-bottom: 12px;">
-        <label style="font-weight: bold; font-size: 12px; display: block; margin-bottom: 4px;">Fritext / Anteckningar</label>
+        <label for="modalFreeText" style="font-weight: bold; font-size: 12px; display: block; margin-bottom: 4px;">Fritext / Anteckningar</label>
         <textarea id="modalFreeText" rows="4"></textarea>
       </div>
       <div class="dialog-actions-stacked">
@@ -297,6 +322,10 @@
         this.mode = 'read'; 
         this.currentLibrary = localStorage.getItem('nv_current_lib') || 'DnD';
 
+        this.connectionState = 'connecting';
+        this.searchOpen = false; this.headerMenuOpen = false;
+        this.searchResults = []; this.searchActiveIndex = -1;
+        this.initHeader();
         this.pendingPress = null;
         this.pressRevision = 0;
         window.addEventListener('scroll', () => { if (this.pendingPress?.hasScrolled()) this.cancelLongPress(true); }, true);
@@ -313,13 +342,15 @@
           this.cancelLongPress(true);
           this.closeSymbolEditDialog();
           this.closeAppearanceDialog();
+          this.closeCreateDialog();
         }
         document.body.setAttribute('data-mode', this.mode);
         const categoryEditor = document.getElementById('categoryNotes');
         if (categoryEditor) categoryEditor.readOnly = !this.checkCreative();
-        const lockBtn = document.getElementById('btnModeLock');
-        if (this.mode === 'read') { lockBtn.innerHTML = '🔒 Läs-läge'; lockBtn.style.color = 'var(--db-text)'; } 
-        else if (this.mode === 'create') { lockBtn.innerHTML = '🔓 Skapar-läge'; lockBtn.style.color = '#2e7d32'; } 
+        const nameEditor = document.getElementById('categoryNameInput');
+        if (nameEditor) nameEditor.readOnly = !this.checkCreative();
+        this.renderHeaderStatus();
+        this.updateSearchSuggestions();
       }
 
       promptModeUnlock() {
@@ -344,9 +375,10 @@
       promptLibrarySwitch() {
           const newLib = prompt("Aktuellt bibliotek: " + this.currentLibrary + "\nAnge namnet på biblioteket du vill ladda/skapa:", this.currentLibrary);
           if (newLib && newLib.trim() && newLib.trim() !== this.currentLibrary) {
+              this.resetHeaderForLibrary();
               this.currentLibrary = newLib.trim();
               localStorage.setItem('nv_current_lib', this.currentLibrary);
-              document.getElementById('btnLibSwitcher').innerHTML = '📚 ' + this.currentLibrary;
+              this.updateLibraryLabel();
               this.nodes = []; this.edges = [];
               this.categoryState = { version: 1, categories: [], modifications: [] };
               this.initFirebase();
@@ -374,17 +406,20 @@
       }
 
       initFirebase() {
+        const loadRevision = this.libraryLoadRevision = (this.libraryLoadRevision || 0) + 1;
+        this.setConnectionStatus('connecting');
+        this.updateLibraryLabel();
         try {
           if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
           this.db = firebase.firestore();
           if (this.unsubFirebase) this.unsubFirebase(); 
           
           const docName = this.getDocName();
-          document.getElementById('btnLibSwitcher').innerHTML = '📚 ' + this.currentLibrary;
+          this.updateLibraryLabel();
 
           this.unsubFirebase = this.db.collection('simple_db').doc(docName).onSnapshot(doc => {
-            document.getElementById('dbStatus').className = "status-badge online";
-            document.getElementById('dbStatus').innerText = "☁️ Synkad";
+            if (loadRevision !== this.libraryLoadRevision) return;
+            this.setConnectionStatus('online');
             if (doc.exists) {
               const data = doc.data();
               this.nodes = this.cleanDuplicates(data.nodes || []);
@@ -397,14 +432,14 @@
             }
             this.updateDatalist();
             this.routeFromHash();
-          }, err => { this.fallbackLocal(); });
+          }, err => { if (loadRevision === this.libraryLoadRevision) this.fallbackLocal(); });
         } catch (e) { this.fallbackLocal(); }
       }
 
       fallbackLocal() {
         const docName = this.getDocName();
-        document.getElementById('dbStatus').className = "status-badge offline";
-        document.getElementById('dbStatus').innerText = "☁️ Lokal";
+        this.updateLibraryLabel();
+        this.setConnectionStatus('offline');
         const rawN = localStorage.getItem('nv_nodes_' + docName);
         const rawE = localStorage.getItem('nv_edges_' + docName);
         this.nodes = this.cleanDuplicates(rawN ? JSON.parse(rawN) : BX_NODES);
@@ -458,6 +493,8 @@
           option.value = node.title;
           dl.appendChild(option);
         });
+        this.updateSearchSuggestions();
+        if (this.creationLibrary === this.currentLibrary && this.creationSymbols) this.populateCreationCategories(document.getElementById('creationCategory').value);
       }
 
       getNode(id) { return this.nodes.find(n => n.id === id); }
@@ -693,6 +730,29 @@
         });
         parent.appendChild(section);
       }
+      categoryName(symbol) {
+        const name = this.categoryState?.categories?.find(record => record.symbol === symbol)?.name;
+        return typeof name === 'string' && name.trim() ? name : 'Namnlös kategori';
+      }
+      categoryChoices(preferred = null) {
+        const symbols = new Set(this.nodes.map(node => this.symbolOf(node)).filter(symbol => typeof symbol === 'string' && symbol.length));
+        (this.categoryState?.categories || []).forEach(record => { if (typeof record.symbol === 'string' && record.symbol.length) symbols.add(record.symbol); });
+        // Preserve category-page creation even for an empty, not-yet-stored category view.
+        if (typeof preferred === 'string' && preferred.length) symbols.add(preferred);
+        if (!symbols.size) symbols.add('&');
+        return [...symbols].sort((a,b) => a < b ? -1 : a > b ? 1 : 0).map(symbol => ({symbol, name: this.categoryName(symbol)}));
+      }
+      saveCategoryName(symbol, value) {
+        if (!this.checkCreative() || typeof symbol !== 'string' || !symbol.length || typeof value !== 'string') return false;
+        const record = this.categoryState.categories.find(record => record.symbol === symbol);
+        const previous = typeof record?.name === 'string' ? record.name : '';
+        const name = value.trim();
+        if (value === previous || name === previous || (!name && !record)) return true;
+        if (record) { if (name) record.name = name; else delete record.name; }
+        else this.categoryState.categories.push({symbol, name});
+        this.sync({preserveEdges: true});
+        return true;
+      }
       saveCategoryNotes(symbol, text) {
         if (!this.checkCreative()) return false;
         if ([...text].length > 280) return false;
@@ -715,6 +775,15 @@
         main.appendChild(back);
         const card = this.makeElement('div', undefined, 'item-card');
         card.appendChild(this.makeElement('h1', symbol.toUpperCase(), 'item-name'));
+        const nameDisplay = this.makeElement('p', this.categoryName(symbol)); nameDisplay.id = 'categoryDisplayName';
+        card.appendChild(nameDisplay);
+        const nameLabel = this.makeElement('label', 'Kategorinamn', 'creative-only'); nameLabel.setAttribute('for', 'categoryNameInput');
+        const nameInput = this.makeElement('input', undefined, 'creative-only'); nameInput.id = 'categoryNameInput'; nameInput.type = 'text';
+        nameInput.value = this.categoryState?.categories?.find(record => record.symbol === symbol)?.name || '';
+        nameInput.readOnly = !this.checkCreative();
+        const nameSave = this.makeElement('button', 'Spara kategorinamn', 'creative-only'); nameSave.type = 'button'; nameSave.id = 'saveCategoryName';
+        nameSave.addEventListener('click', () => { if (this.saveCategoryName(symbol, nameInput.value)) nameDisplay.textContent = this.categoryName(symbol); });
+        card.appendChild(nameLabel); card.appendChild(nameInput); card.appendChild(nameSave);
         const notes = this.categoryState?.categories?.find(record => record.symbol === symbol)?.notes || '';
         const noteText = this.makeElement('p', notes || 'Inga kategorianteckningar.');
         noteText.setAttribute('aria-label', 'Kategorianteckningar');
@@ -1091,24 +1160,45 @@
         }
       }
 
-      openCreateDialog() {
+      populateCreationCategories(preferred = null) {
+        const select = document.getElementById('creationCategory');
+        const choices = this.categoryChoices(this.creationCategorySymbol);
+        this.creationSymbols = choices.map(choice => choice.symbol);
+        select.innerHTML = '';
+        choices.forEach(choice => {
+          const option = this.makeElement('option', choice.symbol + ' ' + choice.name);
+          option.value = choice.symbol; select.appendChild(option);
+        });
+        select.value = this.creationSymbols.includes(preferred) ? preferred : this.creationSymbols.includes('&') ? '&' : this.creationSymbols[0];
+      }
+      openCreateDialog(prefill = '') {
+        if (!this.checkCreative()) return;
         this.creationCategorySymbol = this.activeCategorySymbol;
-        document.getElementById('modalTitle').value = '';
+        this.creationLibrary = this.currentLibrary;
+        this.creationReturnFocus = document.activeElement;
+        this.populateCreationCategories(this.creationCategorySymbol);
+        document.getElementById('modalTitle').value = typeof prefill === 'string' ? prefill.trim() : '';
         document.getElementById('modalFreeText').value = '';
         document.getElementById('createDialog').style.display = 'flex';
-        setTimeout(() => document.getElementById('modalTitle').focus(), 50);
+        document.getElementById('modalTitle').focus?.();
       }
-      closeCreateDialog() { document.getElementById('createDialog').style.display = 'none'; }
+      closeCreateDialog() {
+        document.getElementById('createDialog').style.display = 'none';
+        this.creationLibrary = null; this.creationSymbols = null;
+        this.creationReturnFocus?.focus?.(); this.creationReturnFocus = null;
+      }
       saveNewNode() {
-        if (!this.checkCreative()) return;
+        if (!this.checkCreative() || this.creationLibrary !== this.currentLibrary) return;
         const title = document.getElementById('modalTitle').value.trim();
-        if (!title) return;
+        const symbol = document.getElementById('creationCategory').value;
+        if (!title || !this.creationSymbols?.includes(symbol) || !this.categoryChoices(this.creationCategorySymbol).some(choice => choice.symbol === symbol)) return;
         if (this.getNodeByTitle(title)) return alert(`Namnet är upptaget.`);
-        const newNode = { id: 'n_' + Math.random().toString(36).substr(2, 9), title, icon: this.creationCategorySymbol ?? '&', color: '#202122', free_text: {sv:document.getElementById('modalFreeText').value, en:document.getElementById('modalFreeText').value} };
+        const newNode = { id: 'n_' + Math.random().toString(36).substr(2, 9), title, icon: symbol, color: '#202122', free_text: {sv:document.getElementById('modalFreeText').value, en:document.getElementById('modalFreeText').value} };
         this.nodes.push(newNode);
         this.touchNodes([newNode.id]);
-        this.sync();
+        this.sync({preserveEdges: true});
         this.closeCreateDialog();
+        this.clearSearchSuggestions();
         this.navigateTo(newNode.id);
       }
 
@@ -1178,20 +1268,130 @@
         this.renderPage(pageId);
       }
 
+      initHeader() {
+        const input = document.getElementById('searchInput');
+        input.addEventListener('input', () => this.updateSearchSuggestions());
+        input.addEventListener('keydown', event => this.handleSearchKeydown(event));
+        document.addEventListener('pointerdown', event => {
+          if (this.headerMenuOpen && !document.getElementById('headerMenu').contains(event.target) && !document.getElementById('btnMenu').contains(event.target)) this.closeHeaderMenu(false);
+          if (this.searchOpen && !document.getElementById('searchPanel').contains(event.target) && !document.getElementById('btnSearchToggle').contains(event.target)) this.clearSearchSuggestions();
+        });
+        document.addEventListener('keydown', event => {
+          if (event.key === 'Escape' && this.headerMenuOpen) { event.preventDefault(); this.closeHeaderMenu(); }
+        });
+        document.getElementById('headerMenu').addEventListener('keydown', event => {
+          if (event.key === 'Escape') { event.preventDefault(); this.closeHeaderMenu(); }
+        });
+        document.getElementById('createDialog').addEventListener('keydown', event => {
+          if (event.key === 'Escape') { event.preventDefault(); this.closeCreateDialog(); }
+        });
+        this.updateLibraryLabel();
+      }
+      updateLibraryLabel() {
+        document.getElementById('libraryName').textContent = this.currentLibrary;
+        const button = document.getElementById('btnLibSwitcher');
+        button.title = this.currentLibrary; button.setAttribute('aria-label', 'Byt bibliotek: ' + this.currentLibrary);
+      }
+      setConnectionStatus(state) { this.connectionState = state; this.renderHeaderStatus(); }
+      renderHeaderStatus() {
+        const state = this.connectionState || 'connecting';
+        document.getElementById('dbStatus').textContent = ({connecting:'Ansluter…',online:'Synkad',offline:'Lokal/offline'})[state];
+        document.getElementById('connectionDot').setAttribute('data-state', state);
+        document.getElementById('menuMode').hidden = !this.checkCreative();
+        document.getElementById('btnModeLock').textContent = this.checkCreative() ? 'Lås skaparläge' : 'Lås upp skaparläge';
+      }
+      toggleHeaderMenu() {
+        if (this.headerMenuOpen) return this.closeHeaderMenu();
+        this.headerMenuOpen = true; this.renderHeaderStatus();
+        document.getElementById('headerMenu').hidden = false;
+        document.getElementById('btnMenu').setAttribute('aria-expanded','true');
+        document.getElementById('btnModeLock').focus?.();
+      }
+      closeHeaderMenu(returnFocus = true) {
+        this.headerMenuOpen = false; document.getElementById('headerMenu').hidden = true;
+        document.getElementById('btnMenu').setAttribute('aria-expanded','false');
+        if (returnFocus) document.getElementById('btnMenu').focus?.();
+      }
+      chooseModeAction() { this.closeHeaderMenu(false); this.promptModeUnlock(); document.getElementById('btnMenu').focus?.(); }
+      toggleSearch() {
+        if (this.searchOpen) return this.closeSearch();
+        this.searchOpen = true; document.getElementById('searchPanel').hidden = false;
+        document.getElementById('btnSearchToggle').setAttribute('aria-expanded','true');
+        document.getElementById('searchInput').focus?.(); this.updateSearchSuggestions();
+      }
+      closeSearch(returnFocus = true) {
+        this.searchOpen = false; document.getElementById('searchPanel').hidden = true;
+        document.getElementById('btnSearchToggle').setAttribute('aria-expanded','false');
+        this.clearSearchSuggestions();
+        if (returnFocus) document.getElementById('btnSearchToggle').focus?.();
+      }
+      resetHeaderForLibrary() {
+        this.closeHeaderMenu(false); this.closeSearch(false); this.closeCreateDialog();
+        document.getElementById('searchInput').value = '';
+      }
+      searchMatches(query) {
+        const q = query.trim().toLowerCase();
+        if (!q) return [];
+        const compare = (a,b) => a < b ? -1 : a > b ? 1 : 0;
+        return this.nodes.filter(node => node.title.toLowerCase().includes(q)).sort((a,b) => {
+          const left = a.title.toLowerCase(), right = b.title.toLowerCase();
+          return Number(!left.startsWith(q)) - Number(!right.startsWith(q)) || compare(left,right) || compare(a.id,b.id);
+        }).slice(0,8);
+      }
+      clearSearchSuggestions() {
+        this.searchResults = []; this.searchActiveIndex = -1;
+        const list = document.getElementById('searchSuggestions'); list.innerHTML = ''; list.hidden = true;
+        const input = document.getElementById('searchInput'); input.setAttribute('aria-expanded','false'); input.setAttribute('aria-activedescendant','');
+      }
+      updateSearchSuggestions() {
+        const input = document.getElementById('searchInput'), q = input.value.trim(), exact = this.getNodeByTitle(q);
+        const action = document.getElementById('btnSearchGo');
+        action.textContent = exact || !q ? 'Gå till' : 'Skapa'; action.disabled = !q;
+        action.setAttribute('aria-disabled', String(!q || (!exact && !this.checkCreative())));
+        document.getElementById('searchHint').textContent = q && !exact && !this.checkCreative() ? 'Lås upp skaparläge för att skapa objekt.' : '';
+        this.clearSearchSuggestions();
+        if (!this.searchOpen || !q) return;
+        this.searchResults = this.searchMatches(q).map(node => node.id);
+        const list = document.getElementById('searchSuggestions'), library = this.currentLibrary;
+        list.hidden = false; input.setAttribute('aria-expanded','true');
+        if (!this.searchResults.length) { list.appendChild(this.makeElement('div','Inga matchande objekt.','search-empty')); return; }
+        this.searchResults.forEach((id,index) => {
+          const node = this.getNode(id), option = this.makeElement('button',node.title,'search-suggestion');
+          option.type = 'button'; option.id = 'search-option-' + index; option.tabIndex = -1;
+          option.setAttribute('role','option'); option.setAttribute('aria-selected','false');
+          option.addEventListener('pointerdown', event => event.preventDefault());
+          option.addEventListener('click', () => this.selectSearchSuggestion(id,library));
+          list.appendChild(option);
+        });
+      }
+      selectSearchSuggestion(id, library) {
+        const node = library === this.currentLibrary && this.getNode(id);
+        if (!node) return;
+        document.getElementById('searchInput').value = node.title;
+        this.updateSearchSuggestions(); this.clearSearchSuggestions(); this.navigateTo(node.id);
+      }
+      handleSearchKeydown(event) {
+        if (event.key === 'Escape') { event.preventDefault(); if (document.getElementById('searchSuggestions').hidden) this.closeSearch(); else this.clearSearchSuggestions(); return; }
+        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+          event.preventDefault(); if (document.getElementById('searchSuggestions').hidden) this.updateSearchSuggestions();
+          const count = this.searchResults?.length || 0; if (!count) return;
+          const step = event.key === 'ArrowDown' ? 1 : -1;
+          this.searchActiveIndex = this.searchActiveIndex < 0 ? (step > 0 ? 0 : count-1) : (this.searchActiveIndex + step + count) % count;
+          [...document.getElementById('searchSuggestions').children].forEach((option,index) => { option.setAttribute('aria-selected',String(index===this.searchActiveIndex)); if (index===this.searchActiveIndex) option.scrollIntoView?.({block:'nearest'}); });
+          document.getElementById('searchInput').setAttribute('aria-activedescendant','search-option-' + this.searchActiveIndex);
+        }
+        if (event.key === 'Enter') {
+          event.preventDefault(); const id = this.searchResults?.[this.searchActiveIndex];
+          if (id !== undefined) this.selectSearchSuggestion(id,this.currentLibrary); else this.handleSearch();
+        }
+      }
       handleSearch() {
         const q = document.getElementById('searchInput').value.trim();
         if (!q) return;
-        const n = this.getNodeByTitle(q);
-        if (n) this.navigateTo(n.id);
-        else {
-          if (this.checkCreative() && confirm(`"${q}" finns inte. Skapa?`)) {
-            const newNode = this.getOrCreateNode(q);
-            this.sync();
-            this.navigateTo(newNode.id);
-          } else if (!this.checkCreative()) {
-            alert(`Noden "${q}" kunde inte hittas.`);
-          }
-        }
+        const node = this.getNodeByTitle(q);
+        if (node) { this.clearSearchSuggestions(); this.navigateTo(node.id); }
+        else if (this.checkCreative()) { this.clearSearchSuggestions(); this.openCreateDialog(q); }
+        else document.getElementById('searchHint').textContent = 'Lås upp skaparläge för att skapa objekt.';
       }
     }
 

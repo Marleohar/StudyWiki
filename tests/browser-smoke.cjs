@@ -84,12 +84,13 @@ let proc, socket;
   await click('[onclick="app.requestRemoveRelation(\'B\', \'A\')"]');
   await send('Page.reload'); await delay(500);
   assert.deepEqual(await evaluate("[testApp.getNeighbors('A',true), testApp.getNeighbors('B',true), testApp.nodes.length, testApp.mode]"), [['B'], ['A'], 4, 'read']);
-  assert.equal(await evaluate("getComputedStyle(document.querySelector('section button')).display"), 'none');
+  assert.equal(await evaluate("getComputedStyle(document.querySelector('section[aria-label=\"Vilande relationer\"] button')).display"), 'none');
   await evaluate("testApp.requestRestoreRelation('B','A')");
   assert.equal(await evaluate("testApp.edges[0].paused"), true);
   await evaluate("testApp.navigateTo('overview')");
   assert.equal(await evaluate("document.getElementById('mainContent').textContent.includes('Standalone')"), true);
-  await evaluate("document.getElementById('searchInput').value='Standalone'");
+  await click('#btnSearchToggle');
+  await send('Input.insertText', {text: 'Standalone'});
   await click('button[onclick="app.handleSearch()"]');
   assert.equal(await evaluate('testApp.activeNodeId'), 'Standalone');
   // Keep hostile titles out of the inherited active/header rendering surfaces.
