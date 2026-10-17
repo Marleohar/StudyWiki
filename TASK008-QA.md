@@ -1,13 +1,13 @@
-﻿# TASK 008 — Smart Quick Linking and Category Selection
+# TASK 008 — Smart Quick Linking and Category Selection
 
-Status: READY FOR INDEPENDENT QA — NOT MERGED.
+Status: READY FOR RE-REVIEW AND INDEPENDENT QA — NOT MERGED.
 
 ## Revision identity
 
 Repository: Marleohar/StudyWiki. Branch: feat/task008-smart-linking-category-selection.
 
 Verified main baseline: `b1bf7d8fc0e93ca7b20f848a2034c5db6d004ec9`.
-Tested implementation commit: `f1dfb46d2d2513a002633d082a002db5ba4092e8`.
+Tested corrected implementation commit: `09bf2021fa79e882a77aac3fbbe38fdc7174f0c7`. Original implementation: `f1dfb46d2d2513a002633d082a002db5ba4092e8`; rejected delivery: `dfad5ec19aca6594daf43d6eeedae5c9af565841`.
 The delivery commit adds only this report to that implementation. Its immutable SHA is recorded in the PR and `../evidence/delivery.json`; this avoids a self-referential commit hash inside this file. Main was rechecked unchanged before delivery.
 
 ## Changed files
@@ -18,6 +18,7 @@ The delivery commit adds only this report to that implementation. Its immutable 
 - `tests/browser-page-ui.cjs`
 - `tests/category-moves.test.cjs`
 - `tests/smart-workflows.test.cjs`
+- `tests/smart-target-identity.test.cjs`
 - `tests/browser-smart-workflows.cjs`
 - `TASK008-QA.md`
 
@@ -49,7 +50,7 @@ All tests used synthetic libraries and disposable Chromium profiles. TEMP and TM
 
 | Command | Result |
 | --- | --- |
-| `node --test tests/*.test.cjs` | PASS: 153/153; 126 baseline plus 27 focused tests; no skips |
+| `node --test tests/*.test.cjs` | PASS: 159/159; 126 baseline plus 27 initial workflow and six target-identity tests; no skips |
 | `node tests/browser-smoke.cjs` | PASS |
 | `node tests/browser-category-moves.cjs` | PASS |
 | `node tests/browser-header-search.cjs` | PASS |
@@ -81,3 +82,45 @@ New named categories require an explicit name and symbol; duplicate existing cat
 Inherited client-side mode controls are not server authorization. Whole-array cloud saves retain concurrent-write limitations, and invoking sync does not establish remote durability. Existing loading/normalization and unrelated rendering paths were not redesigned; malformed historical records and unrelated legacy HTML rendering remain outside this task's guarantees. The explicitly invoked legacy chain parser retains its historical punctuation semantics. Conservative snapshot guards cancel transactions even after unrelated library edits. Successful mutations rerender their source view and may reset other transient editor state, consistent with existing behavior.
 
 No merge, deployment or auto-merge was performed. Independent QA is still required.
+
+## Blocking QA correction — identical-field target replacement
+
+Independent QA rejected `dfad5ec19aca6594daf43d6eeedae5c9af565841`: a selected target or retained suggestion remained usable after replacement with a different JavaScript object containing identical fields and the same immutable ID. The old path created an edge and produced one logical save plus three localStorage writes, or one mocked cloud write.
+
+Cause: `captureSmartContext` retained the source and category record references, but the JSON database snapshot could not distinguish an identical-field target replacement. `quickLinkResolution` looked up the current target by ID, and suggestion callbacks retained only ID/title. The old controls could therefore silently act on a replacement instance.
+
+Correction: smart contexts now retain an ephemeral ordered array of node references. `smartContextValid` requires the current node count and every node reference to match before the existing permission, page, library/revision, category-reference and complete-snapshot checks. This single guard already runs in suggestion callbacks and in `commitQuickLink` before target resolution, relationship mutation or persistence, covering unique-title resolution, explicitly selected duplicate titles, retained buttons and keyboard activation. JSON equality remains an additional check, rather than the sole identity check. No persistence, schema, relationship, category, creation or chain behavior was changed. The policy is deliberately conservative: replacement of any node invalidates the current smart transaction, even when all serialized fields are equal. Reopening the view captures current references and restores valid operation.
+
+Changed files for this correction only:
+
+- `index.html` — node-reference capture/validation plus explanation; two existing implementation lines changed.
+- `tests/smart-target-identity.test.cjs` — six focused Node cases.
+- `tests/browser-smart-workflows.cjs` — six additional real Chromium scenarios; earlier assertions retained.
+- `TASK008-QA.md` — updated revision, results and correction evidence.
+
+The six Node cases failed against the rejected source before the fix (`target-identity-before.txt`) and all pass afterward (`target-identity-after.txt`). Three entry scenarios are exercised against both local and mocked cloud persistence: a unique-title target, an explicitly selected duplicate-title target, and an old suggestion. Each replaces B with an identical-field clone and verifies a different object reference. Retained button activation and direct confirmation reject; complete before/after library snapshots remain equal, with **0 saves / 0 localStorage writes / 0 mocked cloud writes**. Reopening the source view and explicitly selecting B succeeds exactly once, preserves complete existing records and metadata, and creates only the intended edge and established clock changes. Local success: **1 save / 3 storage writes / 0 cloud writes**. Cloud success: **1 save / 0 storage writes / 1 merge write**, with the complete expected nodes, edges and category state in the payload.
+
+Real Chromium repeats the same six scenarios through Enter, a real mouse click and retained action/suggestion elements. Old controls remain rejected after the fresh successful operation as well. Full rejected snapshots and exact rejected/fresh write counts are saved as `targetIdentity` in the latest `snapshots.json`. Every rejected case reports `[0,0,0]` for saves, storage writes and mocked cloud writes. Fresh selection works for both unique and duplicate names, stays on A and returns focus to quick linking.
+
+The original independent QA scripts were copied into development evidence and rerun against the corrected source without altering the QA checkout. The original real-browser selected-target and old-suggestion reproductions now PASS with zero writes, along with the twelve-identical-title touch and comma/semicolon/colon chain checks. The independent mocked-cloud matrix now passes all ten source/target/category/mode/library/revision cases with zero writes. Logs: `correction-original-repro.txt` and `correction-original-cloud-repro.txt`.
+
+Latest complete validation on the corrected implementation:
+
+| Command | Actual result |
+| --- | --- |
+| `node --test tests/*.test.cjs` | PASS: 159/159, zero fail/skip/cancel |
+| `node tests/browser-smoke.cjs` | PASS, exit 0 |
+| `node tests/browser-category-moves.cjs` | PASS, exit 0 |
+| `node tests/browser-header-search.cjs` | PASS, exit 0 |
+| `node tests/browser-existing-object-transfer.cjs` | PASS, exit 0 |
+| `node tests/browser-relation-sorting.cjs` | PASS, exit 0 |
+| `node tests/browser-confirmed-relation-sorting.cjs` | PASS, exit 0 |
+| `node tests/browser-page-ui.cjs` | PASS, exit 0 |
+| `node tests/browser-smart-workflows.cjs` | PASS, exit 0, including six target-identity scenarios |
+| `git diff --check` | PASS |
+
+All eight browser commands passed on their first correction validation attempt; no cleanup error occurred in these runs. The earlier Windows profile-cleanup incident remains documented above rather than erased. Logs are `correction-node-tests.txt`, `correction-browser-results.json` and `correction-browser-*.txt`. The latest dedicated snapshots and 1280/375/320 screenshots are in `evidence\tmp\task008-smart-eFzzAC`. Both focused and complete suites retain all earlier valid linking, atomic creation, category selection/creation, advanced-chain, long-press/F2, sorting, template and read-mode assertions.
+
+This correction used the same isolated synthetic setup: Firebase disabled, external network blocked, disposable profiles and task-local TEMP/TMP. No production data/services, credentials or paid APIs were accessed. No Digital GM or Ört-Wikin files were modified. The final delivery commit adds only this updated report to tested correction commit `09bf2021fa79e882a77aac3fbbe38fdc7174f0c7`; its immutable SHA is recorded in the PR and `evidence\correction-delivery.json`.
+
+**READY FOR RE-REVIEW AND INDEPENDENT QA — NOT MERGED.** No merge, deployment or auto-merge was performed; independent approval is still required.
