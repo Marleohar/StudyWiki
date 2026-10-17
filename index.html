@@ -766,9 +766,14 @@
         if (symbol.length === 0) { error.textContent = 'Symbolen får inte vara tom.'; return; }
         if (symbol === context.source) return this.closeSymbolEditDialog();
         if (context.kind === 'category' && this.categorySymbolOccupied(symbol)) { error.textContent = 'Symbolen används redan av en annan kategori.'; return; }
-        this.closeSymbolEditDialog();
-        if (context.kind === 'object') this.moveNodeCategory(context.nodeId, symbol);
-        else this.renameCategorySymbol(context.source, symbol);
+        if (context.kind === 'object') {
+          this.closeSymbolEditDialog();
+          this.moveNodeCategory(context.nodeId, symbol);
+        } else if (this.renameCategorySymbol(context.source, symbol)) {
+          this.closeSymbolEditDialog();
+        } else {
+          error.textContent = 'Kategorin ändrades inte. Sorteringsinställningarna kunde inte läsas eller sparas. Försök igen när webbläsarlagringen fungerar.';
+        }
       }
       appendTemplate(parent, symbol) {
         const section = this.makeElement('section');
@@ -958,19 +963,26 @@
         const ids=[...new Set(value.ids)];
         return ids.length<=6 ? {mode:value.mode,ids} : null;
       }
-      readCategorySortPreferences() {
+      readCategorySortPreferencesStrict() {
         try {
-          const data=JSON.parse(localStorage.getItem(this.categorySortPreferenceKey()));
-          if (data?.version!==1 || !Array.isArray(data.categories)) return {version:1,categories:[]};
+          const raw=localStorage.getItem(this.categorySortPreferenceKey());
+          // Only a successful null read establishes that preferences are genuinely absent.
+          if (raw===null) return {version:1,categories:[]};
+          const data=JSON.parse(raw);
+          if (data?.version!==1 || !Array.isArray(data.categories)) return null;
           const symbols=new Set(),categories=[];
           for (const entry of data.categories) {
-            if (!Array.isArray(entry)||entry.length!==2||typeof entry[0]!=='string'||symbols.has(entry[0])) return {version:1,categories:[]};
+            if (!Array.isArray(entry)||entry.length!==2||typeof entry[0]!=='string'||symbols.has(entry[0])) return null;
             const preference=this.validatedSortPreference(entry[1]);
-            if (!preference) return {version:1,categories:[]};
+            if (!preference) return null;
             symbols.add(entry[0]);categories.push([entry[0],preference]);
           }
           return {version:1,categories};
-        } catch { return {version:1,categories:[]}; }
+        } catch { return null; }
+      }
+      readCategorySortPreferences() {
+        // Display restoration stays tolerant; graph migrations require the strict result.
+        return this.readCategorySortPreferencesStrict() || {version:1,categories:[]};
       }
       orderedSortCriteria(ids) {
         return [...this.canonicalRelationCriteria(ids),...ids.filter(id=>!this.getNode(id)).sort((a,b)=>a<b?-1:a>b?1:0)];
@@ -985,7 +997,9 @@
         catch { state.preferenceError=true; }
       }
       migrateCategorySortPreference(source,symbol) {
-        const data=this.readCategorySortPreferences(),previous=data.categories.find(entry=>entry[0]===source);
+        const data=this.readCategorySortPreferencesStrict();
+        if (!data) return false;
+        const previous=data.categories.find(entry=>entry[0]===source);
         // A stale destination preference belongs to a different category and must not be inherited.
         if (!previous && !data.categories.some(entry=>entry[0]===symbol)) return true;
         data.categories=data.categories.filter(entry=>entry[0]!==source&&entry[0]!==symbol);
