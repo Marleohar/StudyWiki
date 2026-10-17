@@ -111,6 +111,11 @@
     .item-top-zone { margin-bottom: 16px; border-bottom: 1px solid var(--db-border); padding-bottom: 12px; }
     .item-name-row { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px; }
     .item-name { font-family: 'Linux Libertine', 'Georgia', Times, serif; font-size: 32px; line-height: 1.1; letter-spacing: 0.5px; display:flex; align-items:center; gap:8px;}
+    .item-name { min-width:0; max-width:100%; font-weight:bold; }
+    #nodeTitle, #categoryDisplayName { min-width:0; overflow-wrap:anywhere; }
+    #categoryHeadingSymbol { flex-shrink:0; }
+    .compact-action { font-size:11px; padding:4px 8px; border:1px solid var(--db-border); }
+    .free-text-content { overflow-wrap:anywhere; }
     .creative-controls { display: flex; gap: 6px; flex-wrap: wrap; }
 
     .long-press-target { touch-action: manipulation; -webkit-touch-callout: none; }
@@ -121,7 +126,7 @@
     /* FREE TEXT */
     .free-text-frame { border: 1px solid var(--db-border-light); border-radius: 4px; padding: 12px; background: #fafafa; margin-bottom: 24px; cursor: pointer; }
     .free-text-frame.readonly { cursor: default; }
-    .free-text-label { font-size: 11px; color: var(--db-muted); text-transform: uppercase; margin-bottom: 6px; display: flex; justify-content: space-between; }
+    .free-text-label { margin-top:8px; font-size: 11px; color: var(--db-muted); text-transform: uppercase; margin-bottom: 0; display: flex; justify-content: space-between; }
     .free-text-content { font-size: 14px; white-space: pre-wrap; }
 
     /* NY ENKEL TELEFONLISTA - INGA RUTOR */
@@ -221,9 +226,9 @@
         <label for="modalTitle" style="font-weight: bold; font-size: 12px; display: block; margin-bottom: 4px;">Namn / Titel</label>
         <input type="text" id="modalTitle" list="existingNodesList" placeholder="t.ex. Fireball...">
       </div>
-      <div style="margin-bottom: 12px;">
-        <label for="modalFreeText" style="font-weight: bold; font-size: 12px; display: block; margin-bottom: 4px;">Fritext / Anteckningar</label>
-        <textarea id="modalFreeText" rows="4"></textarea>
+      <div class="free-text-frame readonly" id="creationDescription">
+        <textarea id="modalFreeText" rows="4" aria-label="Beskrivning"></textarea>
+        <label for="modalFreeText" class="free-text-label">Beskrivning</label>
       </div>
       <div class="dialog-actions-stacked">
         <button type="button" class="primary" onclick="app.saveNewNode()">Skapa</button>
@@ -363,12 +368,17 @@
           this.closeSymbolEditDialog();
           this.closeAppearanceDialog();
           this.closeCreateDialog();
+          this.categoryDescriptionRefresh?.();
+          const objectEditor=document.getElementById('freeTextEditor');
+          if(objectEditor && this.activeNodeId)this.renderPage(this.activeNodeId);
         }
         document.body.setAttribute('data-mode', this.mode);
         const categoryEditor = document.getElementById('categoryNotes');
         if (categoryEditor) categoryEditor.readOnly = !this.checkCreative();
-        const nameEditor = document.getElementById('categoryNameInput');
-        if (nameEditor) nameEditor.readOnly = !this.checkCreative();
+        document.querySelectorAll('#mainContent .free-text-frame').forEach(frame=>{
+          frame.classList.toggle('readonly',!this.checkCreative());
+          if(!frame.querySelector('textarea')) {frame.setAttribute('role',this.checkCreative()?'button':'group');frame.setAttribute('aria-label',this.checkCreative()?'Redigera beskrivning':'Beskrivning');}
+        });
         this.renderHeaderStatus();
         this.updateSearchSuggestions();
       }
@@ -784,6 +794,69 @@
         this.sync();
         return true;
       }
+      requestRenameCategory(symbol) {
+        if (!this.checkCreative() || this.activeCategorySymbol !== symbol) return;
+        const library=this.currentLibrary, revision=this.libraryLoadRevision;
+        const previous=this.categoryState.categories.find(record=>record.symbol===symbol)?.name || '';
+        const value=prompt('Ange nytt namn:',previous);
+        if (typeof value !== 'string' || value===previous || value.trim()===previous) return;
+        if (!this.checkCreative() || this.currentLibrary!==library || this.libraryLoadRevision!==revision || this.activeCategorySymbol!==symbol) return;
+        if ((this.categoryState.categories.find(record=>record.symbol===symbol)?.name || '')!==previous) return;
+        if (this.saveCategoryName(symbol,value)) document.getElementById('categoryDisplayName').textContent=this.categoryName(symbol);
+      }
+      descriptionFrame({value, editing=false, editorId, contentLabel, maxLength, onSave, onCancel, onEdit}) {
+        const frame=this.makeElement('div',undefined,'free-text-frame'+(!this.checkCreative()?' readonly':''));
+        const caption=this.makeElement('div','Beskrivning','free-text-label');
+        if (editing && this.checkCreative()) {
+          const editor=this.makeElement('textarea');editor.id=editorId;editor.value=value;
+          editor.setAttribute('aria-label','Beskrivning'+(maxLength ? ', högst '+maxLength+' tecken' : ''));
+          editor.style.minHeight='80px';
+          const actions=this.makeElement('div',undefined,'creative-controls');
+          const save=this.makeElement('button','Spara','primary creative-only');save.type='button';save.id=editorId==='categoryNotes'?'saveCategoryNotes':'saveObjectDescription';
+          const cancel=this.makeElement('button','Avbryt');cancel.type='button';cancel.id=editorId==='categoryNotes'?'cancelCategoryNotes':'cancelObjectDescription';
+          const error=this.makeElement('p');error.setAttribute('role','alert');
+          const submit=()=>{
+            if (!this.checkCreative() || frame.isConnected===false) return;
+            if (maxLength && [...editor.value].length>maxLength) { error.textContent='Högst '+maxLength+' tecken. Texten har inte sparats.';return; }
+            if (onSave(editor.value)===false) error.textContent='Underlaget har ändrats. Öppna redigeringen igen.';
+          };
+          save.addEventListener('click',submit);cancel.addEventListener('click',onCancel);
+          const handleKey=event=>{
+            if (event.key==='Escape') {event.preventDefault();onCancel();}
+            if (event.key==='Enter' && (event.ctrlKey || event.metaKey)) {event.preventDefault();submit();}
+          };
+          editor.addEventListener('keydown',handleKey);actions.addEventListener('keydown',handleKey);
+          actions.appendChild(save);actions.appendChild(cancel);frame.appendChild(editor);frame.appendChild(actions);frame.appendChild(error);
+        } else {
+          const content=this.makeElement('div',value || 'Tomt.','free-text-content');
+          if (contentLabel) content.setAttribute('aria-label',contentLabel);
+          frame.appendChild(content);frame.tabIndex=0;
+          frame.setAttribute('role',this.checkCreative()?'button':'group');
+          frame.setAttribute('aria-label',this.checkCreative()?'Redigera beskrivning':'Beskrivning');
+          const edit=()=>{if(this.checkCreative() && frame.isConnected!==false)onEdit();};
+          frame.addEventListener('click',edit);
+          frame.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();edit();}});
+        }
+        frame.appendChild(caption);
+        return frame;
+      }
+      setCategoryDescription(slot,symbol,editing=false) {
+        const value=this.categoryState.categories.find(record=>record.symbol===symbol)?.notes || '';
+        const library=this.currentLibrary, revision=this.libraryLoadRevision;
+        const valid=()=>this.currentLibrary===library && this.libraryLoadRevision===revision && this.activeCategorySymbol===symbol && slot.isConnected!==false;
+        const show=(edit,focus=true)=>{
+          if(!valid())return;
+          this.setCategoryDescription(slot,symbol,edit);
+          if(focus)(edit?document.getElementById('categoryNotes'):slot.children[0]).focus?.();
+        };
+        const frame=this.descriptionFrame({value,editing,editorId:'categoryNotes',contentLabel:'Kategorianteckningar',maxLength:280,
+          onEdit:()=>show(true),onCancel:()=>show(false),onSave:text=>{
+            if(!valid() || (this.categoryState.categories.find(record=>record.symbol===symbol)?.notes || '')!==value)return false;
+            if(!this.saveCategoryNotes(symbol,text))return false;show(false);return true;
+          }});
+        slot.innerHTML='';slot.appendChild(frame);
+        this.categoryDescriptionRefresh=()=>{if(valid())show(false,false);};
+      }
       renderCategory(symbol) {
         this.resetPresses();
         this.activeNodeId = null;
@@ -794,37 +867,17 @@
         back.type = 'button'; back.addEventListener('click', () => this.navigateTo('overview'));
         main.appendChild(back);
         const card = this.makeElement('div', undefined, 'item-card');
-        card.appendChild(this.makeElement('h1', symbol.toUpperCase(), 'item-name'));
-        const nameDisplay = this.makeElement('p', this.categoryName(symbol)); nameDisplay.id = 'categoryDisplayName';
-        card.appendChild(nameDisplay);
-        const nameLabel = this.makeElement('label', 'Kategorinamn', 'creative-only'); nameLabel.setAttribute('for', 'categoryNameInput');
-        const nameInput = this.makeElement('input', undefined, 'creative-only'); nameInput.id = 'categoryNameInput'; nameInput.type = 'text';
-        nameInput.value = this.categoryState?.categories?.find(record => record.symbol === symbol)?.name || '';
-        nameInput.readOnly = !this.checkCreative();
-        const nameSave = this.makeElement('button', 'Spara kategorinamn', 'creative-only'); nameSave.type = 'button'; nameSave.id = 'saveCategoryName';
-        nameSave.addEventListener('click', () => { if (this.saveCategoryName(symbol, nameInput.value)) nameDisplay.textContent = this.categoryName(symbol); });
-        card.appendChild(nameLabel); card.appendChild(nameInput); card.appendChild(nameSave);
-        const notes = this.categoryState?.categories?.find(record => record.symbol === symbol)?.notes || '';
-        const noteText = this.makeElement('p', notes || 'Inga kategorianteckningar.');
-        noteText.setAttribute('aria-label', 'Kategorianteckningar');
-        card.appendChild(noteText);
-        const editor = this.makeElement('textarea', undefined, 'creative-only');
-        editor.id = 'categoryNotes'; editor.value = notes;
-        editor.setAttribute('aria-label', 'Kategorianteckningar, högst 280 tecken');
-        editor.readOnly = !this.checkCreative();
-        const error = this.makeElement('p'); error.setAttribute('role', 'alert');
-        const save = this.makeElement('button', 'Spara kategorianteckningar', 'creative-only');
-        save.type = 'button'; save.id = 'saveCategoryNotes';
-        save.addEventListener('click', () => {
-          if (!this.checkCreative()) return;
-          if (!this.saveCategoryNotes(symbol, editor.value)) {
-            error.textContent = 'Högst 280 tecken. Texten har inte sparats.';
-            return;
-          }
-          noteText.textContent = editor.value || 'Inga kategorianteckningar.';
-          error.textContent = 'Sparat.';
-        });
-        card.appendChild(editor); card.appendChild(save); card.appendChild(error);
+        const top=this.makeElement('div',undefined,'item-top-zone');
+        const headingRow=this.makeElement('div',undefined,'item-name-row');
+        const heading=this.makeElement('h1',undefined,'item-name');
+        const symbolDisplay=this.makeElement('span',symbol.toUpperCase(),'node-icon'); symbolDisplay.id='categoryHeadingSymbol';
+        const nameDisplay=this.makeElement('span',this.categoryName(symbol)); nameDisplay.id='categoryDisplayName';
+        heading.appendChild(symbolDisplay);heading.appendChild(nameDisplay);
+        const rename=this.makeElement('button','Byt namn','creative-only btn-ghost compact-action'); rename.type='button';rename.id='renameCategory';
+        rename.addEventListener('click',()=>this.requestRenameCategory(symbol));
+        headingRow.appendChild(heading);headingRow.appendChild(rename);top.appendChild(headingRow);card.appendChild(top);
+        const description=this.makeElement('div');description.id='categoryDescriptionSlot';card.appendChild(description);
+        this.setCategoryDescription(description,symbol);
         const create = this.makeElement('button', 'Skapa objekt i kategorin', 'creative-only');
         create.type = 'button'; create.id = 'createCategoryNode';
         create.addEventListener('click', () => { if (this.checkCreative()) this.openCreateDialog('', symbol); });
@@ -1162,26 +1215,7 @@
             `).join('');
         }).join('');
 
-        // Fritext
-        const currentText = (node.free_text && (node.free_text['sv'] || typeof node.free_text === 'string')) ? 
-            (typeof node.free_text === 'string' ? node.free_text : node.free_text['sv']) : '';
-            
-        let freeTextZone = (isEditingText && this.checkCreative()) ? `
-          <div class="free-text-frame">
-            <div class="free-text-label"><span>Fritext</span></div>
-            <textarea id="freeTextEditor" style="width:100%; min-height:80px; margin-bottom:8px;">${currentText}</textarea>
-            <div class="form-stack" style="flex-direction:row; width:auto;">
-              <button type="button" class="primary" onclick="app.saveFreeText('${node.id}')">Spara</button>
-              <button type="button" onclick="app.renderPage('${node.id}', false)">Avbryt</button>
-            </div>
-          </div>
-        ` : `
-          <div class="free-text-frame ${this.mode==='read'?'readonly':''}" onclick="${this.checkCreative() ? `app.renderPage('${node.id}', true)` : ''}">
-            <div class="free-text-label"><span>Fritext</span><span class="creative-only" style="font-size:10px; text-decoration:underline;">Redigera</span></div>
-            <div class="free-text-content">${currentText || `<span style="color:var(--db-muted); font-style:italic;">Tomt.</span>`}</div>
-          </div>
-        `;
-
+        const currentText = typeof node.free_text==='string' ? node.free_text : (node.free_text?.sv || '');
         // Inline-skapare HTML
         const inputZone = `
           <div class="creative-only" style="margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--db-border-light);">
@@ -1206,15 +1240,14 @@
                   <span id="nodeTitle"></span>
                 </h1>
                 <div class="creative-controls">
-                  <button type="button" id="editNodeCategory" class="creative-only btn-ghost">Ändra kategori</button>
-                  <button type="button" id="editNodeAppearance" class="creative-only btn-ghost">Ändra symbol & färg</button>
-                  <button type="button" id="renameNode" class="creative-only btn-ghost" style="font-size:11px; padding:4px 8px; border: 1px solid var(--db-border);">✎ Byt namn</button>
-                  <button type="button" class="btn-danger creative-only" style="font-size:11px; padding:4px 8px;" onclick="app.requestDeleteNode('${node.id}')">🗑 Radera</button>
+                  <button type="button" id="renameNode" class="creative-only btn-ghost compact-action">Byt namn</button>
+                  <button type="button" id="editNodeCategory" class="creative-only btn-ghost compact-action">Byt kategori</button>
+                  <button type="button" id="deleteNode" class="btn-danger creative-only compact-action">Radera</button>
                 </div>
               </div>
             </div>
             
-            ${freeTextZone}
+            <div id="objectDescriptionSlot"></div>
             
             <div class="flat-list-container">
               ${listHtml}
@@ -1229,6 +1262,14 @@
             </section>
           </div>
         `;
+        const library=this.currentLibrary, revision=this.libraryLoadRevision;
+        const validDescription=()=>this.currentLibrary===library && this.libraryLoadRevision===revision && this.activeNodeId===node.id && this.getNode(node.id)===node;
+        const description=this.descriptionFrame({value:currentText,editing:isEditingText,editorId:'freeTextEditor',
+          onEdit:()=>{if(validDescription())this.renderPage(node.id,true);document.getElementById('freeTextEditor')?.focus?.();},
+          onCancel:()=>{if(validDescription()){this.renderPage(node.id,false);document.querySelector('#objectDescriptionSlot .free-text-frame')?.focus?.();}},
+          onSave:()=>{if(!validDescription())return false;this.saveFreeText(node.id);return true;}});
+        document.getElementById('objectDescriptionSlot').appendChild(description);
+        document.getElementById('deleteNode').addEventListener('click',()=>this.requestDeleteNode(node.id));
         const nameControl = document.getElementById('nodeTitle');
         nameControl.textContent = node.title;
         this.bindLongPress(nameControl, () => this.requestRenameNode(node.id));
@@ -1245,7 +1286,6 @@
         const symbolControl = this.symbolButton(this.symbolOf(node), 'node-icon', node.id);
         symbolControl.style.color = node.color || '#202122';
         document.getElementById('nodeCategorySymbol').appendChild(symbolControl);
-        document.getElementById('editNodeAppearance').addEventListener('click', () => this.openAppearanceDialog(node.id));
         const orderedNeighbors = Object.keys(grouped).sort().flatMap(key => grouped[key].sort((a, b) => a.title.localeCompare(b.title)));
         this.bindRelationSymbols(orderedNeighbors);
         this.appendTemplate(document.getElementById('objectTemplate'), this.symbolOf(node));

@@ -6,6 +6,7 @@ const path = require('node:path');
 const html = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
 const source = html.slice(html.indexOf('    class GraphApp {'), html.indexOf('    const app = new GraphApp();'));
 const plain = value => JSON.parse(JSON.stringify(value));
+function descendant(element,id) { if(element.id===id)return element;for(const child of element.children||[]){const found=descendant(child,id);if(found)return found} }
 function fixture() {
   const elements = new Map(), storage = new Map(); let writes = 0;
   function element(tag = 'div') {
@@ -52,7 +53,7 @@ test('legacy empty, null and missing icons share the visible default without dat
   assert.equal(button.textContent, '&'); button.listeners.click();
   assert.equal(app.lastRoute, 'category/%26');
   app.renderCategory('&');
-  assert.equal(elements.get('mainContent').children[1].children[0].textContent, '&');
+  assert.equal(descendant(elements.get('mainContent'),'categoryHeadingSymbol').textContent, '&');
   assert.deepEqual(plain({ nodes: app.nodes, edges: app.edges, state: app.categoryState }), before);
   assert.equal(writes(), 0);
 });
@@ -61,7 +62,7 @@ test('exact symbol membership and uppercase headings do not convert legacy names
   app.renderCategory('x');
   assert.deepEqual(plain(app.categoryMembers('x').map(n => n.id)), ['A', 'B', 'I']);
   const card = elements.get('mainContent').children[1];
-  assert.equal(card.children[0].textContent, 'X');
+  assert.equal(descendant(card,'categoryHeadingSymbol').textContent, 'X');
   assert.equal(elements.get('mainContent').innerHTML, '');
   assert.deepEqual(plain(app.nodes), before);
   assert.equal(app.categoryMembers('X').length, 0);

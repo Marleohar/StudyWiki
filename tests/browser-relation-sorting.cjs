@@ -12,10 +12,10 @@ withBrowser(data,async({evaluate,send,click,press,navigate,answers,dialogs})=>{
  const rows=()=>evaluate('[...document.querySelectorAll("#categoryMembers a")].map(e=>e.getAttribute("href").slice(1))');
  const headings=()=>evaluate('[...document.querySelectorAll("#categoryMembers h2")].map(e=>e.textContent)');
  await navigate('category/x');assert.deepEqual(await rows(),['none2','none10','m2','m10','p-only','q-only']);assert.equal(await evaluate('testApp.mode'),'read');
- await evaluate('window.sortTemplate=document.querySelector("#mainContent .item-card").lastElementChild;window.sortEditor=document.getElementById("categoryNotes")');
+ await evaluate('window.sortTemplate=document.querySelector("#mainContent .item-card").lastElementChild;window.sortEditor=document.querySelector("#categoryDescriptionSlot .free-text-frame")');
  await mode();await fill('Pacifies');await evaluate('document.getElementById("relationCriteriaSelect").focus()');await key('Home',36);await key('Tab',9);assert.equal(await evaluate('document.activeElement.id'),'addRelationCriterion');await key('Enter',13);assert.deepEqual(await headings(),['Pacifies Pitta','Övriga objekt']);assert.deepEqual(await rows(),['m2','m10','p-only','none2','none10','q-only']);await unchanged();
  await add('Aggravates');assert.deepEqual(await headings(),['Aggravates Kapha, Pacifies Pitta','Aggravates Kapha','Pacifies Pitta','Övriga objekt']);assert.deepEqual(await rows(),['m2','m10','q-only','p-only','none2','none10']);
- assert.equal(await evaluate('sortTemplate===document.querySelector("#mainContent .item-card").lastElementChild && sortEditor===document.getElementById("categoryNotes")'),true);await unchanged();
+ assert.equal(await evaluate('sortTemplate===document.querySelector("#mainContent .item-card").lastElementChild && sortEditor===document.querySelector("#categoryDescriptionSlot .free-text-frame")'),true);await unchanged();
  // Remove through touch, then reverse criterion order to verify equal-cardinality groups.
  await send('Emulation.setTouchEmulationEnabled',{enabled:true,maxTouchPoints:1});await press('#relationCriteriaChips button:nth-child(2)',0,'touch');await send('Emulation.setTouchEmulationEnabled',{enabled:false});assert.deepEqual(await evaluate('testApp.categorySort.ids'),['q']);await add('Pacifies');assert.deepEqual(await headings(),['Aggravates Kapha, Pacifies Pitta','Aggravates Kapha','Pacifies Pitta','Övriga objekt']);await unchanged();
  await click('#clearRelationCriteria');assert.deepEqual(await headings(),[]);assert.equal((await rows()).length,6);
