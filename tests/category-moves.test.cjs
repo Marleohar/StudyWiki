@@ -125,14 +125,14 @@ test('read mode blocks every new mutation and dialog path even when called direc
  assert.deepEqual(f.snapshot(),before);assert.equal(f.saves(),0);
 });
 test('800 ms long press fires once, swallows following click; next quick press navigates',()=>{
- const f=fixture(),{app}=f;let opens=0;app.openSymbolEditDialog=id=>{assert.equal(id,'A');opens++};
+ const f=fixture(),{app}=f;let opens=0;app.openCategoryPicker=id=>{assert.equal(id,'A');opens++};
  const b=app.symbolButton('x','list-symbol','A');b.dispatch('pointerdown');f.advance(799);assert.equal(opens,0);f.advance(1);assert.equal(opens,1);f.advance(1000);assert.equal(opens,1);
  b.dispatch('pointerup');assert.equal(b.dispatch('click').prevented,true);assert.equal(app.lastRoute,undefined);
  b.dispatch('pointerdown');b.dispatch('pointerup');b.dispatch('click');assert.equal(app.lastRoute,'category/x');assert.equal(opens,1);
 });
 test('early release, movement, cancellation, capture loss, rerender and read lock invalidate pending callbacks',()=>{
  for(const cause of ['early','move','cancel','lost','render','scroll','read','removed','secondary']){
- const f=fixture(),{app}=f;let opens=0;app.openSymbolEditDialog=()=>opens++;const b=app.symbolButton('x','list-symbol','A');b.dispatch('pointerdown');f.advance(799);
+ const f=fixture(),{app}=f;let opens=0;app.openCategoryPicker=()=>opens++;const b=app.symbolButton('x','list-symbol','A');b.dispatch('pointerdown');f.advance(799);
  if(cause==='early')b.dispatch('pointerup');if(cause==='move')b.dispatch('pointermove',{clientX:9});if(cause==='cancel')b.dispatch('pointercancel');if(cause==='lost')b.dispatch('lostpointercapture');
  if(cause==='render')app.resetPresses();if(cause==='scroll')app.cancelLongPress(true);if(cause==='read')app.mode='read';if(cause==='removed')b.isConnected=false;if(cause==='secondary')b.dispatch('pointerdown',{isPrimary:false,pointerId:2});
  f.advance(2000);assert.equal(opens,0,cause);assert.equal(f.timers.size,0,cause);assert.equal(f.saves(),0);
@@ -168,7 +168,7 @@ test('cosmetic rename preserves multiple source metadata records and stored-only
  assert.equal(app.renameCategorySymbol('stored-only','metadata-new'),true);assert.equal(app.categoryState.categories[1].notes,'Do not overwrite');assert.equal(f.saves(),2);
 });
 test('read-only symbol and title presses keep quick navigation and never activate keyboard edit alternatives',()=>{
- const f=fixture(),{app}=f;app.mode='read';let opens=0;app.openSymbolEditDialog=()=>opens++;app.requestRenameNode=()=>opens++;
+ const f=fixture(),{app}=f;app.mode='read';let opens=0;app.openCategoryPicker=()=>opens++;app.requestRenameNode=()=>opens++;
  const b=app.symbolButton('x','list-symbol','A'),a=app.titleLink(app.nodes[0]);
  for(const element of [b,a]){element.dispatch('pointerdown');f.advance(1000);element.dispatch('pointerup');element.dispatch('click');element.dispatch('keydown',{key:'F2'})}
  assert.equal(opens,0);assert.equal(f.timers.size,0);assert.equal(f.saves(),0);assert.equal(app.lastRoute,'A');
@@ -183,7 +183,7 @@ test('appearance defaults are a no-op for absent/null/empty legacy colors in the
 });
 
 test('capture ownership lost at 150 ms cancels at threshold without a lostpointercapture event',()=>{
- const f=fixture(),{app}=f;let opens=0;app.openSymbolEditDialog=()=>opens++;
+ const f=fixture(),{app}=f;let opens=0;app.openCategoryPicker=()=>opens++;
  const b=app.symbolButton('x','list-symbol','A');b.dispatch('pointerdown');f.advance(150);b.releasePointerCapture(1);assert.equal(b.hasPointerCapture(1),false);
  f.advance(650);assert.equal(opens,0);assert.equal(app.pendingPress,null);assert.equal(f.timers.size,0);
  b.dispatch('pointerup');assert.equal(b.dispatch('click').prevented,true);assert.equal(app.lastRoute,undefined);assert.equal(f.saves(),0);
@@ -191,7 +191,7 @@ test('capture ownership lost at 150 ms cancels at threshold without a lostpointe
 });
 test('capture checks fail safely and known ownership loss on movement invalidates immediately',()=>{
  for(const cause of ['missing','throws','failed acquisition','movement']){
- const f=fixture(),{app}=f;let opens=0;app.openSymbolEditDialog=()=>opens++;const b=app.symbolButton('x','list-symbol','A');
+ const f=fixture(),{app}=f;let opens=0;app.openCategoryPicker=()=>opens++;const b=app.symbolButton('x','list-symbol','A');
  if(cause==='missing')b.hasPointerCapture=undefined;
  if(cause==='throws')b.hasPointerCapture=()=>{throw Error('Synthetic capture failure')};
  if(cause==='failed acquisition')b.setPointerCapture=()=>{throw Error('Synthetic inactive pointer')};
