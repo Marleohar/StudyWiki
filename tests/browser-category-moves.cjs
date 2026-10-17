@@ -3,7 +3,7 @@ const {withBrowser}=require('./support/browser-harness.cjs');
 const {library}=require('./support/task003a-harness.cjs');
 const snapshot='JSON.stringify({nodes:testApp.nodes,edges:testApp.edges,state:testApp.categoryState})';
 const seed=library();
-withBrowser(seed,async({evaluate,send,press,click,navigate,reload,delay,answers,dialogs,errors})=>{
+withBrowser(seed,async({evaluate,send,press,click,navigate,reload,delay,answers,dialogs,errors,interception,holdLocalRequest})=>{
  const get=()=>evaluate(snapshot);
  const metrics=()=>evaluate('[qa.saves,qa.writes,qa.payloads]');
  const creative=()=>evaluate("testApp.mode='create';testApp.updateModeUI()");
@@ -17,6 +17,25 @@ withBrowser(seed,async({evaluate,send,press,click,navigate,reload,delay,answers,
  await navigate('A');await press('#nodeCategorySymbol button',300);assert.equal(await evaluate('location.hash'),'#category/x');assert.equal(await dialogOpen(),false);await delay(850);assert.equal(await dialogOpen(),false);await unchanged(before);
  await navigate('A');await press('#nodeCategorySymbol button',850);assert.equal(await dialogOpen(),true);assert.equal(await evaluate('location.hash'),'#A');await unchanged(before);
  await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Escape',code:'Escape'});assert.equal(await dialogOpen(),false);
+ await click('#nodeCategorySymbol button');assert.equal(await evaluate('location.hash'),'#category/x');await unchanged(before);
+ // Native capture loss before threshold, without a subsequent pointer event to deliver lostpointercapture.
+ await navigate('A');
+ await evaluate("window.qaCapture={got:false,id:null};const b=document.querySelector('#nodeCategorySymbol button');b.addEventListener('pointerdown',e=>qaCapture.id=e.pointerId,{once:true});b.addEventListener('gotpointercapture',()=>qaCapture.got=true,{once:true})");
+ const capturePoint=await evaluate("(()=>{const b=document.querySelector('#nodeCategorySymbol button');b.scrollIntoView();const r=b.getBoundingClientRect();return{x:r.x+r.width/2,y:r.y+r.height/2}})()");
+ await send('Input.dispatchMouseEvent',{type:'mousePressed',...capturePoint,button:'left',buttons:1,clickCount:1});
+ await send('Input.dispatchMouseEvent',{type:'mouseMoved',...capturePoint,button:'left',buttons:1});
+ for(let n=0;n<50&&!await evaluate('qaCapture.got');n++)await delay(5);
+ assert.equal(await evaluate('qaCapture.got'),true);
+ assert.equal(await evaluate("document.querySelector('#nodeCategorySymbol button').hasPointerCapture(qaCapture.id)"),true);
+ await delay(150);
+ await evaluate("document.querySelector('#nodeCategorySymbol button').releasePointerCapture(qaCapture.id)");
+ assert.equal(await evaluate("document.querySelector('#nodeCategorySymbol button').hasPointerCapture(qaCapture.id)"),false);
+ // No pointer event occurs during this wait. The timeout must inspect ownership itself.
+ await delay(900);
+ assert.equal(await dialogOpen(),false);assert.equal(await evaluate('!!testApp.pendingPress'),false);
+ assert.equal(await evaluate('location.hash'),'#A');await unchanged(before);
+ await send('Input.dispatchMouseEvent',{type:'mouseReleased',...capturePoint,button:'left',buttons:0,clickCount:1});
+ await delay(30);assert.equal(await dialogOpen(),false);assert.equal(await evaluate('location.hash'),'#A');await unchanged(before);
  await click('#nodeCategorySymbol button');assert.equal(await evaluate('location.hash'),'#category/x');await unchanged(before);
  // Genuine pointer/touch: short, held, movement and pointercancel.
  await send('Emulation.setTouchEmulationEnabled',{enabled:true,maxTouchPoints:1});
@@ -88,7 +107,23 @@ withBrowser(seed,async({evaluate,send,press,click,navigate,reload,delay,answers,
  before=await get();await reload();assert.equal(await get(),before);await unchanged(before);
  // Rendering and mouse navigation with renamed symbols never normalizes legacy records.
  await creative();await navigate('A');await evaluate('qa.saves=0;qa.writes=0');before=await get();await click('#nodeCategorySymbol button');assert.equal(await evaluate('location.hash'),'#category/'+encodeURIComponent(symbol));await unchanged(before);
+ // Force the same expired Fetch-ID lifecycle: abort while a local request is paused,
+ // then resolve its disposition only after Chromium confirms Network cancellation.
+ await interception.drain();
+ const staleBefore=interception.stats.staleCanceled;
+ const held=holdLocalRequest('/qa-aborted-request');
+ await evaluate("window.qaAbortController=new AbortController();window.qaAbortResult=null;fetch('/qa-aborted-request',{signal:qaAbortController.signal}).catch(e=>qaAbortResult=e.name);true");
+ let pauseDeadline;
+ const aborted=await Promise.race([held.paused,new Promise((_,reject)=>{pauseDeadline=setTimeout(()=>reject(Error('Local Fetch request did not reach interception')),5000)})]).finally(()=>clearTimeout(pauseDeadline));
+ await evaluate('qaAbortController.abort();true');
+ assert.equal(await interception.waitForCancellation(aborted.networkId),true);
+ held.release();
+ await interception.drain();
+ assert.equal(interception.stats.staleCanceled,staleBefore+1);
+ assert.equal(await evaluate('qaAbortResult'),'AbortError');
+ await unchanged(before);
  console.log('PASS: 800 ms mouse/touch long press; quick navigation; early release; pointer cancel; movement; scrolling; rerender; no duplicate click; read locks; list/header renames and F2/Escape controls.');
  console.log('PASS: existing/new category rules; immigrant display/clear/local reload; template exclusion/restored eligibility; appearance bypass blocked; atomic collision rejection and cosmetic metadata rename; complete snapshots/edges preserved.');
+ console.log('PASS: native capture release at 150 ms cancels the held edit; canceled Fetch IDs are correlated and awaited without weakening external blocking.');
  console.log('PASS: safe exact special symbols/names, zero no-op/navigation writes; every logical local save writes only the existing three keys; no page errors, payload execution or external requests.');
 }).catch(error=>{console.error(error.stack);process.exitCode=1});

@@ -29,7 +29,7 @@ function fixture() {
     return {tag,style:{},children:[],listeners:{},attributes:{},textContent:'',value:'',isConnected:true,className:'',
       set innerHTML(v){this.html=v;this.children=[]},get innerHTML(){return this.html||''},
       appendChild(e){this.children.push(e);return e},setAttribute(k,v){this.attributes[k]=v},
-      focus(){document.activeElement=this},setPointerCapture(){},
+      focus(){document.activeElement=this},setPointerCapture(id){this.capture=id},hasPointerCapture(id){return this.capture===id},releasePointerCapture(){this.capture=null},
       addEventListener(type,fn,capture){(this.listeners[type]||=[]).push({fn,capture:!!capture})},
       dispatch(type,fields={}){const e={button:0,isPrimary:true,pointerId:1,clientX:0,clientY:0,...fields,preventDefault(){this.prevented=true},stopImmediatePropagation(){this.stopped=true}};
         for(const h of [...(this.listeners[type]||[])].sort((a,b)=>Number(b.capture)-Number(a.capture))){h.fn(e);if(e.stopped)break}return e}

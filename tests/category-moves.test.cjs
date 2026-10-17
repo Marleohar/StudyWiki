@@ -181,3 +181,22 @@ test('appearance defaults are a no-op for absent/null/empty legacy colors in the
   assert.deepEqual(f.snapshot(),before);assert.equal(f.saves(),0);
  }
 });
+
+test('capture ownership lost at 150 ms cancels at threshold without a lostpointercapture event',()=>{
+ const f=fixture(),{app}=f;let opens=0;app.openSymbolEditDialog=()=>opens++;
+ const b=app.symbolButton('x','list-symbol','A');b.dispatch('pointerdown');f.advance(150);b.releasePointerCapture(1);assert.equal(b.hasPointerCapture(1),false);
+ f.advance(650);assert.equal(opens,0);assert.equal(app.pendingPress,null);assert.equal(f.timers.size,0);
+ b.dispatch('pointerup');assert.equal(b.dispatch('click').prevented,true);assert.equal(app.lastRoute,undefined);assert.equal(f.saves(),0);
+ b.dispatch('pointerdown');b.dispatch('pointerup');b.dispatch('click');assert.equal(app.lastRoute,'category/x');b.dispatch('keydown',{key:'F2'});assert.equal(opens,1);
+});
+test('capture checks fail safely and known ownership loss on movement invalidates immediately',()=>{
+ for(const cause of ['missing','throws','failed acquisition','movement']){
+ const f=fixture(),{app}=f;let opens=0;app.openSymbolEditDialog=()=>opens++;const b=app.symbolButton('x','list-symbol','A');
+ if(cause==='missing')b.hasPointerCapture=undefined;
+ if(cause==='throws')b.hasPointerCapture=()=>{throw Error('Synthetic capture failure')};
+ if(cause==='failed acquisition')b.setPointerCapture=()=>{throw Error('Synthetic inactive pointer')};
+ b.dispatch('pointerdown');
+ if(cause==='movement'){b.releasePointerCapture(1);b.dispatch('pointermove',{clientX:1});assert.equal(app.pendingPress,null);assert.equal(f.timers.size,0)}
+ f.advance(1000);assert.equal(opens,0,cause);assert.equal(f.timers.size,0);assert.equal(b.dispatch('click').prevented,true);assert.equal(f.saves(),0);
+ }
+});

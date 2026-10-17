@@ -2,6 +2,7 @@
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),http=require('node:http');
 const {spawn}=require('node:child_process');
 const assert=require('node:assert/strict');
+const {createRequestInterceptor}=require('./cdp-interception.cjs');
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function withBrowser(data,run){
  const browser=process.env.STUDYWIKI_TEST_BROWSER||['C:/Program Files/Google/Chrome/Application/chrome.exe','C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'].find(p=>fs.existsSync(p));
@@ -25,7 +26,7 @@ async function withBrowser(data,run){
  const save=app.sync.bind(app);app.sync=(...args)=>{window.qa.saves++;return save(...args)};
  `);
  const profile=fs.mkdtempSync(path.join(os.tmpdir(),'studywiki-003a-browser-'));
- const server=http.createServer((req,res)=>{res.setHeader('Content-Type','text/html; charset=utf-8');res.setHeader('Content-Security-Policy',"default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; object-src 'none'; base-uri 'none'");res.end(html)});
+ const server=http.createServer((req,res)=>{res.setHeader('Content-Type','text/html; charset=utf-8');res.setHeader('Content-Security-Policy',"default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; object-src 'none'; base-uri 'none'");res.end(html)});
  let proc,socket;const external=[],errors=[],dialogs=[],answers=[];
  try{
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const origin='http://127.0.0.1:'+server.address().port;
@@ -36,15 +37,27 @@ async function withBrowser(data,run){
   const targets=await(await fetch('http://127.0.0.1:'+port+'/json')).json();socket=new WebSocket(targets.find(t=>t.type==='page').webSocketDebuggerUrl);
   await new Promise(resolve=>socket.addEventListener('open',resolve,{once:true}));let next=0;const pending=new Map();
   function send(method,params={}){return new Promise((resolve,reject)=>{const id=++next;const timer=setTimeout(()=>{pending.delete(id);reject(Error('CDP timeout: '+method))},10000);pending.set(id,{resolve:v=>{clearTimeout(timer);resolve(v)},reject:e=>{clearTimeout(timer);reject(e)}});socket.send(JSON.stringify({id,method,params}))})}
+  let heldRequest = null;
+  const interception = createRequestInterceptor({send, origin, beforeSend: record => {
+    if (heldRequest && new URL(record.url).pathname === heldRequest.path) { heldRequest.seen(record); return heldRequest.gate; }
+  }});
+  function holdLocalRequest(requestPath) {
+    if (heldRequest) throw Error('A local test request is already held');
+    let seen, release;
+    const paused = new Promise(resolve => { seen = resolve; });
+    const gate = new Promise(resolve => { release = resolve; });
+    heldRequest = {path: requestPath, seen, gate};
+    return {paused, release() {heldRequest = null; release();}};
+  }
   socket.addEventListener('message',event=>{
    const m=JSON.parse(event.data);
-   if(m.id&&pending.has(m.id)){const p=pending.get(m.id);pending.delete(m.id);m.error?p.reject(Error(m.error.message)):p.resolve(m.result)}
-   if(m.method==='Fetch.requestPaused'){const local=m.params.request.url.startsWith(origin+'/');if(!local)external.push(m.params.request.url);send(local?'Fetch.continueRequest':'Fetch.failRequest',{requestId:m.params.requestId,...(local?{}:{errorReason:'BlockedByClient'})}).catch(e=>errors.push(e.message))}
+   if(m.id&&pending.has(m.id)){const p=pending.get(m.id);pending.delete(m.id);m.error?p.reject(Object.assign(Error(m.error.message),{code:m.error.code})):p.resolve(m.result)}
+   interception.handle(m);
    if(m.method==='Runtime.exceptionThrown')errors.push(m.params.exceptionDetails.exception?.description||m.params.exceptionDetails.text);
    if(m.method==='Page.javascriptDialogOpening'){dialogs.push(m.params);const answer=answers.shift();send('Page.handleJavaScriptDialog',{accept:answer!==undefined&&answer!==null,promptText:typeof answer==='string'?answer:''}).catch(e=>errors.push(e.message))}
   });
   console.log('Chromium: '+(await send('Browser.getVersion')).product);
-  await send('Fetch.enable',{patterns:[{urlPattern:'*'}]});await send('Page.enable');await send('Runtime.enable');
+  await interception.start();await send('Page.enable');await send('Runtime.enable');
   async function evaluate(expression){const r=await send('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});if(r.exceptionDetails)throw Error(r.exceptionDetails.exception?.description||r.exceptionDetails.text);return r.result.value}
   async function until(expression){for(let i=0;i<100;i++){if(await evaluate(expression))return;await delay(20)}throw Error('Timed out: '+expression)}
   async function point(selector){return evaluate(`(()=>{const e=document.querySelector(${JSON.stringify(selector)});if(!e)throw Error('Missing '+${JSON.stringify(selector)});e.scrollIntoView({block:'center'});const r=e.getBoundingClientRect();return{x:r.x+r.width/2,y:r.y+r.height/2}})()`)}
@@ -66,7 +79,9 @@ async function withBrowser(data,run){
   async function navigate(route){await evaluate('testApp.navigateTo('+JSON.stringify(route)+')');await delay(25)}
   async function reload(){await send('Page.reload');await until('!!window.testApp');await delay(80)}
   await send('Page.navigate',{url:origin+'/#A'});await until('!!window.testApp');
-  await run({evaluate,send,press,click:s=>press(s),navigate,reload,until,delay,answers,dialogs,external,errors,origin});
+  await run({evaluate,send,press,click:s=>press(s),navigate,reload,until,delay,answers,dialogs,external,errors,origin,interception,holdLocalRequest});
+  await interception.drain();
+  external.push(...interception.external);
   assert.deepEqual(external,[]);assert.deepEqual(errors,[]);
  }finally{
   if(socket)socket.close();if(proc){proc.kill();await delay(300)}await new Promise(resolve=>server.close(resolve));

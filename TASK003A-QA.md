@@ -1,6 +1,6 @@
 # TASK 003A - object renaming, category symbols and immigrant status
 
-Status: READY FOR INDEPENDENT QA - NOT MERGED.
+Status: READY FOR INDEPENDENT RE-QA - NOT MERGED.
 Repository: `Marleohar/StudyWiki` (Nördverket only).
 Verified main baseline: `88371b6bf1fbdbab4b9a7c037dfe2ad28d2a0030`.
 Branch: `feat/task003a-category-moves`.
@@ -98,7 +98,10 @@ record change. Case-only edits of the same object are allowed; another object's
 case-insensitive name remains reserved. Current-page rerender and subsequent
 overview/category/relationship views display the new literal name.
 
-## Validation executed 2026-10-17
+## Initial developer validation executed 2026-10-17 (rejected QA HEAD)
+
+The following initial results describe `583e94d233e0525ed6cca004d39e5f52350bfc15`.
+Independent QA subsequently rejected that revision; current correction results follow below.
 
 Environment: Windows, Node `v24.12.0`, real headless Chromium
 `Chrome/155.0.8059.84`. No installed Node packages or external test dependencies
@@ -200,6 +203,153 @@ Changed files:
 - `tests/browser-category-moves.cjs`
 - `tests/support/task003a-harness.cjs`
 - `tests/support/browser-harness.cjs`
+- `tests/support/cdp-interception.cjs`
+- `tests/cdp-interception.test.cjs`
 - `TASK003A-QA.md`
 
 Independent QA and owner review are required before merging.
+
+
+## QA blocker correction - 2026-10-17
+
+Rejected QA HEAD: `583e94d233e0525ed6cca004d39e5f52350bfc15`.
+Main baseline remains `88371b6bf1fbdbab4b9a7c037dfe2ad28d2a0030`.
+Corrections continue on `feat/task003a-category-moves` in PR #3. No new feature
+or data-model change is included. The final correction HEAD is recorded in the
+PR/final delivery (`git rev-parse HEAD`). This section supersedes the initial
+validation claim above for the two rejected findings.
+
+### Capture loss: cause and correction
+
+The long-press timer previously trusted delivery of `lostpointercapture` and
+checked only pointer state, creative mode, element connection and render revision.
+Chromium can defer the native loss event until subsequent pointer processing.
+Releasing capture at about 150 ms could therefore leave the timer alive long
+enough to open the dialog even though `hasPointerCapture(pointerId)` was false.
+
+`bindLongPress` now checks actual ownership in the timeout immediately before any
+edit activation. Missing/throwing ownership checks fail closed and cancel the
+press. Capture acquisition errors also cancel. Pointer movement checks ownership
+as well as displacement, so observed loss invalidates immediately. Existing
+loss/cancel, eight-pixel movement, scroll, rerender, read-mode and connection
+checks remain. Cancellation still suppresses the associated click; the next
+independent quick click and F2 alternatives continue to work.
+
+The real Chromium regression presses the symbol, forces pointer processing at
+the same coordinates, observes `gotpointercapture`, verifies ownership, waits
+150 ms, calls `releasePointerCapture` and verifies ownership is false. It then
+sends no further pointer event for 900 ms. No dialog opens, no navigation occurs,
+the pending press is cleared, and full snapshots/storage/save counts remain
+unchanged. Releasing the physical mouse afterward still cannot navigate; a new
+quick click works. Node coverage additionally checks missing/throwing capture
+APIs, acquisition failure and immediate invalidation on movement after loss.
+
+### CDP interception: mechanism and correction
+
+The original smoke handler sent Fetch continue/fail commands from the socket
+callback without attaching a rejection handler or joining those promises to the
+test's result. A protocol rejection could therefore terminate Node as an unhandled
+promise rejection independently of the scenario assertions.
+
+A Fetch interception ID expires when Chromium cancels its associated request,
+including requests abandoned around navigation/reload. A later disposition can
+return protocol code `-32602`, message `Invalid InterceptionId.`. The corrected
+real-browser regression deterministically exercises this mechanism: hold a
+same-origin request at the Fetch pause, abort it using AbortController, wait for
+the matching `Network.loadingFailed` with `canceled: true`, then attempt the
+Fetch disposition. It reproduces the exact expired-ID response and asserts one
+additional, explicitly correlated canceled disposition and an AbortError.
+
+The new test-only shared interceptor enables Network lifecycle observation and
+request-stage Fetch blocking. Every asynchronous disposition is tracked with
+rejection handlers attached immediately and is drained before test success.
+Only the exact code/message above AND matching Network cancellation are accepted
+as an expected stale request. Cancellation may precede or follow the response;
+an event-driven waiter handles either ordering with a bounded failure deadline.
+Missing identity, non-canceled completion/failure, uncorrelated IDs, different
+codes/messages and transport errors fail the suite. No blanket catch, retry,
+arbitrary correctness sleep or external-request fallback was introduced.
+
+Only the exact loopback origin may continue. All other targets still receive
+Fetch.failRequest(BlockedByClient), and attempted external targets remain part
+of the suites' failure assertions. The blocked proxy, disposable profiles and
+Firebase SDK/configuration/initialization removal remain. The new harness CSP
+now permits only same-origin connections (`connect-src 'self'`) so the deliberate
+loopback abort can reach Fetch; cross-origin connections remain prohibited by
+CSP and interception. No production connection is permitted or made.
+
+Eight focused Node interception tests verify the matching-cancellation rule,
+late notifications, asynchronous draining, fail-closed external classification
+and that unknown protocol/transport errors remain fatal. The original smoke's
+scenarios and assertions are unchanged; it now also awaits interception outcomes
+and requires zero external attempts. Both Chromium harnesses use this same
+lifecycle handler.
+
+### Current commands and repeated-run evidence
+
+Windows, Node `v24.12.0`, Chromium `Chrome/155.0.8059.84`; no package installation
+or other project's tooling is used. From this repository root:
+
+```text
+node --test tests/*.test.cjs
+node tests/browser-smoke.cjs
+node tests/browser-category-moves.cjs
+git diff --check
+```
+
+Final Node result: **64 passed, 0 failed, 0 skipped/cancelled/TODO** (all prior
+54 plus two capture and eight interception regressions).
+
+The mandatory ordinary command `node tests/browser-smoke.cjs` was executed in
+five consecutive independent Node processes, each launching its own Chromium
+process and fresh disposable profile. No diagnostic logging wrapper or manual
+test alteration was used for these runs:
+
+| Consecutive run | Outcome | Exit |
+| --- | --- | --- |
+| 1 | PASS, all original scenarios | 0 |
+| 2 | PASS, all original scenarios | 0 |
+| 3 | PASS, all original scenarios | 0 |
+| 4 | PASS, all original scenarios | 0 |
+| 5 | PASS, all original scenarios | 0 |
+
+New Chromium suite: **PASS**, including the exact native capture-release sequence,
+real canceled Fetch-ID response and all previous mouse/touch/immigrant/category
+scenarios. `git diff --check`: **PASS**.
+
+Complete node/edge/category-state snapshots still cover exact immutable IDs,
+active/paused edge metadata, unknown fields and both free-text languages. The
+capture-loss, cancellation, navigation, rejected/no-op and read-mode paths make
+**zero logical saves and zero storage writes**. Intended edits retain one logical
+save (three existing local storage keys). No template, immigrant, category rename,
+clock, library naming or persistence-data-model behavior is changed here.
+
+### Remaining uncertainty and inherited limits
+
+Lifecycle tracing did not reproduce QA's original timing-dependent failure during
+bounded diagnostic runs; one ordinary pre-harness-fix run also passed. Therefore
+this report does not claim to identify the exact resource URL or navigation that
+failed during QA, or attribute it to application changes. The old unobserved
+promise defect is directly visible in source, and the exact expired-ID/canceled-
+request mechanism is reproduced deterministically in real Chromium. Further
+protocol errors without cancellation proof will still fail re-QA rather than
+being hidden. Five successful independent smoke runs are evidence of the fix,
+not a guarantee about every future browser release or scheduling condition.
+
+An initial development attempt at the forced local abort was stopped because the
+old connect-src none policy prevented that deliberately introduced test request
+from reaching Fetch. The final regression explicitly permits only loopback-origin
+connections and has a bounded request-pause deadline; this was a test setup issue,
+not a production connection or application regression.
+
+The earlier inherited loading cleanup, whole-array/concurrent-cloud writes,
+client-local clocks, older-client metadata behavior, client-side mode unlock,
+legacy unsafe sinks/arbitrary-ID routing, and deferred layout/language work remain
+unchanged. No production Firebase/data/services, real library, credentials, paid
+services, merge, deployment, auto-merge, TASK 003B or bilingual work is included.
+
+Correction changed files (relative to rejected QA HEAD): `index.html`,
+`tests/browser-smoke.cjs`, `tests/browser-category-moves.cjs`,
+`tests/category-moves.test.cjs`, `tests/support/task003a-harness.cjs`,
+`tests/support/browser-harness.cjs`, `tests/support/cdp-interception.cjs`,
+`tests/cdp-interception.test.cjs`, and `TASK003A-QA.md`.

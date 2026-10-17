@@ -5,6 +5,7 @@ const path = require('node:path');
 const http = require('node:http');
 const { spawn } = require('node:child_process');
 const assert = require('node:assert/strict');
+const {createRequestInterceptor} = require('./support/cdp-interception.cjs');
 const browser = process.env.STUDYWIKI_TEST_BROWSER || [
   'C:/Program Files/Google/Chrome/Application/chrome.exe',
   'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
@@ -54,15 +55,13 @@ let proc, socket;
     pending.set(id, { resolve: value => { clearTimeout(timer); resolve(value); }, reject: e => { clearTimeout(timer); reject(e); } });
     socket.send(JSON.stringify({ id, method, params }));
   }); }
+  const interception = createRequestInterceptor({send, origin});
   socket.addEventListener('message', event => {
     const m = JSON.parse(event.data);
-    if (m.id && pending.has(m.id)) { const p = pending.get(m.id); pending.delete(m.id); m.error ? p.reject(Error(m.error.message)) : p.resolve(m.result); }
-    if (m.method === 'Fetch.requestPaused') {
-      const local = m.params.request.url.startsWith(origin + '/');
-      send(local ? 'Fetch.continueRequest' : 'Fetch.failRequest', { requestId: m.params.requestId, ...(local ? {} : { errorReason: 'BlockedByClient' }) });
-    }
+    if (m.id && pending.has(m.id)) { const p = pending.get(m.id); pending.delete(m.id); m.error ? p.reject(Object.assign(Error(m.error.message), {code: m.error.code})) : p.resolve(m.result); }
+    interception.handle(m);
   });
-  await send('Fetch.enable', { patterns: [{ urlPattern: '*' }] });
+  await interception.start();
   const evaluate = async expression => {
     const r = await send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true });
     if (r.exceptionDetails) throw Error(r.exceptionDetails.text + ': ' + r.exceptionDetails.exception?.description);
@@ -242,6 +241,8 @@ let proc, socket;
   assert.equal(await evaluate('JSON.stringify({nodes:testApp.nodes,edges:testApp.edges,state:testApp.categoryState})===window.legacyBefore'), true);
   assert.equal(await evaluate('JSON.stringify(Object.entries(localStorage).sort())===window.legacyStorageBefore'), true);
   assert.deepEqual(await evaluate('[window.legacyWrites,window.legacySyncs]'), [0,0]);
+  await interception.drain();
+  assert.deepEqual(interception.external, []);
   console.log('PASS: legacy empty/null/missing icon default category and real mouse navigation; exact records/metadata preserved with zero storage writes or sync calls.');
   console.log('PASS: category mouse navigation, exact membership/uppercase heading, shared templates, safe notes/limit, category creation, appearance changes, template recalculation and local reload/read mode.');
   console.log('PASS: browser clicks pause from A, navigate to B, restore from B, pause/reload, read mode, isolated overview/search. External page requests blocked; synthetic disposable localStorage only.');

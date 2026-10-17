@@ -524,6 +524,10 @@
           if (blockClick) suppressClick = true;
           if (this.pendingPress?.cancel === cancel) this.pendingPress = null;
         };
+        const ownsCapture = () => {
+          try { return pointer !== null && element.hasPointerCapture?.(pointer) === true; }
+          catch (error) { return false; }
+        };
         element.className += ' long-press-target';
         element.addEventListener('pointerdown', event => {
           if (event.isPrimary === false) { this.cancelLongPress(true); return; }
@@ -535,15 +539,17 @@
           const scrollX = window.scrollX, scrollY = window.scrollY, ancestors = [];
           for (let parent = element.parentElement; parent; parent = parent.parentElement) ancestors.push({ element: parent, x: parent.scrollLeft, y: parent.scrollTop });
           this.pendingPress = { cancel, hasScrolled: () => window.scrollX !== scrollX || window.scrollY !== scrollY || ancestors.some(record => record.element.scrollLeft !== record.x || record.element.scrollTop !== record.y) };
-          element.setPointerCapture?.(pointer);
+          try { element.setPointerCapture?.(pointer); }
+          catch (error) { return cancel(true); }
           timer = setTimeout(() => {
-            if (pointer === null || !this.checkCreative() || element.isConnected === false || revision !== (this.pressRevision || 0)) return cancel(true);
+            // Chromium may defer lostpointercapture until another pointer event.
+            if (!ownsCapture() || !this.checkCreative() || element.isConnected === false || revision !== (this.pressRevision || 0)) return cancel(true);
             cancel(true);
             action();
           }, 800);
         });
         element.addEventListener('pointermove', event => {
-          if (event.pointerId === pointer && Math.hypot(event.clientX - startX, event.clientY - startY) > 8) cancel(true);
+          if (event.pointerId === pointer && (!ownsCapture() || Math.hypot(event.clientX - startX, event.clientY - startY) > 8)) cancel(true);
         });
         element.addEventListener('pointerup', event => { if (event.pointerId === pointer) cancel(); });
         for (const type of ['pointercancel', 'lostpointercapture']) {
