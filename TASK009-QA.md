@@ -1,17 +1,19 @@
-﻿# TASK 009 — Persistent Category Sorting and Category Heading
+# TASK 009 — Persistent Category Sorting and Category Heading
 
-Status: **READY FOR INDEPENDENT QA — NOT MERGED**.
+Status: **READY FOR INDEPENDENT RE-QA — NOT MERGED**.
 
 ## Revision and scope
 
 Repository: Marleohar/StudyWiki. Branch: `feat/task009-persistent-category-sorting`.
 Verified main baseline: `0d41ca0e0858273176863115177fbd241b110541` (checked before development and after final tests).
-Tested implementation commit: `6608204601ff32ff4d6ea42335e018f8e9694286`. The final delivery commit adds only this report; its immutable SHA and PR URL are recorded in `../evidence/delivery.json` and the delivery response/PR.
+Tested corrected implementation commit: `dca80e55cc20fb8fcf4d266c84888703d7f0eee5`. Original implementation: `6608204601ff32ff4d6ea42335e018f8e9694286`; rejected delivery: `69a9d24bd47af1eb38198c8371e5b975db5533da`. The final delivery commit adds only this report; its immutable SHA and PR URL are recorded in `../evidence/delivery.json` and the delivery response/PR.
 
 Changed files:
 
 - `index.html`
 - `tests/category-sort-preferences.test.cjs`
+- `tests/category-sort-migration-guard.test.cjs`
+- `tests/browser-category-sort-migration-guard.cjs`
 - `tests/browser-category-sort-preferences.cjs`
 - `tests/relation-sorting.test.cjs`
 - `tests/confirmed-relation-sorting.test.cjs`
@@ -67,7 +69,7 @@ Three existing Node files accommodate the wrapping suffix group and retained sel
 
 The two existing sorting Chromium scripts count preference writes separately from total storage writes, preserving zero graph-write, zero-save, zero-cloud and full snapshot assertions. Existing reset expectations now assert restoration; the deleted criterion remains as an unavailable selected ID. A focused rename scenario explicitly clears first to test its original single-criterion grouping. Membership, headings, permutation comparisons, six-limit/forced-click, touch, keyboard, long-press/F2, templates and library-switch assertions remain. No unrelated tests or historical reports were removed or rewritten.
 
-## Final validation
+## Initial TASK 009 validation (superseded by correction results below)
 
 | Command | Actual result |
 | --- | --- |
@@ -106,4 +108,71 @@ Preferences belong to this browser storage and exact library name, with no cross
 
 No merge, deployment or auto-merge was performed. Independent QA is required.
 
-**READY FOR INDEPENDENT QA — NOT MERGED.**
+**READY FOR INDEPENDENT RE-QA — NOT MERGED.**
+
+## Blocking QA correction — unreliable migration reads
+
+Independent QA rejected delivery `69a9d24bd47af1eb38198c8371e5b975db5533da`. When reading the browser preference record threw, whole-category symbol rename still mutated and saved the graph while preferences remained under the old symbol. Local reproduction: one graph save and three graph-storage writes. Mock-cloud reproduction: one graph save and one cloud write.
+
+Cause: `readCategorySortPreferences()` returned the same empty default for absent data, access failures and malformed non-null data. `migrateCategorySortPreference()` interpreted that default as successful absence and allowed graph rename. The dialog also closed before checking operation success, hiding a failed migration.
+
+Correction: `readCategorySortPreferencesStrict()` now returns a valid preference structure only after a successful read and validation. A successful literal null read is genuine absence; access exceptions, invalid JSON, null-valued JSON, unsupported versions, malformed entries, duplicate category records or excessive effective selections return a failure result. Migration rejects that result before any preference write, graph-record change or sync. The tolerant `readCategorySortPreferences()` wrapper continues returning defaults for ordinary view restoration, preserving existing sorting/display behavior and the storage format. Existing successful migrations, collisions and setItem failure guards remain.
+
+The actual symbol dialog now closes only after a successful whole-category rename. Failure leaves it open on the original object, retains the entered symbol, and displays: `Kategorin ändrades inte. Sorteringsinställningarna kunde inte läsas eller sparas. Försök igen när webbläsarlagringen fungerar.` Retrying after access is restored succeeds. Malformed records are neither overwritten nor disassociated by migration; recovery tests explicitly repair invalid fixture data outside the application before retry, rather than claiming automatic repair.
+
+Correction-only changed files:
+
+- `index.html` — strict migration read, tolerant display wrapper, guarded dialog completion.
+- `tests/category-sort-migration-guard.test.cjs` — 21 focused Node tests.
+- `tests/browser-category-sort-migration-guard.cjs` — dedicated real-browser visible-dialog suite.
+- `TASK009-QA.md` — current revision, cause, correction and validation evidence.
+
+### Failing-before / passing-after evidence
+
+A disposable rejected checkout at `evidence\rejected-checkout` was pinned to the rejected immutable HEAD, with only the new regression files copied in. The 21 new Node tests reported 20 FAIL / 1 PASS and exit 1; the genuine-absence success case was already valid. The new Chromium suite exited 1 on its first required rejection check. Logs: `correction-rejected-node.txt`, `correction-rejected-browser.txt`. The earlier initial focused run is also retained in `correction-before-node.txt`.
+
+On corrected source, all 21 focused Node tests pass as part of the full suite. Real Chromium exercises the actual visible path: Byt kategori → Byt symbol för hela kategorin → type destination → Spara symbol. Its 22 cases comprise ten rejection/recovery cases on each of local and mocked-cloud persistence, plus successful genuine-absence rename on each path. Cases cover getItem exceptions with source settings, absent settings and a stale destination; invalid JSON, non-null JSON null, obsolete version, duplicate category entries, malformed shape, oversized selection; and setItem failure.
+
+Every one of the 20 blocked browser operations verifies complete before/after graph snapshots, unchanged raw saved preferences, unchanged route, visible error/open dialog, no cloud payload, and exactly:
+
+**0 graph saves / 0 graph-storage writes / 0 mocked cloud writes / 0 preference writes.**
+
+Recovery uses the retained dialog after restoring access (or explicitly repairing malformed fixture data). Valid source settings move to the exact new symbol once; stale destination settings are replaced appropriately, unrelated category settings survive, and all graph fields/metadata/edges/clocks remain unchanged except the requested cosmetic symbol changes. The exact saved category name, literal heading suffix and unrelated records remain intact. Genuinely absent preferences remain absent and do not create a preference key.
+
+| Successful recovery | Graph saves | Graph storage writes | Cloud writes | Preference writes |
+| --- | --- | --- | --- | --- |
+| Local, source preferences | 1 | 3 | 0 | 1 |
+| Mock cloud, source preferences | 1 | 0 | 1 merge | 1 |
+| Local, genuinely absent preferences | 1 | 3 | 0 | 0 |
+| Mock cloud, genuinely absent preferences | 1 | 0 | 1 merge | 0 |
+
+Complete recovered payloads are compared with expected nodes, edges and category state. Source-array order, unknown fields, language fields, active/paused associations and modification metadata are preserved.
+
+The original independent QA Chromium reproduction and six-case Node migration matrix were reused against corrected source with only checkout/output paths adjusted. Both now exit 0; read/write failures produce zero writes and normal migration retains its exact established counts. Logs: `correction-original-browser-repro.txt`, `correction-original-node-repro.txt`. The independent QA checkout and its original failure evidence were untouched.
+
+### Final correction validation
+
+| Command | Actual result |
+| --- | --- |
+| `node --test tests/*.test.cjs` | PASS: 198/198 (177 existing + 21 new), 0 fail/skip/cancel |
+| `node tests/browser-smoke.cjs` | PASS, exit 0 |
+| `node tests/browser-category-moves.cjs` | PASS, exit 0 |
+| `node tests/browser-header-search.cjs` | PASS, exit 0 |
+| `node tests/browser-existing-object-transfer.cjs` | PASS, exit 0 |
+| `node tests/browser-relation-sorting.cjs` | PASS, exit 0 |
+| `node tests/browser-confirmed-relation-sorting.cjs` | PASS, exit 0 |
+| `node tests/browser-page-ui.cjs` | PASS, exit 0 |
+| `node tests/browser-smart-workflows.cjs` | PASS, exit 0 |
+| `node tests/browser-category-sort-preferences.cjs` | PASS, exit 0 |
+| `node tests/browser-category-sort-migration-guard.cjs` | PASS, exit 0; 22 cases including 20 zero-write rejections |
+| `git diff --check` | PASS |
+
+All ten browser commands passed on their first complete correction run; no Windows profile-cleanup error occurred. Earlier heading, sorting, scoping/restoration, six-criterion, malformed-view fallback, smart-linking and target-reference assertions were retained unchanged in this correction. No persistence-schema change, new dependency, data migration or sorting redesign was added.
+
+Logs: `correction-node-tests.txt`, `correction-browser-results.json`, `correction-browser-*.txt`. Latest dedicated evidence: `evidence\tmp\task009-migration-guard-ZmKDhw\snapshots.json` and `blocked-symbol-dialog.png`. The blocked dialog screenshot was visually inspected. Earlier desktop/mobile heading screenshots remain available in the task evidence.
+
+All tests remain synthetic and offline: Firebase startup disabled, external network blocked, disposable profiles and TEMP/TMP under this task's evidence directory. No production libraries/services, credentials or paid APIs were accessed. Digital GM and Ört-Wikin were untouched. Browser-local preference and inherited cloud durability/concurrency limitations remain as documented above; display fallback intentionally remains tolerant. A malformed record must be repaired explicitly before whole-category migration can proceed.
+
+Tested correction implementation: `dca80e55cc20fb8fcf4d266c84888703d7f0eee5`. Final delivery adds only this report update; its immutable HEAD is recorded in the PR, delivery response and `evidence\correction-delivery.json`.
+
+**READY FOR INDEPENDENT RE-QA — NOT MERGED.** No merge, deployment or auto-merge was performed.
