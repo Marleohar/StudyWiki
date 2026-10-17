@@ -5,6 +5,7 @@ const path = require('node:path');
 const http = require('node:http');
 const { spawn } = require('node:child_process');
 const assert = require('node:assert/strict');
+const {createRequestInterceptor} = require('./support/cdp-interception.cjs');
 const browser = process.env.STUDYWIKI_TEST_BROWSER || [
   'C:/Program Files/Google/Chrome/Application/chrome.exe',
   'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
@@ -16,6 +17,11 @@ const edges = [{ a: 'B', b: 'A', custom: 'preserved' }, { a: 'B', b: 'C' }];
 let html = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
 // Remove remote scripts; force the normal local fallback with disposable synthetic storage.
 html = html.replace(/<script\b[^>]*\bsrc=[^>]*>[\s\S]*?<\/script>/gi, '');
+html = html.replace(/const firebaseConfig = \{[\s\S]*?\};/, 'const firebaseConfig = {};');
+assert.equal(/<script\b[^>]*\bsrc=/i.test(html), false);
+assert.equal(html.includes('apiKey:'), false);
+html = html.replace('if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);', "throw Error('Firebase disabled by offline smoke harness');");
+assert.equal(html.includes('firebase.initializeApp('), false);
 html = html.replace('const app = new GraphApp();', `
   localStorage.setItem('nv_current_lib', 'synthetic-browser-task001');
   if (!localStorage.getItem('nv_nodes_nv_lib_synthetic-browser-task001')) {
@@ -31,7 +37,7 @@ let proc, socket;
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   const origin = `http://127.0.0.1:${server.address().port}`;
   proc = spawn(browser, ['--headless=new', '--disable-gpu', '--no-first-run', '--disable-background-networking',
-    '--remote-debugging-port=0', `--user-data-dir=${profile}`, 'about:blank'], { stdio: 'ignore' });
+    '--proxy-server=http://127.0.0.1:9', '--proxy-bypass-list=127.0.0.1', '--disable-component-update', '--remote-debugging-port=0', `--user-data-dir=${profile}`, 'about:blank'], { stdio: 'ignore' });
   proc.on('error', () => {});
   let port;
   for (let i = 0; i < 100; i++) {
@@ -49,15 +55,13 @@ let proc, socket;
     pending.set(id, { resolve: value => { clearTimeout(timer); resolve(value); }, reject: e => { clearTimeout(timer); reject(e); } });
     socket.send(JSON.stringify({ id, method, params }));
   }); }
+  const interception = createRequestInterceptor({send, origin});
   socket.addEventListener('message', event => {
     const m = JSON.parse(event.data);
-    if (m.id && pending.has(m.id)) { const p = pending.get(m.id); pending.delete(m.id); m.error ? p.reject(Error(m.error.message)) : p.resolve(m.result); }
-    if (m.method === 'Fetch.requestPaused') {
-      const local = m.params.request.url.startsWith(origin + '/');
-      send(local ? 'Fetch.continueRequest' : 'Fetch.failRequest', { requestId: m.params.requestId, ...(local ? {} : { errorReason: 'BlockedByClient' }) });
-    }
+    if (m.id && pending.has(m.id)) { const p = pending.get(m.id); pending.delete(m.id); m.error ? p.reject(Object.assign(Error(m.error.message), {code: m.error.code})) : p.resolve(m.result); }
+    interception.handle(m);
   });
-  await send('Fetch.enable', { patterns: [{ urlPattern: '*' }] });
+  await interception.start();
   const evaluate = async expression => {
     const r = await send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true });
     if (r.exceptionDetails) throw Error(r.exceptionDetails.text + ': ' + r.exceptionDetails.exception?.description);
@@ -185,7 +189,7 @@ let proc, socket;
   assert.deepEqual(await evaluate("[...document.querySelectorAll('#categoryMembers a')].map(e=>e.textContent)"), ['A','Created in category']);
   assert.equal(await evaluate("testApp.templateFor('x').sourceId"), 'cat-A');
   assert.equal(await evaluate("JSON.stringify(testApp.edges)===window.categoryOriginalEdges"), true);
-  assert.equal(await evaluate("(() => { const expected=JSON.parse(window.categoryOriginalNodes);expected[1].icon='y';expected[1].color='#123456';return JSON.stringify(testApp.nodes.slice(0,4))===JSON.stringify(expected); })()"), true);
+  assert.equal(await evaluate("(() => { const expected=JSON.parse(window.categoryOriginalNodes);expected[1].icon='y';expected[1].isImmigrant=true;expected[1].color='#123456';return JSON.stringify(testApp.nodes.slice(0,4))===JSON.stringify(expected); })()"), true);
   const categoryBeforeReload = await evaluate("JSON.stringify({nodes:testApp.nodes,edges:testApp.edges,state:testApp.categoryState})");
   await send('Page.reload'); await delay(500);
   assert.equal(await evaluate('JSON.stringify({nodes:testApp.nodes,edges:testApp.edges,state:testApp.categoryState})'),
@@ -237,11 +241,13 @@ let proc, socket;
   assert.equal(await evaluate('JSON.stringify({nodes:testApp.nodes,edges:testApp.edges,state:testApp.categoryState})===window.legacyBefore'), true);
   assert.equal(await evaluate('JSON.stringify(Object.entries(localStorage).sort())===window.legacyStorageBefore'), true);
   assert.deepEqual(await evaluate('[window.legacyWrites,window.legacySyncs]'), [0,0]);
+  await interception.drain();
+  assert.deepEqual(interception.external, []);
   console.log('PASS: legacy empty/null/missing icon default category and real mouse navigation; exact records/metadata preserved with zero storage writes or sync calls.');
   console.log('PASS: category mouse navigation, exact membership/uppercase heading, shared templates, safe notes/limit, category creation, appearance changes, template recalculation and local reload/read mode.');
   console.log('PASS: browser clicks pause from A, navigate to B, restore from B, pause/reload, read mode, isolated overview/search. External page requests blocked; synthetic disposable localStorage only.');
   console.log('PASS: literal hostile title, no injected paused-list elements/handlers, mouse navigation with original special IDs at router boundary, restoration from both endpoints, metadata preservation and zero no-op persistence.');
-})().catch(e => { console.error(e.message); process.exitCode = 1; }).finally(async () => {
+})().catch(e => { console.error(e.stack); process.exitCode = 1; }).finally(async () => {
   if (socket) socket.close();
   if (proc) { proc.kill(); await delay(500); }
   server.close();
