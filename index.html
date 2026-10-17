@@ -91,6 +91,7 @@
     .item-name { font-family: 'Linux Libertine', 'Georgia', Times, serif; font-size: 32px; line-height: 1.1; letter-spacing: 0.5px; display:flex; align-items:center; gap:8px;}
     .creative-controls { display: flex; gap: 6px; flex-wrap: wrap; }
 
+    .long-press-target { touch-action: manipulation; -webkit-touch-callout: none; }
     .node-icon { cursor: pointer; padding: 4px 6px; border-radius: 4px; transition: background 0.2s; background:#f6f7f8; border:1px solid var(--db-border-light); font-size:24px; display:inline-block; text-align:center;}
     .node-icon.creative-only:hover { background: #eaecf0; border-color:var(--db-border); }
     .node-icon.readonly-only { cursor: default; border:none; background:transparent; padding:0; }
@@ -192,7 +193,7 @@
       <h2 style="font-size: 18px; margin-bottom: 16px;">Ändra Utseende (Tagg/Ikon)</h2>
       <div style="margin-bottom: 12px;">
         <label style="font-weight: bold; font-size: 12px; display: block; margin-bottom: 4px;">Symbol (Text eller Emoji)</label>
-        <input type="text" id="appIconInput" placeholder="t.ex. &, ☆, eller ⚔️" maxlength="10">
+        <input type="text" id="appIconInput" placeholder="t.ex. &, ☆, eller ⚔️">
       </div>
       <div style="margin-bottom: 12px;">
         <label style="font-weight: bold; font-size: 12px; display: block; margin-bottom: 4px;">Färg (Påverkar textsymboler)</label>
@@ -202,6 +203,24 @@
         <button type="button" class="primary" onclick="app.saveAppearance()">Spara Utseende</button>
         <button type="button" onclick="app.closeAppearanceDialog()">Avbryt</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Symbols are identities, not HTML or inline handler arguments. -->
+  <div class="dialog-backdrop" id="symbolEditDialog" role="dialog" aria-modal="true" aria-labelledby="symbolEditHeading">
+    <div class="dialog">
+      <h2 id="symbolEditHeading">Ändra symbol/kategori</h2>
+      <div id="symbolEditChoices" class="dialog-actions-stacked">
+        <button type="button" onclick="app.chooseSymbolEdit('object')">Ändra detta objekts kategori</button>
+        <button type="button" onclick="app.chooseSymbolEdit('category')">Ändra hela kategorins symbol</button>
+      </div>
+      <form id="symbolEditForm" style="display:none;" onsubmit="event.preventDefault(); app.saveSymbolEdit()">
+        <label for="symbolEditInput">Ny symbol (exakt, inte tom)</label>
+        <input id="symbolEditInput" type="text" autocomplete="off">
+        <p id="symbolEditError" role="alert"></p>
+        <button type="submit" class="primary">Spara symbol</button>
+      </form>
+      <button type="button" onclick="app.closeSymbolEditDialog()">Avbryt</button>
     </div>
   </div>
 
@@ -278,12 +297,23 @@
         this.mode = 'read'; 
         this.currentLibrary = localStorage.getItem('nv_current_lib') || 'DnD';
 
+        this.pendingPress = null;
+        this.pressRevision = 0;
+        window.addEventListener('scroll', () => { if (this.pendingPress?.hasScrolled()) this.cancelLongPress(true); }, true);
+        window.addEventListener('blur', () => this.cancelLongPress(true));
+        document.addEventListener('visibilitychange', () => { if (document.hidden) this.cancelLongPress(true); });
         this.updateModeUI();
+        document.getElementById('symbolEditDialog').addEventListener('keydown', event => this.handleSymbolEditKey(event));
         this.initHistoryRouter();
         this.initFirebase();
       }
 
       updateModeUI() {
+        if (!this.checkCreative()) {
+          this.cancelLongPress(true);
+          this.closeSymbolEditDialog();
+          this.closeAppearanceDialog();
+        }
         document.body.setAttribute('data-mode', this.mode);
         const categoryEditor = document.getElementById('categoryNotes');
         if (categoryEditor) categoryEditor.readOnly = !this.checkCreative();
@@ -399,10 +429,11 @@
         return edgeArray.filter(e => validIds.has(e.a) && validIds.has(e.b));
       }
 
-      async sync() {
+      async sync({ preserveEdges = false } = {}) {
         this.updateDatalist();
         const docName = this.getDocName();
-        this.edges = this.cleanEdges(this.edges);
+        // Label/category edits preserve edge records; other callers retain legacy cleanup.
+        if (!preserveEdges) this.edges = this.cleanEdges(this.edges);
         if (this.db) {
           try {
             await this.db.collection('simple_db').doc(docName).set({ nodes: this.nodes, edges: this.edges, updatedAt: Date.now(), ...(this.categoryState ? { symbolCategories: this.categoryState } : {}) }, { merge: true });
@@ -420,7 +451,13 @@
 
       updateDatalist() {
         const dl = document.getElementById('existingNodesList');
-        if (dl) dl.innerHTML = this.nodes.map(n => `<option value="${n.title}">`).join('');
+        if (!dl) return;
+        dl.innerHTML = '';
+        this.nodes.forEach(node => {
+          const option = document.createElement('option');
+          option.value = node.title;
+          dl.appendChild(option);
+        });
       }
 
       getNode(id) { return this.nodes.find(n => n.id === id); }
@@ -457,7 +494,7 @@
       }
       templateFor(symbol) {
         const compareId = (a, b) => a < b ? -1 : a > b ? 1 : 0;
-        const candidates = this.categoryMembers(symbol).map(node => ({
+        const candidates = this.categoryMembers(symbol).filter(node => node.isImmigrant !== true).map(node => ({
           node,
           symbols: [...new Set(this.getNeighbors(node.id).map(id => this.getNode(id)).filter(Boolean).map(node => this.symbolOf(node)))].sort(compareId),
           modified: this.categoryState?.modifications?.find(record => record.id === node.id)?.at || 0
@@ -471,20 +508,171 @@
         if (className) element.className = className;
         return element;
       }
-      symbolButton(symbol, className = 'list-symbol') {
+      cancelLongPress(blockClick = false) {
+        this.pendingPress?.cancel(blockClick);
+      }
+      resetPresses() {
+        this.pressRevision = (this.pressRevision || 0) + 1;
+        this.cancelLongPress(true);
+      }
+      bindLongPress(element, action) {
+        let pointer = null, timer = null, startX = 0, startY = 0, suppressClick = false;
+        const cancel = (blockClick = false) => {
+          if (timer !== null) clearTimeout(timer);
+          timer = null;
+          pointer = null;
+          if (blockClick) suppressClick = true;
+          if (this.pendingPress?.cancel === cancel) this.pendingPress = null;
+        };
+        element.className += ' long-press-target';
+        element.addEventListener('pointerdown', event => {
+          if (event.isPrimary === false) { this.cancelLongPress(true); return; }
+          if (event.button !== 0 || !this.checkCreative()) return;
+          this.cancelLongPress(true);
+          suppressClick = false;
+          pointer = event.pointerId; startX = event.clientX; startY = event.clientY;
+          const revision = this.pressRevision || 0;
+          const scrollX = window.scrollX, scrollY = window.scrollY, ancestors = [];
+          for (let parent = element.parentElement; parent; parent = parent.parentElement) ancestors.push({ element: parent, x: parent.scrollLeft, y: parent.scrollTop });
+          this.pendingPress = { cancel, hasScrolled: () => window.scrollX !== scrollX || window.scrollY !== scrollY || ancestors.some(record => record.element.scrollLeft !== record.x || record.element.scrollTop !== record.y) };
+          element.setPointerCapture?.(pointer);
+          timer = setTimeout(() => {
+            if (pointer === null || !this.checkCreative() || element.isConnected === false || revision !== (this.pressRevision || 0)) return cancel(true);
+            cancel(true);
+            action();
+          }, 800);
+        });
+        element.addEventListener('pointermove', event => {
+          if (event.pointerId === pointer && Math.hypot(event.clientX - startX, event.clientY - startY) > 8) cancel(true);
+        });
+        element.addEventListener('pointerup', event => { if (event.pointerId === pointer) cancel(); });
+        for (const type of ['pointercancel', 'lostpointercapture']) {
+          element.addEventListener(type, event => { if (event.pointerId === pointer) cancel(true); });
+        }
+        element.addEventListener('click', event => {
+          if (!suppressClick) return;
+          suppressClick = false;
+          event.preventDefault(); event.stopImmediatePropagation();
+        }, true);
+        element.addEventListener('contextmenu', event => { if (this.checkCreative()) event.preventDefault(); });
+      }
+      titleLink(node) {
+        const link = this.makeElement('a', node.title, 'list-title');
+        link.setAttribute('href', '#' + node.id);
+        this.bindLongPress(link, () => this.requestRenameNode(node.id));
+        link.addEventListener('click', event => { event?.preventDefault(); this.navigateTo(node.id); });
+        link.addEventListener('keydown', event => {
+          if (event.key === 'F2' && this.checkCreative()) { event.preventDefault(); this.requestRenameNode(node.id); }
+        });
+        link.title = 'Klicka: öppna objekt. F2 eller håll 800 ms: byt namn i skaparläge.';
+        return link;
+      }
+      symbolButton(symbol, className = 'list-symbol', nodeId = null) {
         const button = this.makeElement('button', symbol, className);
         button.type = 'button';
-        button.title = 'Öppna kategori';
+        button.title = 'Öppna kategori. F2 eller håll 800 ms: ändra i skaparläge.';
+        if (nodeId !== null) {
+          this.bindLongPress(button, () => this.openSymbolEditDialog(nodeId));
+          button.addEventListener('keydown', event => {
+            if (event.key === 'F2' && this.checkCreative()) { event.preventDefault(); this.openSymbolEditDialog(nodeId); }
+          });
+        }
         button.addEventListener('click', () => this.navigateTo(this.categoryRoute(symbol)));
         return button;
       }
       bindRelationSymbols(nodes) {
         document.querySelectorAll('#mainContent .category-symbol-slot').forEach((slot, index) => {
           const node = nodes[index];
-          const button = this.symbolButton(this.symbolOf(node));
+          const button = this.symbolButton(this.symbolOf(node), 'list-symbol', node.id);
           button.style.color = node.color || '#202122';
           slot.appendChild(button);
         });
+        document.querySelectorAll('#mainContent .node-title-slot').forEach((slot, index) => slot.appendChild(this.titleLink(nodes[index])));
+      }
+      applyCategoryMove(node, symbol) {
+        if (!this.checkCreative() || !node || typeof symbol !== 'string' || symbol.length === 0 || this.symbolOf(node) === symbol) return false;
+        node.icon = symbol;
+        // Optional boolean: absent/false legacy values remain ordinary members.
+        node.isImmigrant = true;
+        this.touchNodes([node.id, ...this.getNeighbors(node.id)]);
+        return true;
+      }
+      moveNodeCategory(nodeId, symbol) {
+        const node = this.getNode(nodeId);
+        if (!this.applyCategoryMove(node, symbol)) return false;
+        this.sync({ preserveEdges: true });
+        this.navigateTo(node.id);
+        return true;
+      }
+      clearImmigrantStatus(nodeId) {
+        if (!this.checkCreative()) return false;
+        const node = this.getNode(nodeId);
+        if (!node || node.isImmigrant !== true) return false;
+        delete node.isImmigrant;
+        // Eligibility changes immediately; clearing a flag does not fabricate a new edit ordering.
+        this.sync({ preserveEdges: true });
+        this.renderPage(node.id);
+        return true;
+      }
+      categorySymbolOccupied(symbol) {
+        return this.categoryMembers(symbol).length > 0 || !!this.categoryState?.categories?.some(record => record.symbol === symbol);
+      }
+      renameCategorySymbol(source, symbol) {
+        if (!this.checkCreative() || typeof source !== 'string' || typeof symbol !== 'string' || !symbol.length || symbol === source || !this.categorySymbolOccupied(source) || this.categorySymbolOccupied(symbol)) return false;
+        // Validate before mutating: one cosmetic operation, one logical save, no node clocks.
+        this.categoryMembers(source).forEach(node => { node.icon = symbol; });
+        this.categoryState?.categories?.forEach(record => { if (record.symbol === source) record.symbol = symbol; });
+        this.sync({ preserveEdges: true });
+        this.navigateTo(this.categoryRoute(symbol));
+        return true;
+      }
+      openSymbolEditDialog(nodeId) {
+        if (!this.checkCreative()) return;
+        const node = this.getNode(nodeId);
+        if (!node) return;
+        this.symbolEditContext = { nodeId, source: this.symbolOf(node), kind: null };
+        this.symbolEditReturnFocus = document.activeElement;
+        document.getElementById('symbolEditChoices').style.display = '';
+        document.getElementById('symbolEditForm').style.display = 'none';
+        document.getElementById('symbolEditError').textContent = '';
+        document.getElementById('symbolEditDialog').style.display = 'flex';
+        document.querySelector('#symbolEditChoices button')?.focus();
+      }
+      chooseSymbolEdit(kind) {
+        if (!this.checkCreative() || !this.symbolEditContext || !['object', 'category'].includes(kind)) return;
+        this.symbolEditContext.kind = kind;
+        document.getElementById('symbolEditChoices').style.display = 'none';
+        document.getElementById('symbolEditForm').style.display = '';
+        document.getElementById('symbolEditInput').value = this.symbolEditContext.source;
+        document.getElementById('symbolEditInput').focus();
+      }
+      handleSymbolEditKey(event) {
+        if (event.key === 'Escape') { event.preventDefault(); this.closeSymbolEditDialog(); return; }
+        if (event.key !== 'Tab') return;
+        const controls = [...document.getElementById('symbolEditDialog').querySelectorAll('button, input')].filter(element => element.getClientRects().length > 0);
+        const first = controls[0], last = controls[controls.length - 1];
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+      }
+      closeSymbolEditDialog() {
+        this.symbolEditContext = null;
+        document.getElementById('symbolEditDialog').style.display = 'none';
+        this.symbolEditReturnFocus?.focus();
+        this.symbolEditReturnFocus = null;
+      }
+      saveSymbolEdit() {
+        const context = this.symbolEditContext;
+        if (!this.checkCreative() || !context?.kind) return;
+        const node = this.getNode(context.nodeId);
+        const symbol = document.getElementById('symbolEditInput').value;
+        const error = document.getElementById('symbolEditError');
+        if (!node || this.symbolOf(node) !== context.source) { error.textContent = 'Objektet har ändrats. Öppna dialogen igen.'; return; }
+        if (symbol.length === 0) { error.textContent = 'Symbolen får inte vara tom.'; return; }
+        if (symbol === context.source) return this.closeSymbolEditDialog();
+        if (context.kind === 'category' && this.categorySymbolOccupied(symbol)) { error.textContent = 'Symbolen används redan av en annan kategori.'; return; }
+        this.closeSymbolEditDialog();
+        if (context.kind === 'object') this.moveNodeCategory(context.nodeId, symbol);
+        else this.renameCategorySymbol(context.source, symbol);
       }
       appendTemplate(parent, symbol) {
         const section = this.makeElement('section');
@@ -511,6 +699,7 @@
         return true;
       }
       renderCategory(symbol) {
+        this.resetPresses();
         this.activeNodeId = null;
         this.activeCategorySymbol = symbol;
         const main = document.getElementById('mainContent');
@@ -549,8 +738,7 @@
         list.id = 'categoryMembers';
         this.categoryMembers(symbol).sort((a, b) => a.title.localeCompare(b.title)).forEach(node => {
           const row = this.makeElement('div', undefined, 'list-row');
-          const link = this.makeElement('a', node.title, 'list-title');
-          link.addEventListener('click', () => this.navigateTo(node.id));
+          const link = this.titleLink(node);
           row.appendChild(link); list.appendChild(row);
         });
         card.appendChild(list);
@@ -594,17 +782,25 @@
         this.renderPage(this.activeNodeId);
       }
 
+      renameNode(nodeId, value) {
+        if (!this.checkCreative() || typeof value !== 'string') return false;
+        const node = this.getNode(nodeId), title = value.trim();
+        if (!node || !title || title === node.title) return false;
+        if (this.nodes.some(other => other.id !== node.id && other.title.toLowerCase().trim() === title.toLowerCase())) return false;
+        node.title = title;
+        this.touchNodes([node.id]);
+        this.sync({ preserveEdges: true });
+        this.routeFromHash();
+        return true;
+      }
       requestRenameNode(nodeId) {
-        if (!this.checkCreative()) return; // Ändrad till Creative Mode
+        if (!this.checkCreative()) return;
         const node = this.getNode(nodeId);
-        const newName = prompt("Ange nytt namn:", node.title);
-        if (newName && newName.trim() && newName !== node.title) {
-          if (this.getNodeByTitle(newName)) return alert("Namnet är upptaget.");
-          node.title = newName.trim();
-          this.touchNodes([node.id]);
-          this.sync();
-          this.renderPage(nodeId);
-        }
+        if (!node) return;
+        const value = prompt('Ange nytt namn:', node.title);
+        if (typeof value !== 'string' || !value.trim() || value.trim() === node.title) return;
+        if (this.nodes.some(other => other.id !== nodeId && other.title.toLowerCase().trim() === value.trim().toLowerCase())) return alert('Namnet är upptaget.');
+        this.renameNode(nodeId, value);
       }
 
       requestDeleteNode(nodeId) {
@@ -635,14 +831,15 @@
         if (!this.checkCreative() || !this.appearanceTargetId) return;
         const node = this.getNode(this.appearanceTargetId);
         if (node) {
-            const icon = document.getElementById('appIconInput').value.trim() || '&';
-            const color = document.getElementById('appColorInput').value;
-            if (node.icon === icon && node.color === color) return this.closeAppearanceDialog();
-            node.icon = icon;
-            node.color = color;
-            this.touchNodes([node.id, ...this.getNeighbors(node.id)]);
-            this.sync();
-            this.renderPage(this.activeNodeId || this.appearanceTargetId);
+          const icon = document.getElementById('appIconInput').value;
+          const color = document.getElementById('appColorInput').value;
+          if (icon.length === 0) return;
+          const moved = this.applyCategoryMove(node, icon);
+          const colorChanged = (node.color || '#202122') !== color;
+          if (!moved && !colorChanged) return this.closeAppearanceDialog();
+          if (colorChanged) { node.color = color; if (!moved) this.touchNodes([node.id]); }
+          this.sync({ preserveEdges: true });
+          this.renderPage(this.activeNodeId || node.id);
         }
         this.closeAppearanceDialog();
       }
@@ -687,6 +884,7 @@
       }
 
       renderOverview() {
+        this.resetPresses();
         this.activeCategorySymbol = null;
         this.activeNodeId = null;
         const main = document.getElementById('mainContent');
@@ -698,7 +896,7 @@
           <div class="list-row">
             <div class="list-row-left">
               <span class="category-symbol-slot"></span>
-              <a class="list-title" onclick="app.navigateTo('${n.id}')">${n.title}</a>
+              <span class="node-title-slot"></span>
             </div>
             <button class="unlink-btn creative-only" onclick="app.requestDeleteNode('${n.id}')" title="Radera Nod">🗑</button>
           </div>
@@ -719,6 +917,7 @@
       }
 
       renderPage(nodeId, isEditingText = false) {
+        this.resetPresses();
         this.activeCategorySymbol = null;
         const node = this.getNode(nodeId);
         if (!node) return this.navigateTo('overview');
@@ -749,7 +948,7 @@
               <div class="list-row">
                 <div class="list-row-left">
                   <span class="category-symbol-slot"></span>
-                  <a class="list-title" onclick="app.navigateTo('${item.id}')">${item.title}</a>
+                  <span class="node-title-slot"></span>
                 </div>
                 <button class="unlink-btn creative-only" onclick="app.requestRemoveRelation('${node.id}', '${item.id}')" title="Pausa relation" aria-label="Pausa relation">×</button>
               </div>
@@ -797,11 +996,12 @@
               <div class="item-name-row">
                 <h1 class="item-name">
                   <span id="nodeCategorySymbol"></span>
-                  ${node.title}
+                  <span id="nodeTitle"></span>
                 </h1>
                 <div class="creative-controls">
+                  <button type="button" id="editNodeCategory" class="creative-only btn-ghost">Ändra kategori</button>
                   <button type="button" id="editNodeAppearance" class="creative-only btn-ghost">Ändra symbol & färg</button>
-                  <button type="button" class="creative-only btn-ghost" style="font-size:11px; padding:4px 8px; border: 1px solid var(--db-border);" onclick="app.requestRenameNode('${node.id}')">✎ Byt namn</button>
+                  <button type="button" id="renameNode" class="creative-only btn-ghost" style="font-size:11px; padding:4px 8px; border: 1px solid var(--db-border);">✎ Byt namn</button>
                   <button type="button" class="btn-danger creative-only" style="font-size:11px; padding:4px 8px;" onclick="app.requestDeleteNode('${node.id}')">🗑 Radera</button>
                 </div>
               </div>
@@ -814,6 +1014,7 @@
             </div>
 
             ${inputZone}
+            <div id="immigrantStatus"></div>
             <div id="objectTemplate"></div>
             <section aria-label="Vilande relationer" style="margin-top: 24px;">
               <h2>Vilande relationer</h2>
@@ -821,7 +1022,20 @@
             </section>
           </div>
         `;
-        const symbolControl = this.symbolButton(this.symbolOf(node), 'node-icon');
+        const nameControl = document.getElementById('nodeTitle');
+        nameControl.textContent = node.title;
+        this.bindLongPress(nameControl, () => this.requestRenameNode(node.id));
+        document.getElementById('renameNode').addEventListener('click', () => this.requestRenameNode(node.id));
+        document.getElementById('editNodeCategory').addEventListener('click', () => this.openSymbolEditDialog(node.id));
+        const status = document.getElementById('immigrantStatus');
+        if (node.isImmigrant === true) {
+          status.appendChild(this.makeElement('p', 'Inflyttare'));
+          const clear = this.makeElement('button', 'Upphäv inflyttarstatus', 'creative-only');
+          clear.type = 'button'; clear.id = 'clearImmigrantStatus';
+          clear.addEventListener('click', () => this.clearImmigrantStatus(node.id));
+          status.appendChild(clear);
+        }
+        const symbolControl = this.symbolButton(this.symbolOf(node), 'node-icon', node.id);
         symbolControl.style.color = node.color || '#202122';
         document.getElementById('nodeCategorySymbol').appendChild(symbolControl);
         document.getElementById('editNodeAppearance').addEventListener('click', () => this.openAppearanceDialog(node.id));
@@ -841,10 +1055,7 @@
           row.className = 'list-row';
           const left = document.createElement('div');
           left.className = 'list-row-left';
-          const link = document.createElement('a');
-          link.className = 'list-title';
-          link.textContent = item.title;
-          link.addEventListener('click', () => this.navigateTo(item.id));
+          const link = this.titleLink(item);
           const restore = document.createElement('button');
           restore.type = 'button';
           restore.className = 'creative-only';
