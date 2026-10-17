@@ -64,6 +64,15 @@
     .search-suggestion[aria-selected="true"] { background: #eaf0ff; outline: 2px solid var(--db-link); outline-offset: -2px; }
     .search-empty { padding: 8px; color: var(--db-muted); }
     #searchHint { max-width: 640px; margin: 4px auto 0; font-size: 12px; color: var(--db-muted); }
+    .category-sort { margin:12px 0; display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+    .category-sort select, .category-sort input { max-width:100%; min-width:0; }
+    .relation-sort-controls { flex-basis:100%; min-width:0; }
+    .relation-sort-controls label { display:block; margin-top:6px; }
+    .relation-sort-controls input { width:100%; padding:8px 12px; border:1px solid var(--db-border); border-radius:4px; font-size:14px; }
+    .relation-sort-controls > div { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+    #relationCriteriaSelect { width:100%; }
+    #relationCriteriaChips button, #categoryMembers h2 { white-space:normal; overflow-wrap:anywhere; }
+    #categoryMembers .list-row a { overflow-wrap:anywhere; }
     :focus-visible { outline: 2px solid var(--db-link); outline-offset: 2px; }
     @media (max-width: 480px) { header { padding: 6px 8px; gap: 4px; } .brand-logo { display: none; } .brand { font-size: 16px; } #btnLibSwitcher { padding: 8px 6px; font-size: 12px; } }
 
@@ -822,14 +831,112 @@
         card.appendChild(create);
         const list = this.makeElement('div', undefined, 'flat-list-container');
         list.id = 'categoryMembers';
-        this.categoryMembers(symbol).sort((a, b) => a.title.localeCompare(b.title)).forEach(node => {
-          const row = this.makeElement('div', undefined, 'list-row');
-          const link = this.titleLink(node);
-          row.appendChild(link); list.appendChild(row);
-        });
+        card.appendChild(this.createCategorySort(symbol, list));
         card.appendChild(list);
+        this.renderSortedCategory(this.categorySort);
         this.appendTemplate(card, symbol);
         main.appendChild(card);
+      }
+      compareCategoryTitles(a, b) {
+        const order = new Intl.Collator('sv', {numeric:true, sensitivity:'base'}).compare(a.title, b.title);
+        return order || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+      }
+      categoryRelationGroups(symbol, criterionIds = []) {
+        const ids = [...new Set(criterionIds)].filter(id => !!this.getNode(id));
+        const groups = new Map();
+        this.categoryMembers(symbol).forEach(node => {
+          const matched = ids.map((id,index) => this.areNeighbors(node.id,id) ? index : -1).filter(index => index >= 0);
+          const key = matched.join(',');
+          if (!groups.has(key)) groups.set(key, {matched, nodes:[]});
+          groups.get(key).nodes.push(node);
+        });
+        return [...groups.values()].sort((a,b) => {
+          if (a.matched.length !== b.matched.length) return b.matched.length - a.matched.length;
+          for (let i=0; i<a.matched.length; i++) if (a.matched[i] !== b.matched[i]) return a.matched[i]-b.matched[i];
+          return 0;
+        }).map(group => ({ids:group.matched.map(index => ids[index]),
+          heading:group.matched.length ? group.matched.map(index => this.getNode(ids[index]).title).join('; ') : '\u00d6vriga objekt',
+          nodes:group.nodes.sort((a,b) => this.compareCategoryTitles(a,b))}));
+      }
+      categorySortIsCurrent(state) {
+        return this.categorySort === state && state.library === this.currentLibrary && state.symbol === this.activeCategorySymbol && state.revision === this.libraryLoadRevision;
+      }
+      createCategorySort(symbol, list) {
+        const state = {symbol, library:this.currentLibrary, revision:this.libraryLoadRevision, ids:[], mode:'alphabetical', list};
+        this.categorySort = state;
+        const controls = this.makeElement('div', undefined, 'category-sort');
+        const label = this.makeElement('label', 'Sortering'); label.setAttribute('for','categorySortMode');
+        const mode = this.makeElement('select'); mode.id = 'categorySortMode';
+        for (const [value,text] of [['alphabetical','Alfabetisk'],['relations','Relationer']]) {
+          const option = this.makeElement('option',text); option.value=value; mode.appendChild(option);
+        }
+        const panel = this.makeElement('div',undefined,'relation-sort-controls'); panel.id='relationSortControls'; panel.hidden=true;
+        const searchLabel = this.makeElement('label','Sök relationsobjekt'); searchLabel.setAttribute('for','relationCriteriaSearch');
+        const search = this.makeElement('input'); search.id='relationCriteriaSearch'; search.type='search';
+        const selectLabel = this.makeElement('label','Välj befintligt objekt'); selectLabel.setAttribute('for','relationCriteriaSelect');
+        const select = this.makeElement('select'); select.id='relationCriteriaSelect';
+        const actions = this.makeElement('div');
+        const add = this.makeElement('button','Lägg till'); add.type='button'; add.id='addRelationCriterion';
+        const clear = this.makeElement('button','Rensa alla'); clear.type='button'; clear.id='clearRelationCriteria';
+        const chips = this.makeElement('div'); chips.id='relationCriteriaChips';
+        const status = this.makeElement('p'); status.id='relationSortStatus'; status.setAttribute('role','status');
+        Object.assign(state,{modeControl:mode, panel, search, select, add, chips, status});
+        const refresh = () => { if (!this.categorySortIsCurrent(state)) return; this.renderRelationChoices(state); this.renderSortedCategory(state); };
+        mode.addEventListener('change', () => {
+          if (!this.categorySortIsCurrent(state)) return;
+          state.mode=mode.value==='relations'?'relations':'alphabetical'; panel.hidden=state.mode!=='relations';
+          if (panel.hidden) state.ids=[];
+          refresh();
+        });
+        search.addEventListener('input', () => { if (this.categorySortIsCurrent(state)) this.renderRelationChoices(state); });
+        add.addEventListener('click', () => {
+          if (!this.categorySortIsCurrent(state)) return;
+          const id=select.value;
+          if (!this.getNode(id) || state.ids.includes(id)) return;
+          state.ids.push(id); refresh();
+        });
+        clear.addEventListener('click', () => { if (!this.categorySortIsCurrent(state)) return; state.ids=[]; refresh(); });
+        actions.appendChild(add); actions.appendChild(clear);
+        for (const element of [searchLabel,search,selectLabel,select,actions,chips,status]) panel.appendChild(element);
+        controls.appendChild(label); controls.appendChild(mode); controls.appendChild(panel);
+        this.renderRelationChoices(state);
+        return controls;
+      }
+      renderRelationChoices(state) {
+        const selected=state.select.value, query=state.search.value.trim().toLowerCase();
+        state.select.innerHTML='';
+        const candidates=this.nodes.filter(node => !state.ids.includes(node.id) && node.title.toLowerCase().includes(query)).slice().sort((a,b)=>this.compareCategoryTitles(a,b));
+        candidates.forEach(node => {
+          const duplicate=this.nodes.some(other=>other.id!==node.id && other.title===node.title);
+          const option=this.makeElement('option', node.title + (duplicate ? ' ('+node.id+')' : ''));
+          option.value=node.id; state.select.appendChild(option);
+        });
+        if (candidates.some(node=>node.id===selected)) state.select.value=selected;
+        if (!candidates.length) { const empty=this.makeElement('option','Inga matchande objekt.'); empty.value=''; empty.disabled=true; empty.selected=true; state.select.appendChild(empty); }
+        state.add.disabled=!candidates.length;
+      }
+      renderSortedCategory(state) {
+        if (!this.categorySortIsCurrent(state)) return;
+        state.ids=state.ids.filter(id=>!!this.getNode(id));
+        this.cancelLongPress(true);
+        state.list.innerHTML=''; state.chips.innerHTML='';
+        state.ids.forEach(id => {
+          const remove=this.makeElement('button','Ta bort: '+this.getNode(id).title); remove.type='button';
+          remove.addEventListener('click',()=>{
+            if (!this.categorySortIsCurrent(state)) return;
+            state.ids=state.ids.filter(value=>value!==id);
+            this.renderRelationChoices(state);this.renderSortedCategory(state);
+            state.search.focus?.();
+          }); state.chips.appendChild(remove);
+        });
+        const groups=this.categoryRelationGroups(state.symbol,state.mode==='relations'?state.ids:[]);
+        groups.forEach(group=>{
+          if (state.mode==='relations' && state.ids.length) state.list.appendChild(this.makeElement('h2',group.heading));
+          group.nodes.forEach(node=>{
+            const row=this.makeElement('div',undefined,'list-row');row.appendChild(this.titleLink(node));state.list.appendChild(row);
+          });
+        });
+        state.status.textContent=state.ids.length ? state.ids.length+' valda relationer' : 'Välj ett eller flera relationsobjekt.';
       }
       getNeighbors(nodeId, paused = false) { return [...new Set(this.edges.filter(e => (e.paused === true) === paused && (e.a === nodeId || e.b === nodeId)).map(e => e.a === nodeId ? e.b : e.a))]; }
       areNeighbors(idA, idB) { return this.edges.some(e => e.paused !== true && this.relationMatches(e, idA, idB)); }
