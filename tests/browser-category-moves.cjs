@@ -92,8 +92,8 @@ withBrowser(seed,async({evaluate,send,press,click,navigate,reload,delay,answers,
  repeatedExpected.nodes[0].icon='z';repeatedExpected.nodes[0].isImmigrant=true;repeatedExpected.state.modifications=repeatedAfter.state.modifications;
  assert.deepEqual(repeatedAfter,repeatedExpected);assert.deepEqual(await metrics(),[2,6,0]);
  // Existing appearance UI cannot bypass moves; changing only color remains ordinary.
- await reset();await navigate('B');await click('#editNodeAppearance');await evaluate("document.getElementById('appColorInput').value='#654321'");await click('button[onclick="app.saveAppearance()"]');assert.equal(await evaluate("testApp.getNode('B').isImmigrant"),false);assert.deepEqual(await metrics(),[1,3,0]);
- await click('#editNodeAppearance');await evaluate("document.getElementById('appIconInput').value='y'");await click('button[onclick="app.saveAppearance()"]');assert.equal(await evaluate("testApp.getNode('B').isImmigrant"),true);assert.equal(await evaluate("testApp.templateFor('y').sourceId"),'C');
+ await reset();await navigate('B');await evaluate('testApp.openAppearanceDialog(testApp.activeNodeId)');await evaluate("document.getElementById('appColorInput').value='#654321'");await click('button[onclick="app.saveAppearance()"]');assert.equal(await evaluate("testApp.getNode('B').isImmigrant"),false);assert.deepEqual(await metrics(),[1,3,0]);
+ await evaluate('testApp.openAppearanceDialog(testApp.activeNodeId)');await evaluate("document.getElementById('appIconInput').value='y'");await click('button[onclick="app.saveAppearance()"]');assert.equal(await evaluate("testApp.getNode('B').isImmigrant"),true);assert.equal(await evaluate("testApp.templateFor('y').sourceId"),'C');
  await click('#clearImmigrantStatus');assert.equal(await evaluate("testApp.templateFor('y').sourceId"),'B');
  // Whole-category collision rejects without intermediate changes, including metadata-only targets.
  await reset();before=await get();await click('#editNodeCategory');await click('#symbolEditChoices button:nth-child(2)');
@@ -102,7 +102,7 @@ withBrowser(seed,async({evaluate,send,press,click,navigate,reload,delay,answers,
  const symbol=` '"/%\u96ea\ud83d\udc09|<svg onload="qa.payloads++"> `;
  await click('#editNodeCategory');await choose('category',symbol);
  const categoryState=JSON.parse(await get()),categoryExpected=JSON.parse(before);categoryExpected.nodes.filter(n=>n.icon==='x').forEach(n=>n.icon=symbol);categoryExpected.state.categories[0].symbol=symbol;assert.deepEqual(categoryState,categoryExpected);assert.deepEqual(await metrics(),[1,3,0]);
- assert.equal(await evaluate('location.hash'),'#category/'+encodeURIComponent(symbol));assert.equal(await evaluate("document.querySelector('h1.item-name').textContent"),symbol.toUpperCase());assert.equal(await evaluate("testApp.templateFor(testApp.activeCategorySymbol).sourceId"),'B');
+ assert.equal(await evaluate('location.hash'),'#category/'+encodeURIComponent(symbol));assert.equal(await evaluate("document.getElementById('categoryHeadingSymbol').textContent"),symbol.toUpperCase());assert.equal(await evaluate("testApp.templateFor(testApp.activeCategorySymbol).sourceId"),'B');
  assert.equal(await evaluate("document.querySelectorAll('#mainContent svg,#mainContent img,#mainContent script').length"),0);
  before=await get();await reload();assert.equal(await get(),before);await unchanged(before);
  // Rendering and mouse navigation with renamed symbols never normalizes legacy records.
