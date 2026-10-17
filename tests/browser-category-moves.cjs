@@ -9,7 +9,7 @@ withBrowser(seed,async({evaluate,send,press,click,navigate,reload,delay,answers,
  const creative=()=>evaluate("testApp.mode='create';testApp.updateModeUI()");
  async function reset(){await evaluate(`testApp.nodes=${JSON.stringify(seed.nodes)};testApp.edges=${JSON.stringify(seed.edges)};testApp.categoryState=${JSON.stringify(seed.state)};qa.saves=0;qa.writes=0;testApp.closeSymbolEditDialog();testApp.closeAppearanceDialog();testApp.mode='create';testApp.updateModeUI();testApp.navigateTo('A')`);await delay(60)}
  async function unchanged(before){assert.equal(await get(),before);assert.deepEqual(await metrics(),[0,0,0])}
- async function dialogOpen(){return evaluate("getComputedStyle(document.getElementById('symbolEditDialog')).display!=='none'")}
+ async function dialogOpen(){return evaluate("getComputedStyle(document.getElementById('smartDialog')).display!=='none'||getComputedStyle(document.getElementById('symbolEditDialog')).display!=='none'")}
  async function choose(kind,value){await click(`#symbolEditChoices button:nth-child(${kind==='object'?1:2})`);await evaluate('document.getElementById("symbolEditInput").value='+JSON.stringify(value));await click('#symbolEditForm button')}
  // Quick symbol navigation and early release; real mouse and touch.
  await creative();let before=await get();
@@ -40,7 +40,7 @@ withBrowser(seed,async({evaluate,send,press,click,navigate,reload,delay,answers,
  // Genuine pointer/touch: short, held, movement and pointercancel.
  await send('Emulation.setTouchEmulationEnabled',{enabled:true,maxTouchPoints:1});
  await navigate('A');await press('#nodeCategorySymbol button',200,'touch');assert.equal(await evaluate('location.hash'),'#category/x');await unchanged(before);
- await navigate('A');await press('#nodeCategorySymbol button',850,'touch');assert.equal(await dialogOpen(),true);assert.equal(await evaluate('location.hash'),'#A');await click('#symbolEditDialog > div > button');
+ await navigate('A');await press('#nodeCategorySymbol button',850,'touch');assert.equal(await dialogOpen(),true);assert.equal(await evaluate('location.hash'),'#A');await click('#smartCategoryCancel');
  for(const ending of ['cancel','move']){await navigate('A');await press('#nodeCategorySymbol button',900,'touch',ending);assert.equal(await dialogOpen(),false,ending);assert.equal(await evaluate('location.hash'),'#A');await unchanged(before)}
  await send('Emulation.setTouchEmulationEnabled',{enabled:false});
  for(const ending of ['move','rerender']){await press('#nodeCategorySymbol button',900,'mouse',ending);assert.equal(await dialogOpen(),false,ending);assert.equal(await evaluate('location.hash'),'#A');await unchanged(before)}
@@ -70,13 +70,13 @@ withBrowser(seed,async({evaluate,send,press,click,navigate,reload,delay,answers,
  for(const [route,selector]of [['overview','#mainContent .list-title'],['category/x','#categoryMembers .list-title'],['C','#mainContent .flat-list-container .list-title'],['D','#pausedRelationsList .list-title']]){
   await navigate(route);const n=dialogs.length;answers.push(null);await press(selector,850);assert.equal(dialogs.length,n+1);assert.equal(await evaluate('location.hash'),'#'+route);await unchanged(before);
  }
- // Existing category move through the new two-choice dialog.
- await navigate('A');await press('#nodeCategorySymbol button',850);await choose('object','y');
+ // Existing category move through the direct smart picker after a real long press.
+ await navigate('A');await press('#nodeCategorySymbol button',850);await evaluate("document.getElementById('smartCategorySearch').value='y';document.getElementById('smartCategorySearch').dispatchEvent(new Event('input'))");await click('#smartCategoryConfirm');
  assert.equal(await evaluate("testApp.getNode('A').icon"),'y');assert.equal(await evaluate("testApp.getNode('A').isImmigrant"),true);assert.equal(await evaluate('location.hash'),'#A');assert.equal(await evaluate("document.getElementById('immigrantStatus').textContent.includes('Inflyttare')"),true);
  const moved=JSON.parse(await get()),moveExpected=JSON.parse(before);moveExpected.nodes[0].icon='y';moveExpected.nodes[0].isImmigrant=true;moveExpected.state.modifications=moved.state.modifications;assert.deepEqual(moved,moveExpected);assert.deepEqual(await metrics(),[1,3,0]);
  assert.equal(await evaluate("testApp.templateFor('y').sourceId"),'C');
  // No-op UI move causes no writes/timestamps. Explicit controls are keyboard accessible.
- await evaluate('qa.saves=0;qa.writes=0');before=await get();await click('#editNodeCategory');await choose('object','y');await unchanged(before);
+ await evaluate('qa.saves=0;qa.writes=0');before=await get();await evaluate('testApp.openSymbolEditDialog(testApp.activeNodeId)');await choose('object','y');await unchanged(before);
  await evaluate("document.querySelector('#nodeCategorySymbol button').focus()");await send('Input.dispatchKeyEvent',{type:'keyDown',key:'F2',code:'F2'});assert.equal(await dialogOpen(),true);await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Escape',code:'Escape'});await unchanged(before);
  // Local reload preserves the entire payload and marks the immigrant in read mode.
  before=await get();await reload();assert.equal(await get(),before);assert.equal(await evaluate('testApp.mode'),'read');assert.equal(await evaluate("getComputedStyle(document.getElementById('clearImmigrantStatus')).display"),'none');await unchanged(before);
@@ -84,10 +84,10 @@ withBrowser(seed,async({evaluate,send,press,click,navigate,reload,delay,answers,
  // Move an existing immigrant to a previously unused exact symbol without copying any template rows.
  await reset();const repeatedBefore=JSON.parse(await get());
  const unused=`Unused / % '\" \u96ea`;
- await click('#editNodeCategory');await choose('object',unused);
+ await evaluate('testApp.openSymbolEditDialog(testApp.activeNodeId)');await choose('object',unused);
  assert.equal(await evaluate("testApp.getNode('A').isImmigrant"),true);
  assert.equal(await evaluate('testApp.templateFor('+JSON.stringify(unused)+').sourceId'),null);
- await click('#editNodeCategory');await choose('object','z');
+ await evaluate('testApp.openSymbolEditDialog(testApp.activeNodeId)');await choose('object','z');
  const repeatedAfter=JSON.parse(await get()),repeatedExpected=structuredClone(repeatedBefore);
  repeatedExpected.nodes[0].icon='z';repeatedExpected.nodes[0].isImmigrant=true;repeatedExpected.state.modifications=repeatedAfter.state.modifications;
  assert.deepEqual(repeatedAfter,repeatedExpected);assert.deepEqual(await metrics(),[2,6,0]);
@@ -96,11 +96,11 @@ withBrowser(seed,async({evaluate,send,press,click,navigate,reload,delay,answers,
  await evaluate('testApp.openAppearanceDialog(testApp.activeNodeId)');await evaluate("document.getElementById('appIconInput').value='y'");await click('button[onclick="app.saveAppearance()"]');assert.equal(await evaluate("testApp.getNode('B').isImmigrant"),true);assert.equal(await evaluate("testApp.templateFor('y').sourceId"),'C');
  await click('#clearImmigrantStatus');assert.equal(await evaluate("testApp.templateFor('y').sourceId"),'B');
  // Whole-category collision rejects without intermediate changes, including metadata-only targets.
- await reset();before=await get();await click('#editNodeCategory');await click('#symbolEditChoices button:nth-child(2)');
+ await reset();before=await get();await evaluate('testApp.openSymbolEditDialog(testApp.activeNodeId)');await click('#symbolEditChoices button:nth-child(2)');
  for(const symbol of ['y','stored-only','']){await evaluate('document.getElementById("symbolEditInput").value='+JSON.stringify(symbol));await click('#symbolEditForm button');await unchanged(before);assert.equal(await dialogOpen(),true);assert((await evaluate("document.getElementById('symbolEditError').textContent")).length>0)}
  await evaluate("document.getElementById('symbolEditInput').value='x'");await click('#symbolEditForm button');await unchanged(before);assert.equal(await dialogOpen(),false);
  const symbol=` '"/%\u96ea\ud83d\udc09|<svg onload="qa.payloads++"> `;
- await click('#editNodeCategory');await choose('category',symbol);
+ await evaluate('testApp.openSymbolEditDialog(testApp.activeNodeId)');await choose('category',symbol);
  const categoryState=JSON.parse(await get()),categoryExpected=JSON.parse(before);categoryExpected.nodes.filter(n=>n.icon==='x').forEach(n=>n.icon=symbol);categoryExpected.state.categories[0].symbol=symbol;assert.deepEqual(categoryState,categoryExpected);assert.deepEqual(await metrics(),[1,3,0]);
  assert.equal(await evaluate('location.hash'),'#category/'+encodeURIComponent(symbol));assert.equal(await evaluate("document.getElementById('categoryHeadingSymbol').textContent"),symbol.toUpperCase());assert.equal(await evaluate("testApp.templateFor(testApp.activeCategorySymbol).sourceId"),'B');
  assert.equal(await evaluate("document.querySelectorAll('#mainContent svg,#mainContent img,#mainContent script').length"),0);

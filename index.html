@@ -73,6 +73,18 @@
     #relationCriteriaSelect { width:100%; }
     #relationCriteriaChips button, #categoryMembers h2 { white-space:normal; overflow-wrap:anywhere; }
     #categoryMembers .list-row a { overflow-wrap:anywhere; }
+    .create-action:hover { background:#176b2c; color:white; }
+    .create-action { background:#22823b; color:white; border-color:#176b2c; }
+    .quick-link-row, .smart-search-row { display:flex; gap:6px; align-items:center; min-width:0; }
+    .quick-link-row input, .smart-search-row input { min-width:0; flex:1; }
+    .smart-search-row .quick-symbol { max-width:25%; }
+    .quick-symbol { flex-shrink:0; margin-right:6px; white-space:pre-wrap; overflow-wrap:anywhere; }
+    #quickLinkSuggestions, .smart-category-list { max-height:220px; overflow-y:auto; border:1px solid var(--db-border-light); }
+    #quickLinkSuggestions button, .smart-category-list button { white-space:normal; overflow-wrap:anywhere; }
+    #smartDialogBody { overflow-wrap:anywhere; }
+    #smartDialogBody label { display:block; margin-top:8px; }
+    #smartDialogBody > button { margin:6px 6px 0 0; }
+    #smartDialogBody input, #advancedChainInput { width:100%; min-width:0; }
     :focus-visible { outline: 2px solid var(--db-link); outline-offset: 2px; }
     @media (max-width: 480px) { header { padding: 6px 8px; gap: 4px; } .brand-logo { display: none; } .brand { font-size: 16px; } #btnLibSwitcher { padding: 8px 6px; font-size: 12px; } }
 
@@ -214,6 +226,10 @@
     </div>
   </div>
 
+  <div class="dialog-backdrop" id="smartDialog" role="dialog" aria-modal="true" aria-labelledby="smartDialogHeading" style="z-index:1200">
+    <div class="dialog" id="smartDialogBody"></div>
+  </div>
+
   <!-- Skapa ny nod-dialog -->
   <div class="dialog-backdrop" id="createDialog" role="dialog" aria-modal="true" aria-labelledby="createDialogHeading">
     <div class="dialog">
@@ -259,7 +275,7 @@
   <!-- Symbols are identities, not HTML or inline handler arguments. -->
   <div class="dialog-backdrop" id="symbolEditDialog" role="dialog" aria-modal="true" aria-labelledby="symbolEditHeading">
     <div class="dialog">
-      <h2 id="symbolEditHeading">Ändra symbol/kategori</h2>
+      <h2 id="symbolEditHeading">Byt Kategori</h2>
       <div id="symbolEditChoices" class="dialog-actions-stacked">
         <button type="button" onclick="app.chooseSymbolEdit('object')">Ändra detta objekts kategori</button>
         <button type="button" onclick="app.chooseSymbolEdit('category')">Ändra hela kategorins symbol</button>
@@ -368,6 +384,7 @@
           this.closeSymbolEditDialog();
           this.closeAppearanceDialog();
           this.closeCreateDialog();
+          this.closeSmartDialog(false);this.quickLinkState=null;
           this.categoryDescriptionRefresh?.();
           const objectEditor=document.getElementById('freeTextEditor');
           if(objectEditor && this.activeNodeId)this.renderPage(this.activeNodeId);
@@ -381,6 +398,7 @@
         });
         this.renderHeaderStatus();
         this.updateSearchSuggestions();
+        if(this.checkCreative()&&this.activeNodeId&&document.getElementById('quickLinkInput'))this.initQuickLink(this.activeNodeId);
       }
 
       promptModeUnlock() {
@@ -581,6 +599,7 @@
       resetPresses() {
         this.pressRevision = (this.pressRevision || 0) + 1;
         this.cancelLongPress(true);
+        this.closeSmartDialog(false);this.quickLinkState=null;
       }
       bindLongPress(element, action) {
         let pointer = null, timer = null, startX = 0, startY = 0, suppressClick = false;
@@ -645,9 +664,9 @@
         button.type = 'button';
         button.title = 'Öppna kategori. F2 eller håll 800 ms: ändra i skaparläge.';
         if (nodeId !== null) {
-          this.bindLongPress(button, () => this.openSymbolEditDialog(nodeId));
+          this.bindLongPress(button, () => this.openCategoryPicker(nodeId));
           button.addEventListener('keydown', event => {
-            if (event.key === 'F2' && this.checkCreative()) { event.preventDefault(); this.openSymbolEditDialog(nodeId); }
+            if (event.key === 'F2' && this.checkCreative()) { event.preventDefault(); this.openCategoryPicker(nodeId); }
           });
         }
         button.addEventListener('click', () => this.navigateTo(this.categoryRoute(symbol)));
@@ -703,7 +722,7 @@
         if (!this.checkCreative()) return;
         const node = this.getNode(nodeId);
         if (!node) return;
-        this.symbolEditContext = { nodeId, source: this.symbolOf(node), kind: null };
+        this.symbolEditContext = { nodeId, source: this.symbolOf(node), kind: null, smartGuard:this.captureSmartContext(nodeId) };
         this.symbolEditReturnFocus = document.activeElement;
         document.getElementById('symbolEditChoices').style.display = '';
         document.getElementById('symbolEditForm').style.display = 'none';
@@ -736,6 +755,7 @@
       saveSymbolEdit() {
         const context = this.symbolEditContext;
         if (!this.checkCreative() || !context?.kind) return;
+        if(context.smartGuard && !this.smartContextValid(context.smartGuard)){document.getElementById('symbolEditError').textContent='Underlaget har \u00e4ndrats. \u00d6ppna dialogen igen.';return;}
         const node = this.getNode(context.nodeId);
         const symbol = document.getElementById('symbolEditInput').value;
         const error = document.getElementById('symbolEditError');
@@ -1005,6 +1025,201 @@
         });
         state.status.textContent=state.ids.length >= 6 ? 'Högst sex relationer. Ta bort en relation för att lägga till en annan.' : state.ids.length ? state.ids.length+' av 6 valda relationer' : 'Välj upp till sex relationsobjekt.';
       }
+      captureSmartContext(id) {
+        // JSON equality alone cannot detect replacement of a proposed link target.
+        return {id, pageId:this.activeNodeId, node:this.getNode(id), nodeRecords:[...this.nodes], categoryState:this.categoryState, categoryRecords:[...(this.categoryState?.categories || [])], library:this.currentLibrary, revision:this.libraryLoadRevision,
+          view:this.pressRevision, snapshot:this.creationSnapshot()};
+      }
+      smartContextValid(context) {
+        return !!context && this.nodes.length===context.nodeRecords.length && this.nodes.every((node,index)=>node===context.nodeRecords[index]) && this.checkCreative() && this.activeNodeId===context.pageId && this.getNode(context.id)===context.node && this.categoryState===context.categoryState && (this.categoryState?.categories || []).length===context.categoryRecords.length && (this.categoryState?.categories || []).every((record,index)=>record===context.categoryRecords[index]) &&
+          this.currentLibrary===context.library && this.libraryLoadRevision===context.revision && this.pressRevision===context.view &&
+          this.creationSnapshot()===context.snapshot;
+      }
+      smartExactNodes(value) {
+        const title=value.trim().toLowerCase();return title ? this.nodes.filter(n=>n.title.trim().toLowerCase()===title) : [];
+      }
+      quickLinkResolution(state) {
+        const title=state.input.value.trim();
+        if(!title)return {kind:'blank'};
+        if(state.selected && state.selected.title===title) return {kind:'existing',node:this.getNode(state.selected.id)};
+        const matches=this.smartExactNodes(title);
+        return matches.length===1 ? {kind:'existing',node:matches[0]} : matches.length ? {kind:'ambiguous'} : {kind:'new',title};
+      }
+      initQuickLink(id) {
+        const input=document.getElementById('quickLinkInput');if(!input)return;
+        const state={context:this.captureSmartContext(id),input,list:document.getElementById('quickLinkSuggestions'),
+          action:document.getElementById('quickLinkAction'),status:document.getElementById('quickLinkStatus'),selected:null,index:-1};
+        this.quickLinkState=state;
+        input.addEventListener('input',()=>{if(this.quickLinkState!==state)return;state.selected=null;this.refreshQuickLink(state);});
+        input.addEventListener('keydown',event=>{
+          if(this.quickLinkState!==state)return;
+          if(event.key==='Escape'){event.preventDefault();state.list.hidden=true;state.index=-1;input.setAttribute('aria-expanded','false');input.setAttribute('aria-activedescendant','');}
+          else if(event.key==='ArrowDown'||event.key==='ArrowUp'){
+            event.preventDefault();this.stepSmartOptions(state,event.key==='ArrowDown'?1:-1);
+          }else if(event.key==='Enter'){
+            event.preventDefault();if(state.index>=0 && !state.list.hidden)state.options[state.index]?.click();else this.commitQuickLink(state);
+          }
+        });
+        state.action.addEventListener('click',()=>this.commitQuickLink(state));
+        document.getElementById('runAdvancedChain').addEventListener('click',()=>this.commitAdvancedChain(state));
+        this.refreshQuickLink(state);
+      }
+      stepSmartOptions(state,step) {
+        const count=state.options?.length || 0;if(!count)return;
+        state.list.hidden=false;state.index=state.index<0?(step>0?0:count-1):(state.index+step+count)%count;
+        state.options.forEach((option,i)=>{option.setAttribute('aria-selected',String(i===state.index));if(i===state.index)option.scrollIntoView?.({block:'nearest'});});
+        state.input.setAttribute('aria-expanded','true');state.input.setAttribute('aria-activedescendant',state.options[state.index].id);
+      }
+      refreshQuickLink(state) {
+        if(this.quickLinkState!==state)return;
+        state.list.innerHTML='';state.options=[];state.index=-1;state.input.setAttribute('aria-activedescendant','');
+        const resolution=this.quickLinkResolution(state),q=state.input.value.trim();
+        state.action.textContent=resolution.kind==='new'?'Skapa':'L\u00e4nka';
+        state.action.className=resolution.kind==='new'?'create-action':'primary';
+        state.action.disabled=['blank','ambiguous'].includes(resolution.kind);
+        state.status.textContent=resolution.kind==='ambiguous'?'Flera objekt har namnet. V\u00e4lj ett f\u00f6rslag med r\u00e4tt ID.':'';
+        const exact=this.smartExactNodes(q);
+        const suggestions=exact.length>1?exact.slice().sort((a,b)=>this.compareCategoryTitles(a,b)):this.searchMatches(q);
+        if(q)suggestions.forEach((node,index)=>{
+          const option=this.makeElement('button',undefined,'search-suggestion');option.type='button';option.tabIndex=-1;
+          option.id='quick-option-'+index;option.setAttribute('role','option');option.setAttribute('aria-selected','false');
+          option.appendChild(this.makeElement('span',this.symbolOf(node),'quick-symbol'));
+          option.appendChild(this.makeElement('span',node.title));
+          if(this.smartExactNodes(node.title).length>1)option.appendChild(this.makeElement('small',' ('+node.id+')'));
+          const chosen={id:node.id,title:node.title};
+          option.addEventListener('pointerdown',event=>event.preventDefault());
+          option.addEventListener('click',()=>{
+            if(this.quickLinkState!==state || !this.smartContextValid(state.context) || this.getNode(chosen.id)?.title!==chosen.title)return;
+            state.selected=chosen;state.input.value=chosen.title;this.refreshQuickLink(state);state.list.hidden=true;state.input.setAttribute('aria-expanded','false');state.input.focus?.();
+          });state.list.appendChild(option);state.options.push(option);
+        });
+        state.list.hidden=!state.options.length;state.input.setAttribute('aria-expanded',String(!state.list.hidden));
+      }
+      finishSmartOperation(context,changed) {
+        this.closeSmartDialog(false);this.quickLinkState=null;
+        if(changed)this.sync({preserveEdges:true});
+        if(context.pageId===context.id)this.renderPage(context.id);else this.navigateTo(context.id);
+        document.getElementById('quickLinkInput')?.focus?.();
+      }
+      commitQuickLink(state) {
+        if(this.quickLinkState!==state || this.smartDialogContext)return false;
+        if(!this.smartContextValid(state.context)){if(state.status)state.status.textContent='Underlaget har \u00e4ndrats. \u00d6ppna sidan igen.';return false;}
+        const resolution=this.quickLinkResolution(state);
+        if(resolution.kind==='new')return this.openSmartCategoryPicker(state.context,'create',resolution.title);
+        if(resolution.kind!=='existing'||!resolution.node)return false;
+        if(resolution.node.id===state.context.id){state.status.textContent='Ett objekt kan inte l\u00e4nkas till sig sj\u00e4lvt.';return false;}
+        if(this.areNeighbors(state.context.id,resolution.node.id)){this.finishSmartOperation(state.context,false);return false;}
+        const changed=this.addRelation(state.context.id,resolution.node.id);
+        this.finishSmartOperation(state.context,changed);return changed;
+      }
+      commitAdvancedChain(state) {
+        if(this.quickLinkState!==state || this.smartDialogContext || !this.smartContextValid(state.context))return false;
+        const text=document.getElementById('advancedChainInput').value.trim();if(!text)return false;
+        // Explicit secondary workflow only: ordinary quick-link titles never invoke the parser.
+        this.parseChain(state.context.id,text);
+        const changed=this.creationSnapshot()!==state.context.snapshot;
+        this.finishSmartOperation(state.context,changed);return changed;
+      }
+      openCategoryPicker(id) {
+        if(!this.checkCreative() || !this.getNode(id))return false;
+        return this.openSmartCategoryPicker(this.captureSmartContext(id),'move');
+      }
+      closeSmartDialog(returnFocus=true) {
+        const current=this.smartDialogContext;this.smartDialogContext=null;
+        const root=document.getElementById('smartDialog');if(root)root.style.display='none';
+        current?.inert?.forEach(([element,value])=>{element.inert=value;});
+        if(returnFocus && current?.returnFocus?.isConnected!==false)current?.returnFocus?.focus?.();
+      }
+      smartDialogValid(dialog) {
+        return this.smartDialogContext===dialog && this.smartContextValid(dialog.context);
+      }
+      openSmartCategoryPicker(context,kind,title='') {
+        if(!this.smartContextValid(context))return false;
+        this.closeSmartDialog(false);
+        const root=document.getElementById('smartDialog'),body=document.getElementById('smartDialogBody');body.innerHTML='';
+        const dialog={context,kind,title,selected:null,index:-1,returnFocus:kind==='create'?document.getElementById('quickLinkInput'):document.activeElement,root,body,
+          choices:this.categoryChoices(),inert:[]};this.smartDialogContext=dialog;
+        root.style.display='flex';
+        if(document.body?.children)[...document.body.children].forEach(element=>{if(element!==root){dialog.inert.push([element,element.inert]);element.inert=true;}});
+        const heading=this.makeElement('h2',kind==='create'?'Skapa och l\u00e4nka':'Byt Kategori');heading.id='smartDialogHeading';body.appendChild(heading);
+        body.appendChild(this.makeElement('p',kind==='create'?title:context.node.title));
+        const label=this.makeElement('label','S\u00f6k kategori (namn eller symbol)');label.setAttribute('for','smartCategorySearch');body.appendChild(label);
+        const row=this.makeElement('div',undefined,'smart-search-row');
+        dialog.symbol=this.makeElement('span','','quick-symbol');dialog.symbol.id='smartResolvedSymbol';
+        dialog.input=this.makeElement('input');dialog.input.id='smartCategorySearch';dialog.input.type='text';dialog.input.setAttribute('role','combobox');dialog.input.setAttribute('aria-controls','smartCategoryOptions');dialog.input.setAttribute('aria-autocomplete','list');
+        row.appendChild(dialog.symbol);row.appendChild(dialog.input);body.appendChild(row);
+        dialog.association=this.makeElement('p');dialog.association.id='smartCategoryAssociation';dialog.association.setAttribute('role','status');body.appendChild(dialog.association);
+        dialog.list=this.makeElement('div',undefined,'smart-category-list');dialog.list.id='smartCategoryOptions';dialog.list.setAttribute('role','listbox');dialog.list.setAttribute('aria-label','Kategorier');body.appendChild(dialog.list);
+        dialog.error=this.makeElement('p');dialog.error.id='smartDialogError';dialog.error.setAttribute('role','alert');body.appendChild(dialog.error);
+        dialog.confirm=this.makeElement('button',kind==='create'?'Skapa och l\u00e4nka':'Byt kategori','primary');dialog.confirm.type='button';dialog.confirm.id='smartCategoryConfirm';dialog.confirm.disabled=true;
+        dialog.confirm.addEventListener('click',()=>this.commitSmartCategory(dialog));body.appendChild(dialog.confirm);
+        const cancel=this.makeElement('button','Avbryt');cancel.type='button';cancel.id='smartCategoryCancel';cancel.addEventListener('click',()=>{if(this.smartDialogContext===dialog)this.closeSmartDialog();});body.appendChild(cancel);
+        if(kind==='move'){
+          const newButton=this.makeElement('button','Ny kategori\u2026','btn-ghost');newButton.type='button';newButton.id='newSmartCategory';body.appendChild(newButton);
+          const form=this.makeElement('div');form.id='newCategoryFields';form.hidden=true;
+          const nameLabel=this.makeElement('label','Namn');nameLabel.setAttribute('for','newCategoryName');dialog.newName=this.makeElement('input');dialog.newName.id='newCategoryName';
+          const symbolLabel=this.makeElement('label','Symbol (kr\u00e4vs)');symbolLabel.setAttribute('for','newCategorySymbol');dialog.newSymbol=this.makeElement('input');dialog.newSymbol.id='newCategorySymbol';
+          for(const element of [nameLabel,dialog.newName,symbolLabel,dialog.newSymbol])form.appendChild(element);body.appendChild(form);
+          newButton.addEventListener('click',()=>{if(!this.smartDialogValid(dialog))return;dialog.newCategory=true;dialog.selected=null;dialog.newName.value='';dialog.newSymbol.value='';form.hidden=false;dialog.confirm.disabled=false;dialog.association.textContent='Ange b\u00e5de namn och en ny unik symbol.';dialog.newName.focus?.();});
+          const whole=this.makeElement('button','Byt symbol f\u00f6r hela kategorin\u2026','btn-ghost');whole.type='button';whole.id='wholeCategoryAction';body.appendChild(whole);
+          whole.addEventListener('click',()=>{if(!this.smartDialogValid(dialog))return;this.closeSmartDialog(false);this.openSymbolEditDialog(context.id);this.chooseSymbolEdit('category');});
+        }
+        dialog.input.addEventListener('input',()=>{if(!this.smartDialogValid(dialog))return;dialog.selected=null;dialog.newCategory=false;const form=document.getElementById('newCategoryFields');if(form)form.hidden=true;this.refreshSmartCategories(dialog,true);});
+        dialog.input.addEventListener('keydown',event=>{
+          if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();this.stepSmartOptions(dialog,event.key==='ArrowDown'?1:-1);}
+          if(event.key==='Enter'){event.preventDefault();if(dialog.index>=0)dialog.options[dialog.index]?.click();}
+        });
+        root.onkeydown=event=>{
+          if(this.smartDialogContext!==dialog)return;
+          if(event.key==='Escape'){event.preventDefault();event.stopPropagation();this.closeSmartDialog();}
+          if(event.key==='Enter' && event.target?.tagName==='INPUT')event.preventDefault();
+          if(event.key==='Tab'){
+            const controls=[...body.querySelectorAll('button,input')].filter(e=>!e.disabled&&e.getClientRects().length>0&&e.tabIndex!==-1);
+            const first=controls[0],last=controls.at(-1);
+            if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}
+            else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}
+          }
+        };
+        this.refreshSmartCategories(dialog,false);dialog.input.focus?.();return true;
+      }
+      refreshSmartCategories(dialog,resolve) {
+        const q=dialog.input.value.trim().toLowerCase(),matches=dialog.choices.filter(choice=>choice.symbol===dialog.input.value || choice.name.trim().toLowerCase()===q);
+        if(resolve && matches.length===1)dialog.selected=matches[0].symbol;
+        const selected=dialog.choices.find(choice=>choice.symbol===dialog.selected);
+        dialog.symbol.textContent=selected?.symbol || '';dialog.association.textContent=selected?selected.name:(matches.length>1?'V\u00e4lj den exakta kategorin i listan.':'V\u00e4lj en kategori i listan.');dialog.confirm.disabled=!selected;
+        dialog.list.innerHTML='';dialog.options=[];dialog.index=-1;dialog.input.setAttribute('aria-activedescendant','');
+        dialog.choices.filter(choice=>!q || choice.symbol.toLowerCase().includes(q)||choice.name.toLowerCase().includes(q)).forEach((choice,index)=>{
+          const option=this.makeElement('button',choice.symbol+' '+choice.name,'search-suggestion');option.type='button';option.tabIndex=-1;option.id='category-option-'+index;option.setAttribute('role','option');option.setAttribute('aria-selected',String(choice.symbol===dialog.selected));
+          option.addEventListener('pointerdown',event=>event.preventDefault());
+          option.addEventListener('click',()=>{if(!this.smartDialogValid(dialog))return;dialog.newCategory=false;const form=document.getElementById('newCategoryFields');if(form)form.hidden=true;dialog.selected=choice.symbol;dialog.input.value=choice.symbol;this.refreshSmartCategories(dialog,false);dialog.input.focus?.();});
+          dialog.list.appendChild(option);dialog.options.push(option);
+        });dialog.list.hidden=false;dialog.input.setAttribute('aria-expanded','true');
+      }
+      commitSmartCategory(dialog) {
+        if(!this.smartDialogValid(dialog)){if(dialog.error)dialog.error.textContent='Underlaget har \u00e4ndrats. \u00d6ppna dialogen igen.';return false;}
+        let symbol=dialog.selected,newRecord=null;
+        if(dialog.newCategory){
+          const name=dialog.newName.value.trim();symbol=dialog.newSymbol.value;
+          if(!name || !symbol.trim() || this.categorySymbolOccupied(symbol) || this.categoryChoices().some(c=>c.name.trim().toLowerCase()===name.toLowerCase())){dialog.error.textContent='Ange ett nytt namn och en unik, icke-tom symbol.';return false;}
+          newRecord={symbol,name};
+        }else {
+          const choice=this.categoryChoices().find(c=>c.symbol===symbol);
+          if(!dialog.choices.some(c=>c.symbol===symbol) || !choice || !(dialog.input.value===symbol || dialog.input.value.trim().toLowerCase()===choice.name.trim().toLowerCase()))return false;
+        }
+        const source=this.getNode(dialog.context.id);
+        if(dialog.kind==='create'){
+          if(this.quickLinkState?.context!==dialog.context || this.quickLinkState.input.value.trim()!==dialog.title)return false;
+          const title=dialog.title.trim();if(!title || this.smartExactNodes(title).length){dialog.error.textContent='Namnet \u00e4r upptaget eller tomt. \u00d6ppna fl\u00f6det igen.';return false;}
+          let id;do{id='n_'+Math.random().toString(36).slice(2,11);}while(this.getNode(id));
+          const node={id,title,icon:symbol,color:'#202122',free_text:{sv:'',en:''}};
+          // All validation precedes mutation; addRelation cannot reject these distinct, current IDs.
+          this.nodes.push(node);this.addRelation(source.id,id);this.finishSmartOperation(dialog.context,true);return true;
+        }
+        if(this.symbolOf(source)===symbol){this.closeSmartDialog();return false;}
+        if(newRecord)this.categoryState.categories.push(newRecord);
+        const changed=this.applyCategoryMove(source,symbol);this.finishSmartOperation(dialog.context,changed);return changed;
+      }
+
       getNeighbors(nodeId, paused = false) { return [...new Set(this.edges.filter(e => (e.paused === true) === paused && (e.a === nodeId || e.b === nodeId)).map(e => e.a === nodeId ? e.b : e.a))]; }
       areNeighbors(idA, idB) { return this.edges.some(e => e.paused !== true && this.relationMatches(e, idA, idB)); }
       addRelation(idA, idB) {
@@ -1216,19 +1431,13 @@
         }).join('');
 
         const currentText = typeof node.free_text==='string' ? node.free_text : (node.free_text?.sv || '');
-        // Inline-skapare HTML
-        const inputZone = `
-          <div class="creative-only" style="margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--db-border-light);">
-            <div style="font-size:12px; color:var(--db-muted); margin-bottom:8px;">
-                <strong>Snabblänka:</strong> (Ex: <em>Saving Throws: Poison: 14; Magic: 15, Weapon: Sword</em>)
-            </div>
-            <div style="display:flex; gap:8px;">
-                <input type="text" id="inlineChainInput" list="existingNodesList" placeholder="Skapa relationer..." onkeydown="if(event.key==='Enter'){ event.preventDefault(); app.parseChain('${node.id}', this.value); this.value=''; app.sync(); app.renderPage('${node.id}'); }">
-                <button type="button" class="primary" onclick="app.parseChain('${node.id}', document.getElementById('inlineChainInput').value); document.getElementById('inlineChainInput').value=''; app.sync(); app.renderPage('${node.id}');">Koppla</button>
-            </div>
-            <button type="button" class="btn-secondary" style="margin-top:16px; width:100%;" onclick="app.openLinkDialog('${node.id}')">+ Länka noder manuellt</button>
-          </div>
-        `;
+        const inputZone = `<div class="creative-only" style="margin-top:24px;">
+          <label for="quickLinkInput">Snabblänka objekt</label>
+          <div class="quick-link-row"><input id="quickLinkInput" type="text" autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="quickLinkSuggestions"><button id="quickLinkAction" type="button" class="primary" disabled>Länka</button></div>
+          <div id="quickLinkSuggestions" role="listbox" aria-label="Objektförslag" hidden></div><p id="quickLinkStatus" role="status"></p>
+          <details id="advancedChains"><summary>Avancerade relationskedjor</summary><p>Uttryckligen kedjekommandon: A: B: C; D. Komma separerar fristående kedjor.</p>
+          <label for="advancedChainInput">Relationskedja</label><textarea id="advancedChainInput"></textarea><button id="runAdvancedChain" type="button">Bygg kedja</button></details>
+        </div>`;
 
         main.innerHTML = `
           <div class="breadcrumb-nav"><a onclick="app.navigateTo('overview')">← Tillbaka till Översikt</a></div>
@@ -1274,7 +1483,7 @@
         nameControl.textContent = node.title;
         this.bindLongPress(nameControl, () => this.requestRenameNode(node.id));
         document.getElementById('renameNode').addEventListener('click', () => this.requestRenameNode(node.id));
-        document.getElementById('editNodeCategory').addEventListener('click', () => this.openSymbolEditDialog(node.id));
+        document.getElementById('editNodeCategory').addEventListener('click', () => this.openCategoryPicker(node.id));
         const status = document.getElementById('immigrantStatus');
         if (node.isImmigrant === true) {
           status.appendChild(this.makeElement('p', 'Inflyttare'));
@@ -1286,6 +1495,7 @@
         const symbolControl = this.symbolButton(this.symbolOf(node), 'node-icon', node.id);
         symbolControl.style.color = node.color || '#202122';
         document.getElementById('nodeCategorySymbol').appendChild(symbolControl);
+        this.initQuickLink(node.id);
         const orderedNeighbors = Object.keys(grouped).sort().flatMap(key => grouped[key].sort((a, b) => a.title.localeCompare(b.title)));
         this.bindRelationSymbols(orderedNeighbors);
         this.appendTemplate(document.getElementById('objectTemplate'), this.symbolOf(node));
@@ -1554,6 +1764,7 @@
         if (returnFocus) document.getElementById('btnSearchToggle').focus?.();
       }
       resetHeaderForLibrary() {
+        this.closeSmartDialog(false);this.quickLinkState=null;
         this.closeHeaderMenu(false); this.closeSearch(false); this.closeCreateDialog();
         document.getElementById('searchInput').value = '';
       }

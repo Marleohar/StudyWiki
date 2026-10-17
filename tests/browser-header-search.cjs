@@ -69,7 +69,7 @@ withBrowser(data,async({evaluate,send,click,press,navigate,reload,delay,answers,
  await send('Input.dispatchMouseEvent',{type:'mousePressed',...pressPoint,button:'left',buttons:1,clickCount:1});await send('Input.dispatchMouseEvent',{type:'mouseMoved',...pressPoint,button:'left',buttons:1});assert.equal(await evaluate('headerPressGot'),true);
  await evaluate("testApp.closeSearch(false);testApp.toggleSearch();document.getElementById('searchInput').value='Alpha';testApp.updateSearchSuggestions()");
  assert.equal(await evaluate("headerPressTarget===document.querySelector('#nodeCategorySymbol button')&&!!testApp.pendingPress"),true);
- await delay(850);assert.equal(await shown('#symbolEditDialog'),true);assert.equal(await evaluate('location.hash'),'#A');
+ await delay(850);assert.equal(await shown('#smartDialog'),true);assert.equal(await evaluate('location.hash'),'#A');
  await send('Input.dispatchMouseEvent',{type:'mouseReleased',...pressPoint,button:'left',buttons:0,clickCount:1});await key('Escape');await unchanged(initial);
  await evaluate("testApp.mode='read';testApp.updateModeUI()");
  // Creation from search opens a prefilled dialog and can be canceled without writes.
