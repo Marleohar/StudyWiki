@@ -1616,8 +1616,49 @@
         });
         select.value = this.creationSymbols.includes(preferred) ? preferred : this.creationSymbols.includes('&') ? '&' : this.creationSymbols[0];
       }
+      activeCreationDialog() {
+        if (!this.creationModal) return null;
+        return document.getElementById(this.existingMove ? 'existingMoveDialog' : 'createDialog');
+      }
+      creationDialogControls(root) {
+        return [...(root?.querySelectorAll?.('select,input,textarea,button') || [])].filter(element=>
+          !element.disabled && !element.hidden && element.tabIndex!==-1 &&
+          (!element.getClientRects || element.getClientRects().length>0) && !element.closest?.('[inert]'));
+      }
+      focusActiveCreationDialog() {
+        const root=this.activeCreationDialog();if (!root) return;
+        const controls=this.creationDialogControls(root),preferred=document.getElementById(this.existingMove?'cancelExistingMove':'modalTitle');
+        (controls.includes(preferred)?preferred:controls[0])?.focus?.();
+      }
+      guardCreationInteraction(event) {
+        const root=this.activeCreationDialog();
+        if (root && !root.contains(event.target)) {event.preventDefault();event.stopImmediatePropagation();return false;}
+        return true;
+      }
+      guardCreationPointer(event) {
+        const root=this.activeCreationDialog();if (!root) return;
+        const control=event.target.closest?.('button,input,textarea,select,label,a[href],[tabindex]');
+        if (!root.contains(event.target) || !control || !root.contains(control)) {
+          event.preventDefault();event.stopImmediatePropagation();
+          if (!root.contains(document.activeElement)) this.focusActiveCreationDialog();
+        }
+      }
+      handleCreateDialogKey(event) {
+        if (!this.creationModal || this.existingMove) return;
+        if (event.key==='Escape') {event.preventDefault();event.stopPropagation();this.closeCreateDialog();return;}
+        if (event.key!=='Tab' || event.ctrlKey || event.altKey || event.metaKey) return;
+        const controls=this.creationDialogControls(document.getElementById('createDialog'));
+        if (!controls.length) return;
+        event.preventDefault();event.stopPropagation();
+        const index=controls.indexOf(document.activeElement),next=index<0?(event.shiftKey?controls.length-1:0):(index+(event.shiftKey?-1:1)+controls.length)%controls.length;
+        controls[next].focus();
+      }
       openCreateDialog(prefill = '', categoryOrigin = null) {
         if (!this.checkCreative()) return;
+        if (this.creationModal) {this.focusActiveCreationDialog();return;}
+        const root=document.getElementById('createDialog');
+        this.creationModal={rootInert:root.inert,inert:[...(document.body?.children || [])].filter(element=>element!==root).map(element=>[element,element.inert])};
+        this.creationModal.inert.forEach(([element])=>{element.inert=true;});root.inert=false;
         this.creationCategoryOrigin = categoryOrigin;
         this.creationCategorySymbol = categoryOrigin ?? this.activeCategorySymbol;
         this.creationLibrary = this.currentLibrary;
@@ -1630,10 +1671,14 @@
       }
       closeCreateDialog() {
         this.closeExistingMove(false);
+        const current=this.creationModal;this.creationModal=null;
         this.creationCategoryOrigin = null;
-        document.getElementById('createDialog').style.display = 'none';
+        const root=document.getElementById('createDialog');root.style.display='none';
+        if (current) {root.inert=current.rootInert;current.inert.forEach(([element,value])=>{element.inert=value;});}
         this.creationLibrary = null; this.creationSymbols = null;
-        this.creationReturnFocus?.focus?.(); this.creationReturnFocus = null;
+        const trigger=this.creationReturnFocus;this.creationReturnFocus=null;
+        if (trigger?.isConnected!==false && !trigger?.disabled && !trigger?.closest?.('[inert]') && (!trigger?.getClientRects || trigger.getClientRects().length>0)) trigger?.focus?.();
+        if (root.contains?.(document.activeElement)) document.activeElement.blur?.();
       }
       creationSnapshot() {
         return JSON.stringify({nodes:this.nodes, edges:this.edges, state:this.categoryState});
@@ -1646,15 +1691,17 @@
         document.getElementById('existingMoveQuestion').textContent =
           'Objektet ' + node.title + ' har kategorin ' + this.symbolOf(node) +
           '.\nVill du flytta objektet till kategorin ' + destination + ' istället?';
-        document.getElementById('createDialog').inert = true;
-        document.getElementById('existingMoveDialog').style.display = 'flex';
+        const creation=document.getElementById('createDialog'),confirmation=document.getElementById('existingMoveDialog');
+        this.existingMoveInert=[[creation,creation.inert],[confirmation,confirmation.inert]];
+        creation.inert=true;confirmation.inert=false;
+        confirmation.style.display = 'flex';
         document.getElementById('cancelExistingMove').focus?.();
       }
       closeExistingMove(returnFocus = true) {
         this.existingMove = null;
         document.getElementById('existingMoveDialog').style.display = 'none';
-        document.getElementById('createDialog').inert = false;
-        if (returnFocus) document.getElementById('modalTitle').focus?.();
+        this.existingMoveInert?.forEach(([element,value])=>{element.inert=value;});this.existingMoveInert=null;
+        if (returnFocus && this.creationModal) this.focusActiveCreationDialog();
       }
       confirmExistingMove() {
         const context = this.existingMove;
@@ -1675,6 +1722,7 @@
         return this.moveNodeCategory(context.id, context.destination);
       }
       saveNewNode() {
+        if (this.existingMove) return;
         if (!this.checkCreative() || this.creationLibrary !== this.currentLibrary) return;
         const title = document.getElementById('modalTitle').value.trim();
         const symbol = document.getElementById('creationCategory').value;
@@ -1761,6 +1809,10 @@
       }
 
       initHeader() {
+        // Creation owns this containment; the existing nested confirmation stays on top.
+        document.addEventListener('click',event=>this.guardCreationInteraction(event),true);
+        document.addEventListener('pointerdown',event=>this.guardCreationPointer(event),true);
+        document.addEventListener('focusin',event=>{const root=this.activeCreationDialog();if(root&&!root.contains(event.target))this.focusActiveCreationDialog();});
         const confirmation = document.getElementById('existingMoveDialog');
         confirmation.addEventListener('keydown', event => {
           if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); this.closeExistingMove(); }
@@ -1783,9 +1835,7 @@
         document.getElementById('headerMenu').addEventListener('keydown', event => {
           if (event.key === 'Escape') { event.preventDefault(); this.closeHeaderMenu(); }
         });
-        document.getElementById('createDialog').addEventListener('keydown', event => {
-          if (event.key === 'Escape') { event.preventDefault(); this.closeCreateDialog(); }
-        });
+        document.getElementById('createDialog').addEventListener('keydown', event => this.handleCreateDialogKey(event));
         this.updateLibraryLabel();
       }
       updateLibraryLabel() {
