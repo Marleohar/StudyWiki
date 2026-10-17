@@ -125,7 +125,8 @@
     .item-name { font-family: 'Linux Libertine', 'Georgia', Times, serif; font-size: 32px; line-height: 1.1; letter-spacing: 0.5px; display:flex; align-items:center; gap:8px;}
     .item-name { min-width:0; max-width:100%; font-weight:bold; }
     #nodeTitle, #categoryDisplayName { min-width:0; overflow-wrap:anywhere; }
-    #categoryHeadingSymbol { flex-shrink:0; }
+    #categoryHeadingSymbol { flex-shrink:1; max-width:30%; overflow-wrap:anywhere; white-space:normal; align-self:flex-start; }
+    .category-name-text { min-width:0; flex:1; overflow-wrap:anywhere; }
     .compact-action { font-size:11px; padding:4px 8px; border:1px solid var(--db-border); }
     .free-text-content { overflow-wrap:anywhere; }
     .creative-controls { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -711,6 +712,8 @@
       }
       renameCategorySymbol(source, symbol) {
         if (!this.checkCreative() || typeof source !== 'string' || typeof symbol !== 'string' || !symbol.length || symbol === source || !this.categorySymbolOccupied(source) || this.categorySymbolOccupied(symbol)) return false;
+        // Migrate view preferences atomically before the cosmetic graph operation.
+        if (!this.migrateCategorySortPreference(source,symbol)) return false;
         // Validate before mutating: one cosmetic operation, one logical save, no node clocks.
         this.categoryMembers(source).forEach(node => { node.icon = symbol; });
         this.categoryState?.categories?.forEach(record => { if (record.symbol === source) record.symbol = symbol; });
@@ -763,9 +766,14 @@
         if (symbol.length === 0) { error.textContent = 'Symbolen får inte vara tom.'; return; }
         if (symbol === context.source) return this.closeSymbolEditDialog();
         if (context.kind === 'category' && this.categorySymbolOccupied(symbol)) { error.textContent = 'Symbolen används redan av en annan kategori.'; return; }
-        this.closeSymbolEditDialog();
-        if (context.kind === 'object') this.moveNodeCategory(context.nodeId, symbol);
-        else this.renameCategorySymbol(context.source, symbol);
+        if (context.kind === 'object') {
+          this.closeSymbolEditDialog();
+          this.moveNodeCategory(context.nodeId, symbol);
+        } else if (this.renameCategorySymbol(context.source, symbol)) {
+          this.closeSymbolEditDialog();
+        } else {
+          error.textContent = 'Kategorin ändrades inte. Sorteringsinställningarna kunde inte läsas eller sparas. Försök igen när webbläsarlagringen fungerar.';
+        }
       }
       appendTemplate(parent, symbol) {
         const section = this.makeElement('section');
@@ -892,7 +900,8 @@
         const heading=this.makeElement('h1',undefined,'item-name');
         const symbolDisplay=this.makeElement('span',symbol.toUpperCase(),'node-icon'); symbolDisplay.id='categoryHeadingSymbol';
         const nameDisplay=this.makeElement('span',this.categoryName(symbol)); nameDisplay.id='categoryDisplayName';
-        heading.appendChild(symbolDisplay);heading.appendChild(nameDisplay);
+        const nameGroup=this.makeElement('span',undefined,'category-name-text');nameGroup.appendChild(nameDisplay);nameGroup.appendChild(this.makeElement('span',' (kategori)'));
+        heading.appendChild(symbolDisplay);heading.appendChild(nameGroup);
         const rename=this.makeElement('button','Byt namn','creative-only btn-ghost compact-action'); rename.type='button';rename.id='renameCategory';
         rename.addEventListener('click',()=>this.requestRenameCategory(symbol));
         headingRow.appendChild(heading);headingRow.appendChild(rename);top.appendChild(headingRow);card.appendChild(top);
@@ -948,8 +957,59 @@
       categorySortIsCurrent(state) {
         return this.categorySort === state && state.library === this.currentLibrary && state.symbol === this.activeCategorySymbol && state.revision === this.libraryLoadRevision;
       }
+      categorySortPreferenceKey() { return 'nv_category_sort_v1:' + JSON.stringify(this.currentLibrary); }
+      validatedSortPreference(value) {
+        if (!value || !['alphabetical','relations'].includes(value.mode) || !Array.isArray(value.ids) || value.ids.some(id=>typeof id!=='string'||!id.length)) return null;
+        const ids=[...new Set(value.ids)];
+        return ids.length<=6 ? {mode:value.mode,ids} : null;
+      }
+      readCategorySortPreferencesStrict() {
+        try {
+          const raw=localStorage.getItem(this.categorySortPreferenceKey());
+          // Only a successful null read establishes that preferences are genuinely absent.
+          if (raw===null) return {version:1,categories:[]};
+          const data=JSON.parse(raw);
+          if (data?.version!==1 || !Array.isArray(data.categories)) return null;
+          const symbols=new Set(),categories=[];
+          for (const entry of data.categories) {
+            if (!Array.isArray(entry)||entry.length!==2||typeof entry[0]!=='string'||symbols.has(entry[0])) return null;
+            const preference=this.validatedSortPreference(entry[1]);
+            if (!preference) return null;
+            symbols.add(entry[0]);categories.push([entry[0],preference]);
+          }
+          return {version:1,categories};
+        } catch { return null; }
+      }
+      readCategorySortPreferences() {
+        // Display restoration stays tolerant; graph migrations require the strict result.
+        return this.readCategorySortPreferencesStrict() || {version:1,categories:[]};
+      }
+      orderedSortCriteria(ids) {
+        return [...this.canonicalRelationCriteria(ids),...ids.filter(id=>!this.getNode(id)).sort((a,b)=>a<b?-1:a>b?1:0)];
+      }
+      saveCategorySortPreference(state) {
+        if (!this.categorySortIsCurrent(state)) return;
+        const data=this.readCategorySortPreferences(),value={mode:state.mode,ids:this.orderedSortCriteria(state.ids)};
+        const existing=data.categories.find(entry=>entry[0]===state.symbol);
+        if (existing && JSON.stringify(existing[1])===JSON.stringify(value)) return;
+        if (existing) existing[1]=value;else data.categories.push([state.symbol,value]);
+        try { localStorage.setItem(this.categorySortPreferenceKey(),JSON.stringify(data));state.preferenceError=false; }
+        catch { state.preferenceError=true; }
+      }
+      migrateCategorySortPreference(source,symbol) {
+        const data=this.readCategorySortPreferencesStrict();
+        if (!data) return false;
+        const previous=data.categories.find(entry=>entry[0]===source);
+        // A stale destination preference belongs to a different category and must not be inherited.
+        if (!previous && !data.categories.some(entry=>entry[0]===symbol)) return true;
+        data.categories=data.categories.filter(entry=>entry[0]!==source&&entry[0]!==symbol);
+        if (previous) data.categories.push([symbol,previous[1]]);
+        try { localStorage.setItem(this.categorySortPreferenceKey(),JSON.stringify(data));return true; }
+        catch { return false; }
+      }
       createCategorySort(symbol, list) {
-        const state = {symbol, library:this.currentLibrary, revision:this.libraryLoadRevision, ids:[], mode:'alphabetical', list};
+        const saved=this.readCategorySortPreferences().categories.find(entry=>entry[0]===symbol)?.[1] || {ids:[],mode:'alphabetical'};
+        const state = {symbol, library:this.currentLibrary, revision:this.libraryLoadRevision, ids:this.orderedSortCriteria(saved.ids), mode:saved.mode, list};
         this.categorySort = state;
         const controls = this.makeElement('div', undefined, 'category-sort');
         const label = this.makeElement('label', 'Sortering'); label.setAttribute('for','categorySortMode');
@@ -957,7 +1017,7 @@
         for (const [value,text] of [['alphabetical','Alfabetisk'],['relations','Relationer']]) {
           const option = this.makeElement('option',text); option.value=value; mode.appendChild(option);
         }
-        const panel = this.makeElement('div',undefined,'relation-sort-controls'); panel.id='relationSortControls'; panel.hidden=true;
+        const panel = this.makeElement('div',undefined,'relation-sort-controls'); panel.id='relationSortControls'; panel.hidden=state.mode!=='relations';mode.value=state.mode;
         const searchLabel = this.makeElement('label','Sök relationsobjekt'); searchLabel.setAttribute('for','relationCriteriaSearch');
         const search = this.makeElement('input'); search.id='relationCriteriaSearch'; search.type='search';
         const selectLabel = this.makeElement('label','Välj befintligt objekt'); selectLabel.setAttribute('for','relationCriteriaSelect');
@@ -972,7 +1032,7 @@
         mode.addEventListener('change', () => {
           if (!this.categorySortIsCurrent(state)) return;
           state.mode=mode.value==='relations'?'relations':'alphabetical'; panel.hidden=state.mode!=='relations';
-          if (panel.hidden) state.ids=[];
+          this.saveCategorySortPreference(state);
           refresh();
         });
         search.addEventListener('input', () => { if (this.categorySortIsCurrent(state)) this.renderRelationChoices(state); });
@@ -980,9 +1040,9 @@
           if (!this.categorySortIsCurrent(state)) return;
           const id=select.value;
           if (state.ids.length >= 6 || !this.getNode(id) || state.ids.includes(id)) return;
-          state.ids.push(id); refresh();
+          state.ids.push(id); this.saveCategorySortPreference(state); refresh();
         });
-        clear.addEventListener('click', () => { if (!this.categorySortIsCurrent(state)) return; state.ids=[]; refresh(); });
+        clear.addEventListener('click', () => { if (!this.categorySortIsCurrent(state) || !state.ids.length) return; state.ids=[]; this.saveCategorySortPreference(state); refresh(); });
         actions.appendChild(add); actions.appendChild(clear);
         for (const element of [searchLabel,search,selectLabel,select,actions,chips,status]) panel.appendChild(element);
         controls.appendChild(label); controls.appendChild(mode); controls.appendChild(panel);
@@ -1004,14 +1064,15 @@
       }
       renderSortedCategory(state) {
         if (!this.categorySortIsCurrent(state)) return;
-        state.ids=this.canonicalRelationCriteria(state.ids);
+        state.ids=this.orderedSortCriteria(state.ids);
         this.cancelLongPress(true);
         state.list.innerHTML=''; state.chips.innerHTML='';
         state.ids.forEach(id => {
-          const remove=this.makeElement('button','Ta bort: '+this.getNode(id).title); remove.type='button';
+          const remove=this.makeElement('button','Ta bort: '+(this.getNode(id)?.title || 'Otillgängligt objekt ('+id+')'));  remove.type='button';
           remove.addEventListener('click',()=>{
             if (!this.categorySortIsCurrent(state)) return;
             state.ids=state.ids.filter(value=>value!==id);
+            this.saveCategorySortPreference(state);
             this.renderRelationChoices(state);this.renderSortedCategory(state);
             state.search.focus?.();
           }); state.chips.appendChild(remove);
@@ -1024,6 +1085,8 @@
           });
         });
         state.status.textContent=state.ids.length >= 6 ? 'Högst sex relationer. Ta bort en relation för att lägga till en annan.' : state.ids.length ? state.ids.length+' av 6 valda relationer' : 'Välj upp till sex relationsobjekt.';
+        if(state.ids.some(id=>!this.getNode(id)))state.status.textContent+=' Otillgängliga val används inte. Ta bort dem eller välj Rensa alla.';
+        if(state.preferenceError)state.status.textContent+=' Inställningen kunde inte sparas i webbläsaren.';
       }
       captureSmartContext(id) {
         // JSON equality alone cannot detect replacement of a proposed link target.
