@@ -1026,11 +1026,12 @@
         state.status.textContent=state.ids.length >= 6 ? 'Högst sex relationer. Ta bort en relation för att lägga till en annan.' : state.ids.length ? state.ids.length+' av 6 valda relationer' : 'Välj upp till sex relationsobjekt.';
       }
       captureSmartContext(id) {
-        return {id, pageId:this.activeNodeId, node:this.getNode(id), categoryState:this.categoryState, categoryRecords:[...(this.categoryState?.categories || [])], library:this.currentLibrary, revision:this.libraryLoadRevision,
+        // JSON equality alone cannot detect replacement of a proposed link target.
+        return {id, pageId:this.activeNodeId, node:this.getNode(id), nodeRecords:[...this.nodes], categoryState:this.categoryState, categoryRecords:[...(this.categoryState?.categories || [])], library:this.currentLibrary, revision:this.libraryLoadRevision,
           view:this.pressRevision, snapshot:this.creationSnapshot()};
       }
       smartContextValid(context) {
-        return !!context && this.checkCreative() && this.activeNodeId===context.pageId && this.getNode(context.id)===context.node && this.categoryState===context.categoryState && (this.categoryState?.categories || []).length===context.categoryRecords.length && (this.categoryState?.categories || []).every((record,index)=>record===context.categoryRecords[index]) &&
+        return !!context && this.nodes.length===context.nodeRecords.length && this.nodes.every((node,index)=>node===context.nodeRecords[index]) && this.checkCreative() && this.activeNodeId===context.pageId && this.getNode(context.id)===context.node && this.categoryState===context.categoryState && (this.categoryState?.categories || []).length===context.categoryRecords.length && (this.categoryState?.categories || []).every((record,index)=>record===context.categoryRecords[index]) &&
           this.currentLibrary===context.library && this.libraryLoadRevision===context.revision && this.pressRevision===context.view &&
           this.creationSnapshot()===context.snapshot;
       }
