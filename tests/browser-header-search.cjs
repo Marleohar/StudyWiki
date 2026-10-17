@@ -90,6 +90,8 @@ withBrowser(data,async({evaluate,send,click,press,navigate,reload,delay,answers,
  // Category-page origin and saved optional names use exact symbols, never labels as IDs.
  await evaluate('qa.saves=0;qa.writes=0');let before=await get();await navigate('category/'+encodeURIComponent(specialSymbol));await click('#createCategoryNode');assert.equal(await evaluate("document.getElementById('creationCategory').value"),specialSymbol);
  await fill('#modalTitle',' ALPHA ');await click('button[onclick="app.saveNewNode()"]');assert.equal(await shown('#createDialog'),true);await unchanged(before);
+ // Category-page duplicates now offer transfer; decline before continuing the original tamper check.
+ assert.equal(await shown('#existingMoveDialog'),true);await click('#cancelExistingMove');await unchanged(before);
  await fill('#modalTitle','Invalid selection');await evaluate("const s=document.getElementById('creationCategory');const o=document.createElement('option');o.value='tampered';o.textContent='Tampered';s.appendChild(o);s.value='tampered'");await click('button[onclick="app.saveNewNode()"]');await unchanged(before);await key('Escape');
  const categoryName=`Category '" \u96ea <svg onload="qa.payloads++">`;
  await fill('#categoryNameInput',categoryName);await click('#saveCategoryName');assert.equal(await evaluate("document.getElementById('categoryDisplayName').textContent"),categoryName);

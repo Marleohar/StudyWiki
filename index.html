@@ -189,6 +189,17 @@
     <main id="mainContent"></main>
   </div>
 
+  <div class="dialog-backdrop" id="existingMoveDialog" style="z-index:1100" role="alertdialog" aria-modal="true" aria-labelledby="existingMoveHeading" aria-describedby="existingMoveQuestion">
+    <div class="dialog">
+      <h2 id="existingMoveHeading">Namnet är upptaget.</h2>
+      <p id="existingMoveQuestion" style="white-space:pre-wrap;overflow-wrap:anywhere"></p>
+      <div class="dialog-actions-stacked">
+        <button type="button" id="confirmExistingMove" onclick="app.confirmExistingMove()">Ja</button>
+        <button type="button" id="cancelExistingMove" onclick="app.closeExistingMove()">Nej</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Skapa ny nod-dialog -->
   <div class="dialog-backdrop" id="createDialog" role="dialog" aria-modal="true" aria-labelledby="createDialogHeading">
     <div class="dialog">
@@ -807,7 +818,7 @@
         card.appendChild(editor); card.appendChild(save); card.appendChild(error);
         const create = this.makeElement('button', 'Skapa objekt i kategorin', 'creative-only');
         create.type = 'button'; create.id = 'createCategoryNode';
-        create.addEventListener('click', () => { if (this.checkCreative()) this.openCreateDialog(); });
+        create.addEventListener('click', () => { if (this.checkCreative()) this.openCreateDialog('', symbol); });
         card.appendChild(create);
         const list = this.makeElement('div', undefined, 'flat-list-container');
         list.id = 'categoryMembers';
@@ -1171,9 +1182,10 @@
         });
         select.value = this.creationSymbols.includes(preferred) ? preferred : this.creationSymbols.includes('&') ? '&' : this.creationSymbols[0];
       }
-      openCreateDialog(prefill = '') {
+      openCreateDialog(prefill = '', categoryOrigin = null) {
         if (!this.checkCreative()) return;
-        this.creationCategorySymbol = this.activeCategorySymbol;
+        this.creationCategoryOrigin = categoryOrigin;
+        this.creationCategorySymbol = categoryOrigin ?? this.activeCategorySymbol;
         this.creationLibrary = this.currentLibrary;
         this.creationReturnFocus = document.activeElement;
         this.populateCreationCategories(this.creationCategorySymbol);
@@ -1183,16 +1195,62 @@
         document.getElementById('modalTitle').focus?.();
       }
       closeCreateDialog() {
+        this.closeExistingMove(false);
+        this.creationCategoryOrigin = null;
         document.getElementById('createDialog').style.display = 'none';
         this.creationLibrary = null; this.creationSymbols = null;
         this.creationReturnFocus?.focus?.(); this.creationReturnFocus = null;
+      }
+      creationSnapshot() {
+        return JSON.stringify({nodes:this.nodes, edges:this.edges, state:this.categoryState});
+      }
+      openExistingMove(node, destination) {
+        if (this.existingMove) return;
+        this.existingMove = {id:node.id, source:this.symbolOf(node), destination,
+          library:this.currentLibrary, revision:this.libraryLoadRevision, origin:this.creationCategoryOrigin,
+          snapshot:this.creationSnapshot(), title:document.getElementById('modalTitle').value};
+        document.getElementById('existingMoveQuestion').textContent =
+          'Objektet ' + node.title + ' har kategorin ' + this.symbolOf(node) +
+          '.\nVill du flytta objektet till kategorin ' + destination + ' istället?';
+        document.getElementById('createDialog').inert = true;
+        document.getElementById('existingMoveDialog').style.display = 'flex';
+        document.getElementById('cancelExistingMove').focus?.();
+      }
+      closeExistingMove(returnFocus = true) {
+        this.existingMove = null;
+        document.getElementById('existingMoveDialog').style.display = 'none';
+        document.getElementById('createDialog').inert = false;
+        if (returnFocus) document.getElementById('modalTitle').focus?.();
+      }
+      confirmExistingMove() {
+        const context = this.existingMove;
+        if (!context) return false;
+        const node = this.getNode(context.id);
+        const valid = this.checkCreative() && this.creationLibrary === context.library && this.currentLibrary === context.library &&
+          this.libraryLoadRevision === context.revision && this.creationCategoryOrigin === context.origin && context.origin !== null &&
+          node && this.symbolOf(node) === context.source && context.source !== context.destination &&
+          this.creationSnapshot() === context.snapshot && document.getElementById('modalTitle').value === context.title &&
+          this.getNodeByTitle(context.title)?.id === context.id && document.getElementById('creationCategory').value === context.destination &&
+          this.creationSymbols?.includes(context.destination) && this.categoryChoices(this.creationCategorySymbol).some(c => c.symbol === context.destination);
+        if (!valid) {
+          this.closeCreateDialog();
+          alert('Underlaget har ändrats. Öppna operationen igen.');
+          return false;
+        }
+        this.closeCreateDialog();
+        return this.moveNodeCategory(context.id, context.destination);
       }
       saveNewNode() {
         if (!this.checkCreative() || this.creationLibrary !== this.currentLibrary) return;
         const title = document.getElementById('modalTitle').value.trim();
         const symbol = document.getElementById('creationCategory').value;
         if (!title || !this.creationSymbols?.includes(symbol) || !this.categoryChoices(this.creationCategorySymbol).some(choice => choice.symbol === symbol)) return;
-        if (this.getNodeByTitle(title)) return alert(`Namnet är upptaget.`);
+        const existing = this.getNodeByTitle(title);
+        if (existing) {
+          if (this.creationCategoryOrigin === null || this.creationCategoryOrigin === undefined) return alert('Namnet är upptaget.');
+          if (this.symbolOf(existing) === symbol) return alert('Objektet finns redan i den valda kategorin.');
+          return this.openExistingMove(existing, symbol);
+        }
         const newNode = { id: 'n_' + Math.random().toString(36).substr(2, 9), title, icon: symbol, color: '#202122', free_text: {sv:document.getElementById('modalFreeText').value, en:document.getElementById('modalFreeText').value} };
         this.nodes.push(newNode);
         this.touchNodes([newNode.id]);
@@ -1269,6 +1327,15 @@
       }
 
       initHeader() {
+        const confirmation = document.getElementById('existingMoveDialog');
+        confirmation.addEventListener('keydown', event => {
+          if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); this.closeExistingMove(); }
+          if (event.key === 'Tab') {
+            event.preventDefault();
+            const yes = document.getElementById('confirmExistingMove'), no = document.getElementById('cancelExistingMove');
+            (document.activeElement === yes ? no : yes).focus();
+          }
+        });
         const input = document.getElementById('searchInput');
         input.addEventListener('input', () => this.updateSearchSuggestions());
         input.addEventListener('keydown', event => this.handleSearchKeydown(event));
