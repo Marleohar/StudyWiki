@@ -1,4 +1,4 @@
-﻿const assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
+const assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
 const {withBrowser}=require('./support/browser-harness.cjs'),{library}=require('./support/task003a-harness.cjs');
 const evidence=fs.mkdtempSync(path.join(os.tmpdir(),'task013-refresh-')),records=[];
 withBrowser(library(),async({evaluate,send,click,navigate,reload,answers})=>{
@@ -42,5 +42,3 @@ withBrowser(library(),async({evaluate,send,click,navigate,reload,answers})=>{
   await reset(cloud,320);await rename('Ready');await notes('Ready notes');await zero();const before=await graph();await click('#createCategoryNode');await add('Discard',true);await evaluate('window.staleBatch=testApp.categoryBatch;window.oldSave=document.getElementById("categoryBatchSave")');if(cancel)await click('#categoryBatchCancel');else await key('Escape',27);assert.equal(await evaluate('document.activeElement.id'),'createCategoryNode');await click('#createCategoryNode');await evaluate('oldSave.click();testApp.commitCategoryBatch(staleBatch)');assert.equal(await evaluate('testApp.categoryBatch.pending.length'),0);await key('Escape',27);await unchanged(before);records.push({case:'cancel-reopen',cloud,cancel,before,after:await graph(),counts:await counts()});
  }
 }).then(()=>{fs.writeFileSync(path.join(evidence,'snapshots.json'),JSON.stringify(records,null,2));console.log(JSON.stringify({passed:records.length,evidence}))}).catch(e=>{console.error(e.stack);process.exitCode=1});
-
-
