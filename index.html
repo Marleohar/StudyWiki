@@ -837,12 +837,17 @@
       requestRenameCategory(symbol) {
         if (!this.checkCreative() || this.activeCategorySymbol !== symbol) return;
         const library=this.currentLibrary, revision=this.libraryLoadRevision;
+        const creation=this.categoryCreationControl;
         const previous=this.categoryState.categories.find(record=>record.symbol===symbol)?.name || '';
         const value=prompt('Ange nytt namn:',previous);
         if (typeof value !== 'string' || value===previous || value.trim()===previous) return;
         if (!this.checkCreative() || this.currentLibrary!==library || this.libraryLoadRevision!==revision || this.activeCategorySymbol!==symbol) return;
         if ((this.categoryState.categories.find(record=>record.symbol===symbol)?.name || '')!==previous) return;
-        if (this.saveCategoryName(symbol,value)) document.getElementById('categoryDisplayName').textContent=this.categoryName(symbol);
+        const renew=creation && this.categoryBatchValid(creation.context);
+        if (this.saveCategoryName(symbol,value)) {
+          document.getElementById('categoryDisplayName').textContent=this.categoryName(symbol);
+          if(renew)this.refreshCategoryCreationControl(creation);
+        }
       }
       descriptionFrame({value, editing=false, editorId, contentLabel, maxLength, onSave, onCancel, onEdit}) {
         const frame=this.makeElement('div',undefined,'free-text-frame'+(!this.checkCreative()?' readonly':''));
@@ -892,10 +897,33 @@
         const frame=this.descriptionFrame({value,editing,editorId:'categoryNotes',contentLabel:'Kategorianteckningar',maxLength:280,
           onEdit:()=>show(true),onCancel:()=>show(false),onSave:text=>{
             if(!valid() || (this.categoryState.categories.find(record=>record.symbol===symbol)?.notes || '')!==value)return false;
-            if(!this.saveCategoryNotes(symbol,text))return false;show(false);return true;
+            const creation=this.categoryCreationControl;
+            const renew=text!==value && creation && this.categoryBatchValid(creation.context);
+            if(!this.saveCategoryNotes(symbol,text))return false;
+            show(false);if(renew)this.refreshCategoryCreationControl(creation);return true;
           }});
         slot.innerHTML='';slot.appendChild(frame);
         this.categoryDescriptionRefresh=()=>{if(valid())show(false,false);};
+      }
+      makeCategoryCreationControl(symbol) {
+        const button=this.makeElement('button','Skapa objekt i kategorin','creative-only');
+        button.type='button';button.id='createCategoryNode';
+        const binding=Object.freeze({button,context:this.captureCategoryBatchContext(symbol)});
+        this.categoryCreationControl=binding;
+        button.addEventListener('click',()=>{
+          if(this.categoryCreationControl!==binding || button.isConnected===false || document.getElementById('createCategoryNode')!==button)return;
+          this.openCategoryBatch(binding.context);
+        });
+        return button;
+      }
+      refreshCategoryCreationControl(binding) {
+        const {button,context}=binding;
+        // Only a validated metadata save may renew the current page's control.
+        // Old listeners retain their original binding, never the renewed context.
+        if(this.categoryCreationControl!==binding || button.isConnected===false || document.getElementById('createCategoryNode')!==button ||
+          this.currentLibrary!==context.library || this.libraryLoadRevision!==context.revision || this.pressRevision!==context.view ||
+          this.activeCategorySymbol!==context.symbol || this.activeNodeId!==null || !this.checkCreative())return;
+        button.replaceWith(this.makeCategoryCreationControl(context.symbol));
       }
       renderCategory(symbol) {
         this.resetPresses();
@@ -919,10 +947,7 @@
         headingRow.appendChild(heading);headingRow.appendChild(rename);top.appendChild(headingRow);card.appendChild(top);
         const description=this.makeElement('div');description.id='categoryDescriptionSlot';card.appendChild(description);
         this.setCategoryDescription(description,symbol);
-        const create = this.makeElement('button', 'Skapa objekt i kategorin', 'creative-only');
-        create.type = 'button'; create.id = 'createCategoryNode';
-        const creationContext=this.captureCategoryBatchContext(symbol);
-        create.addEventListener('click',()=>this.openCategoryBatch(creationContext));
+        const create=this.makeCategoryCreationControl(symbol);
         card.appendChild(create);
         const list = this.makeElement('div', undefined, 'flat-list-container');
         list.id = 'categoryMembers';

@@ -1,3 +1,55 @@
+# TASK 013 ? Blocking QA correction
+
+**READY FOR INDEPENDENT RE-QA ? NOT MERGED.**
+
+PR: https://github.com/Marleohar/StudyWiki/pull/13. Existing branch: `feat/task013-category-batch-creation`.
+Rejected HEAD: `c8078e6e72b7e3992aba298d69faa750571a7cb9`; unchanged main: `2eb9777e0d281a522c93ab5c7b9cdb1babc61407`.
+The final correction HEAD is recorded in the PR and correction delivery evidence after committing this report.
+
+## Demonstrated failure and cause
+
+Before application edits, reran the original independent QA `category-edit-entry.cjs` reproduction against rejected HEAD. All four native flows failed: category x ? Byt namn ? changed name ? Skapa objekt i kategorin, and category notes ? changed text ? Spara ? Skapa objekt i kategorin, each in local and mocked-cloud mode. The enabled button focused but neither dialog opened. Revisit recovered it. Full graphs/storage before and after the failed click were identical, with 0 saves / 0 storage writes / 0 cloud writes / 0 preference writes. The intentional metadata save precedes those measured snapshots/counters.
+
+The rendered creation button retained a graph-snapshot context predating the metadata save. Rename updated only the heading; notes save updated only the description. Strict batch validation correctly rejected the obsolete context but left the current visible entry unusable.
+
+## Scoped correction
+
+A newly rendered creation control owns an immutable binding and context. Its listener checks both the current binding identity and the exact connected DOM control before attempting to open the batch dialog. After an authorized, actually changed metadata save, replace that control with a fresh one only if its previous context was valid immediately before saving and the current category/library/revision/rendered view still match. Context validation occurs after the rename prompt, protecting changes during the prompt too.
+
+Cancelled, unchanged and invalid edits do not renew controls. An already stale graph/control cannot gain authorization through a later metadata edit. Detached buttons and captured listeners keep their expired binding permanently, including after metadata values revert. Open batches retain their original contexts and reject graph changes. No context is recaptured on activation. `categoryBatchValid` and `commitCategoryBatch` remain byte-for-byte unchanged.
+
+Correction files: index.html, tests/support/task003a-harness.cjs (DOM replaceWith support only), tests/category-creation-refresh.test.cjs, tests/browser-category-creation-refresh.cjs, TASK013-QA.md. No earlier test assertions or browser scripts changed by this correction.
+
+## Native browser evidence and data integrity
+
+Original reproduction passes after correction in all four flows: the replacement current control opens the fixed-category batch immediately with the saved name and exact symbol, without navigation or writes.
+
+The permanent focused Chromium suite exercises 44 cases: 18 one/two/five-object batches after multiple successive native name and notes saves across 1280/375/320 px and both persistence paths; 22 retained-control/stale/no-op/invalid checks; 4 Cancel/Escape/reopen cases. Native Enter and visible Add, individual removal, forward/reverse Tab containment, current category/name, no selector, focus return, full graph/storage comparisons, screenshots and actual local reload are included. Retained detached buttons, directly captured listener functions and old dialog submits are exercised.
+
+Approved batches append only new standard empty-description nodes and established modification entries, preserving original nodes, IDs, descriptions, edges, category metadata and ordering. Exactly 1 logical save, 3 local storage writes or 1 mocked-cloud merge, and 0 preference writes. Pending, cancelled, old, invalid and navigation-only interactions leave complete snapshots identical with 0 saves/storage/cloud/preference writes. Saved category name/notes remain intact; success stays on category x and restores focus to its current creation button.
+
+## Validation and evidence
+
+Node: 326/326 PASS (311 earlier tests plus 15 focused lifecycle tests). All 15 Chromium suites PASS: all 14 existing suites (including both TASK 012 suites and the 71-case batch suite) plus the new 44-case native creation-refresh suite. The first four existing suites were rerun after the final prompt-time validation adjustment and pass again. Whitespace check passes.
+
+All new evidence is under `../evidence/corrections`, preserving earlier development and `qa/evidence` artifacts:
+
+- rejected-category-edit-entry.json and rejected-after-*.png: failing-before full snapshots/screenshots.
+- corrected-category-edit-entry.json and corrected-after-*.png: passing-after identical native reproduction.
+- node.txt; browser-results.json; individual browser logs; focused-browser-final.txt.
+- tmp/task013-refresh-*/snapshots.json and batch-*.png: complete focused graphs/storage, counts, keyboard traces and responsive screenshots.
+- unchanged-guards.json: unchanged strict validator/atomic commit check.
+
+Set TEMP/TMP to task-local evidence/corrections/tmp before browser processes. Independent installed Chrome 155 and Node 24 use the repository's existing dependency-free CDP harness, disposable profiles, synthetic libraries, disabled Firebase initialization and blocked external requests. No production service/data, credentials, paid API, Digital GM or ?rt-Wikin access/modification. Browser failures encountered while developing the new test were test selector/instrumentation/declaration errors, corrected before the final runs.
+
+## Scope and remaining limitations
+
+Existing TASK 012 draft protection, object-profile Byt Kategori, general creation, sorting, preferences, ID collision and atomic stale protections remain covered by the unchanged existing suites. The previously disclosed category-entry transfer conflict remains: the new batch rejects existing names; object-profile transfer and legacy general creation behavior are preserved. No new transfer shortcut or policy introduced. Inherited duplicate-title filtering on library reload remains unchanged; accepted new batches reject duplicates and retain all created IDs on reload. Mock cloud validates expected merge operations, not live Firebase behavior. Independent QA must approve the exact new HEAD; no merge/deployment/auto-merge performed.
+
+---
+
+The original development report follows unchanged as historical evidence. Its earlier readiness and totals are superseded by this correction section.
+
 # TASK 013 — Fixed-Category Bulk Object Creation
 
 **READY FOR INDEPENDENT QA — NOT MERGED.**
