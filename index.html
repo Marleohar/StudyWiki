@@ -1177,6 +1177,7 @@
         decision?.inert.forEach(([element,value])=>{element.inert=value;});
         if(returnFocus && decision){
           this.closeSmartDialog(false);
+          if(decision.legacy)this.closeLinkDialog();
           const editor=decision.draft.editor;
           if(editor.isConnected!==false && !editor.disabled && !editor.closest?.('[inert]') && (!editor.getClientRects || editor.getClientRects().length))editor.focus?.();
         }
@@ -1194,13 +1195,15 @@
         if(choice==='save')this.updateObjectDescription(decision.context.node,decision.text,decision.draft.language);
         return decision.apply();
       }
-      runDescriptionLink(context,valid,apply) {
+      runDescriptionLink(context,valid,apply,legacy=false) {
         if(this.descriptionLinkDecision || !this.smartContextValid(context) || !valid())return false;
         const draft=this.objectDescriptionDraft;
-        if(!draft || draft.node!==context.node || draft.editor!==document.getElementById('freeTextEditor') || draft.editor.isConnected===false || draft.editor.value===draft.initial)return apply();
-        if(draft.language!==(this.lang || 'sv'))return false;
+        if(!draft)return apply();
+        // A mismatched editor is stale, not permission to discard its draft.
+        if(draft.node!==context.node || draft.editor!==document.getElementById('freeTextEditor') || draft.editor.isConnected===false || draft.language!==(this.lang || 'sv'))return false;
+        if(draft.editor.value===draft.initial)return apply();
         const root=document.getElementById('descriptionLinkDialog'),body=document.getElementById('descriptionLinkBody');body.innerHTML='';
-        const decision={context,valid,apply,draft,text:draft.editor.value,edgeRecords:[...this.edges],inert:[]};this.descriptionLinkDecision=decision;
+        const decision={context,valid,apply,draft,legacy,text:draft.editor.value,edgeRecords:[...this.edges],inert:[]};this.descriptionLinkDecision=decision;
         for(const element of [...(document.body?.children || [])])if(element!==root){decision.inert.push([element,element.inert]);element.inert=true;}
         decision.inert.push([root,root.inert]);root.inert=false;root.style.display='flex';
         const heading=this.makeElement('h2','Osparad beskrivning');heading.id='descriptionLinkHeading';body.appendChild(heading);
@@ -1385,10 +1388,9 @@
         this.renderPage(this.activeNodeId);
       }
 
-      requestRestoreRelation(idA, idB) {
+      requestRestoreRelation(idA, idB,context=this.captureSmartContext(idA),target=this.getNode(idB)) {
         if(this.descriptionLinkDecision || !this.getNode(idA) || !this.getNode(idB) || !this.edges.some(edge=>edge.paused===true && this.relationMatches(edge,idA,idB)))return false;
-        const context=this.captureSmartContext(idA),target=this.getNode(idB);
-        return this.runDescriptionLink(context,()=>this.getNode(idB)===target,()=>{
+        return this.runDescriptionLink(context,()=>context.id===idA && target?.id===idB && this.getNode(idB)===target,()=>{
           const changed=this.setRelationPaused(idA,idB,false);this.finishSmartOperation(context,changed);return changed;
         });
       }
@@ -1654,7 +1656,8 @@
           restore.type = 'button';
           restore.className = 'creative-only';
           restore.textContent = 'Återställ relation';
-          restore.addEventListener('click', () => this.requestRestoreRelation(node.id, item.id));
+          const restoreContext=this.captureSmartContext(node.id);
+          restore.addEventListener('click', () => this.requestRestoreRelation(node.id,item.id,restoreContext,item));
           left.appendChild(link);
           row.appendChild(left);
           row.appendChild(restore);
@@ -1841,9 +1844,11 @@
         document.getElementById('linkNodeInput').value = '';
         this.renderPendingLinks();
         document.getElementById('linkDialog').style.display = 'flex';
-        setTimeout(() => document.getElementById('linkNodeInput').focus(), 50);
+        const context=this.legacyLinkContext;
+        setTimeout(()=>{if(this.legacyLinkContext===context && !this.descriptionLinkDecision)document.getElementById('linkNodeInput').focus();},50);
       }
       closeLinkDialog() {
+        this.legacyLinkContext=null;
         this.targetPageForLink = null;
         this.pendingLinks = [];
         document.getElementById('linkDialog').style.display = 'none';
@@ -1877,7 +1882,7 @@
         return this.runDescriptionLink(context,()=>this.targetPageForLink===pageId && JSON.stringify(this.pendingLinks)===JSON.stringify(names),()=>{
           names.forEach(name=>{const node=this.getOrCreateNode(name);this.addRelation(pageId,node.id);});
           this.closeLinkDialog();this.finishSmartOperation(context,true);return true;
-        });
+        },true);
       }
 
       initHeader() {
