@@ -235,6 +235,10 @@
     <div class="dialog" id="descriptionLinkBody" style="overflow-wrap:anywhere"></div>
   </div>
 
+  <div class="dialog-backdrop" id="categoryBatchDialog" role="dialog" aria-modal="true" aria-labelledby="categoryBatchHeading">
+    <div class="dialog" id="categoryBatchBody" style="max-height:85vh;overflow-y:auto;overflow-wrap:anywhere"></div>
+  </div>
+
   <!-- Skapa ny nod-dialog -->
   <div class="dialog-backdrop" id="createDialog" role="dialog" aria-modal="true" aria-labelledby="createDialogHeading">
     <div class="dialog">
@@ -389,6 +393,7 @@
           this.cancelLongPress(true);
           this.closeSymbolEditDialog();
           this.closeAppearanceDialog();
+          this.closeCategoryBatch();
           this.closeCreateDialog();
           this.closeSmartDialog(false);this.quickLinkState=null;
           this.categoryDescriptionRefresh?.();
@@ -603,6 +608,7 @@
         this.pendingPress?.cancel(blockClick);
       }
       resetPresses() {
+        this.closeCategoryBatch(false);
         this.closeDescriptionLink(false);
         this.pressRevision = (this.pressRevision || 0) + 1;
         this.cancelLongPress(true);
@@ -915,7 +921,8 @@
         this.setCategoryDescription(description,symbol);
         const create = this.makeElement('button', 'Skapa objekt i kategorin', 'creative-only');
         create.type = 'button'; create.id = 'createCategoryNode';
-        create.addEventListener('click', () => { if (this.checkCreative()) this.openCreateDialog('', symbol); });
+        const creationContext=this.captureCategoryBatchContext(symbol);
+        create.addEventListener('click',()=>this.openCategoryBatch(creationContext));
         card.appendChild(create);
         const list = this.makeElement('div', undefined, 'flat-list-container');
         list.id = 'categoryMembers';
@@ -1681,6 +1688,102 @@
         }
       }
 
+      captureCategoryBatchContext(symbol) {
+        return Object.freeze({symbol,library:this.currentLibrary,revision:this.libraryLoadRevision,view:this.pressRevision,
+          snapshot:this.creationSnapshot(),nodes:Object.freeze([...this.nodes]),edges:Object.freeze([...this.edges]),
+          state:this.categoryState,categories:Object.freeze([...(this.categoryState?.categories || [])])});
+      }
+      categoryBatchValid(context) {
+        return !!context && typeof context.symbol==='string' && context.symbol.length>0 && this.checkCreative() && this.activeNodeId===null && this.activeCategorySymbol===context.symbol &&
+          this.currentLibrary===context.library && this.libraryLoadRevision===context.revision && this.pressRevision===context.view &&
+          this.creationSnapshot()===context.snapshot && this.categoryState===context.state &&
+          this.nodes.length===context.nodes.length && this.nodes.every((node,i)=>node===context.nodes[i]) &&
+          this.edges.length===context.edges.length && this.edges.every((edge,i)=>edge===context.edges[i]) &&
+          (this.categoryState?.categories || []).length===context.categories.length && (this.categoryState?.categories || []).every((record,i)=>record===context.categories[i]);
+      }
+      openCategoryBatch(context) {
+        if(this.categoryBatch || this.creationModal){this.focusActiveCreationDialog();return false;}
+        if(!this.categoryBatchValid(context))return false;
+        const root=document.getElementById('categoryBatchDialog'),body=document.getElementById('categoryBatchBody');body.innerHTML='';
+        const heading=this.makeElement('h2','Skapa nya objekt');heading.id='categoryBatchHeading';body.appendChild(heading);
+        const category=this.makeElement('p','Kategori: '+context.symbol+' '+this.categoryName(context.symbol));category.id='categoryBatchCategory';body.appendChild(category);
+        const label=this.makeElement('label','Namn / Titel');label.setAttribute('for','categoryBatchName');body.appendChild(label);
+        const input=this.makeElement('input');input.id='categoryBatchName';input.type='text';input.style.width='100%';input.style.minWidth='0';body.appendChild(input);
+        const add=this.makeElement('button','Lägg till');add.type='button';add.id='categoryBatchAdd';body.appendChild(add);
+        body.appendChild(this.makeElement('p','Noder som ska skapas:'));
+        const list=this.makeElement('ul');list.id='categoryBatchPending';list.style.paddingLeft='20px';body.appendChild(list);
+        const error=this.makeElement('p');error.id='categoryBatchError';error.setAttribute('role','alert');body.appendChild(error);
+        const actions=this.makeElement('div',undefined,'dialog-actions-stacked');body.appendChild(actions);
+        const save=this.makeElement('button','Skapa','primary');save.type='button';save.id='categoryBatchSave';actions.appendChild(save);
+        const cancel=this.makeElement('button','Avbryt');cancel.type='button';cancel.id='categoryBatchCancel';actions.appendChild(cancel);
+        const state=Object.freeze({context,pending:[],root,input,list,error,trigger:document.activeElement,rootInert:root.inert,
+          inert:[...(document.body?.children || [])].filter(e=>e!==root).map(e=>[e,e.inert])});
+        this.categoryBatch=state;state.inert.forEach(([element])=>{element.inert=true;});root.inert=false;root.style.display='flex';
+        add.addEventListener('click',()=>this.addCategoryBatchName(state));
+        save.addEventListener('click',()=>this.commitCategoryBatch(state));
+        cancel.addEventListener('click',()=>{if(this.categoryBatch===state)this.closeCategoryBatch();});
+        root.onkeydown=event=>this.handleCategoryBatchKey(event,state);input.focus?.();return true;
+      }
+      categoryBatchError(state,text) {if(this.categoryBatch===state)state.error.textContent=text;return false;}
+      addCategoryBatchName(state) {
+        if(this.categoryBatch!==state)return false;
+        if(!this.categoryBatchValid(state.context))return this.categoryBatchError(state,'Underlaget har ändrats. Avbryt och öppna kategorin igen.');
+        const title=state.input.value.trim();
+        if(!title)return this.categoryBatchError(state,'Skriv ett namn först.');
+        if(this.getNodeByTitle(title) || state.pending.some(item=>item.title.toLowerCase()===title.toLowerCase()))return this.categoryBatchError(state,'Namnet är upptaget. Inget befintligt objekt flyttas.');
+        state.pending.push(Object.freeze({title}));state.input.value='';state.error.textContent='';this.renderCategoryBatchNames(state);state.input.focus?.();return true;
+      }
+      renderCategoryBatchNames(state) {
+        state.list.innerHTML='';
+        state.pending.forEach(item=>{
+          const row=this.makeElement('li'),name=this.makeElement('span',item.title),remove=this.makeElement('button','X');remove.type='button';remove.setAttribute('aria-label','Ta bort '+item.title);
+          row.style.overflowWrap='anywhere';row.appendChild(name);row.appendChild(remove);state.list.appendChild(row);
+          remove.addEventListener('click',()=>{
+            if(this.categoryBatch!==state || !this.categoryBatchValid(state.context))return;
+            const index=state.pending.indexOf(item);if(index<0)return;state.pending.splice(index,1);this.renderCategoryBatchNames(state);state.input.focus?.();
+          });
+        });
+      }
+      closeCategoryBatch(returnFocus=true) {
+        const state=this.categoryBatch;if(!state)return;
+        this.categoryBatch=null;state.root.style.display='none';state.root.inert=state.rootInert;state.inert.forEach(([element,value])=>{element.inert=value;});
+        const trigger=state.trigger;
+        if(returnFocus && trigger?.isConnected!==false && !trigger?.disabled && !trigger?.closest?.('[inert]') && (!trigger?.getClientRects || trigger.getClientRects().length))trigger?.focus?.();
+        if(state.root.contains?.(document.activeElement))document.activeElement.blur?.();
+      }
+      handleCategoryBatchKey(event,state) {
+        if(this.categoryBatch!==state)return;
+        if(event.key==='Escape'){event.preventDefault();event.stopPropagation();this.closeCategoryBatch();}
+        else if(event.key==='Enter' && event.target===state.input){event.preventDefault();event.stopPropagation();this.addCategoryBatchName(state);}
+        else if(event.key==='Tab' && !event.ctrlKey && !event.altKey && !event.metaKey){
+          const controls=this.creationDialogControls(state.root);if(!controls.length)return;
+          event.preventDefault();event.stopPropagation();const index=controls.indexOf(document.activeElement);
+          controls[(index+(event.shiftKey?-1:1)+controls.length)%controls.length].focus();
+        }
+      }
+      commitCategoryBatch(state) {
+        if(this.categoryBatch!==state)return false;
+        if(!this.categoryBatchValid(state.context))return this.categoryBatchError(state,'Underlaget har ändrats. Avbryt och öppna kategorin igen.');
+        if(state.input.value.trim())return this.categoryBatchError(state,'Lägg till namnet i listan innan du skapar.');
+        if(!state.pending.length)return this.categoryBatchError(state,'Lägg till minst ett namn.');
+        const names=[],seen=new Set();
+        for(const item of state.pending){
+          if(typeof item?.title!=='string' || !item.title.trim())return this.categoryBatchError(state,'Alla objekt behöver ett namn.');
+          const title=item.title.trim(),key=title.toLowerCase();
+          if(seen.has(key) || this.getNodeByTitle(title))return this.categoryBatchError(state,'Namnet är upptaget. Inga objekt skapades.');
+          seen.add(key);names.push(title);
+        }
+        const used=new Set(this.nodes.map(node=>node.id)),created=[];
+        for(const title of names){
+          let id;for(let attempt=0;attempt<1000;attempt++){const candidate='n_'+Math.random().toString(36).slice(2,11);if(!used.has(candidate)){id=candidate;break;}}
+          if(!id)return this.categoryBatchError(state,'Kunde inte skapa unika ID:n. Försök igen.');
+          used.add(id);created.push({id,title,icon:state.context.symbol,color:'#202122',free_text:{sv:'',en:''}});
+        }
+        if(!this.categoryBatchValid(state.context))return this.categoryBatchError(state,'Underlaget har ändrats. Inga objekt skapades.');
+        this.nodes.push(...created);this.touchNodes(created.map(node=>node.id));this.closeCategoryBatch(false);
+        this.sync({preserveEdges:true});this.renderCategory(state.context.symbol);document.getElementById('createCategoryNode')?.focus?.();return true;
+      }
+
       populateCreationCategories(preferred = null) {
         const select = document.getElementById('creationCategory');
         const choices = this.categoryChoices(this.creationCategorySymbol);
@@ -1693,6 +1796,7 @@
         select.value = this.creationSymbols.includes(preferred) ? preferred : this.creationSymbols.includes('&') ? '&' : this.creationSymbols[0];
       }
       activeCreationDialog() {
+        if(this.categoryBatch)return this.categoryBatch.root;
         if (!this.creationModal) return null;
         return document.getElementById(this.existingMove ? 'existingMoveDialog' : 'createDialog');
       }
@@ -1703,7 +1807,7 @@
       }
       focusActiveCreationDialog() {
         const root=this.activeCreationDialog();if (!root) return;
-        const controls=this.creationDialogControls(root),preferred=document.getElementById(this.existingMove?'cancelExistingMove':'modalTitle');
+        const controls=this.creationDialogControls(root),preferred=document.getElementById(this.categoryBatch?'categoryBatchName':this.existingMove?'cancelExistingMove':'modalTitle');
         (controls.includes(preferred)?preferred:controls[0])?.focus?.();
       }
       guardCreationInteraction(event) {
@@ -1731,6 +1835,7 @@
       }
       openCreateDialog(prefill = '', categoryOrigin = null) {
         if (!this.checkCreative()) return;
+        if(this.categoryBatch){this.focusActiveCreationDialog();return;}
         if (this.creationModal) {this.focusActiveCreationDialog();return;}
         const root=document.getElementById('createDialog');
         this.creationModal={rootInert:root.inert,inert:[...(document.body?.children || [])].filter(element=>element!==root).map(element=>[element,element.inert])};

@@ -1,3 +1,4 @@
+// TASK013: legacy single-create/confirmed-transfer setup; new category entry has its own native bulk suite.
 // No packages required. Uses installed Chrome/Edge and Node's built-in CDP WebSocket.
 const fs = require('node:fs');
 const os = require('node:os');
@@ -173,7 +174,7 @@ let proc, socket;
   assert.equal(await evaluate("document.querySelector('[role=alert]').textContent"), 'Högst 280 tecken. Texten har inte sparats.');
   assert.equal(await evaluate('testApp.categoryState.categories[0].notes'), categoryNotes);
   await click('#cancelCategoryNotes');
-  await click('#createCategoryNode');
+  await evaluate('document.getElementById("createCategoryNode").focus();testApp.openCreateDialog("",testApp.activeCategorySymbol)');
   await evaluate("document.getElementById('modalTitle').value='Created in category';document.getElementById('modalFreeText').value='Object notes'");
   await click('button[onclick="app.saveNewNode()"]');
   assert.equal(await evaluate("testApp.getNode(testApp.activeNodeId).icon"), 'x');
