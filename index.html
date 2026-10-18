@@ -231,6 +231,10 @@
     <div class="dialog" id="smartDialogBody"></div>
   </div>
 
+  <div class="dialog-backdrop" id="descriptionLinkDialog" role="dialog" aria-modal="true" aria-labelledby="descriptionLinkHeading" aria-describedby="descriptionLinkQuestion" style="z-index:1300">
+    <div class="dialog" id="descriptionLinkBody" style="overflow-wrap:anywhere"></div>
+  </div>
+
   <!-- Skapa ny nod-dialog -->
   <div class="dialog-backdrop" id="createDialog" role="dialog" aria-modal="true" aria-labelledby="createDialogHeading">
     <div class="dialog">
@@ -381,6 +385,7 @@
 
       updateModeUI() {
         if (!this.checkCreative()) {
+          this.closeDescriptionLink(false);
           this.cancelLongPress(true);
           this.closeSymbolEditDialog();
           this.closeAppearanceDialog();
@@ -598,6 +603,7 @@
         this.pendingPress?.cancel(blockClick);
       }
       resetPresses() {
+        this.closeDescriptionLink(false);
         this.pressRevision = (this.pressRevision || 0) + 1;
         this.cancelLongPress(true);
         this.closeSmartDialog(false);this.quickLinkState=null;
@@ -1158,6 +1164,64 @@
         });
         state.list.hidden=!state.options.length;state.input.setAttribute('aria-expanded',String(!state.list.hidden));
       }
+      descriptionLinkValid(decision) {
+        const draft=decision.draft;
+        return this.smartContextValid(decision.context) && decision.valid() && !decision.invalid &&
+          this.edges.length===decision.edgeRecords.length && this.edges.every((edge,i)=>edge===decision.edgeRecords[i]) &&
+          this.objectDescriptionDraft===draft && draft.node===decision.context.node && draft.language===(this.lang || 'sv') &&
+          draft.editor===document.getElementById('freeTextEditor') && draft.editor.isConnected!==false && draft.editor.value===decision.text;
+      }
+      closeDescriptionLink(returnFocus=true) {
+        const decision=this.descriptionLinkDecision;this.descriptionLinkDecision=null;
+        const root=document.getElementById('descriptionLinkDialog');if(root)root.style.display='none';
+        decision?.inert.forEach(([element,value])=>{element.inert=value;});
+        if(returnFocus && decision){
+          this.closeSmartDialog(false);
+          const editor=decision.draft.editor;
+          if(editor.isConnected!==false && !editor.disabled && !editor.closest?.('[inert]') && (!editor.getClientRects || editor.getClientRects().length))editor.focus?.();
+        }
+      }
+      resolveDescriptionLink(decision,choice) {
+        if(this.descriptionLinkDecision!==decision)return false;
+        if(choice==='cancel'){this.closeDescriptionLink();return false;}
+        if(!['save','discard'].includes(choice))return false;
+        if(!this.descriptionLinkValid(decision)){
+          decision.invalid=true;decision.error.textContent='Underlaget har ändrats. Avbryt och öppna länkningen igen.';return false;
+        }
+        // Validate everything before either mutation. Saving here does not render/sync:
+        // the approved link finishes both changes with the established single save.
+        this.closeDescriptionLink(false);
+        if(choice==='save')this.updateObjectDescription(decision.context.node,decision.text,decision.draft.language);
+        return decision.apply();
+      }
+      runDescriptionLink(context,valid,apply) {
+        if(this.descriptionLinkDecision || !this.smartContextValid(context) || !valid())return false;
+        const draft=this.objectDescriptionDraft;
+        if(!draft || draft.node!==context.node || draft.editor!==document.getElementById('freeTextEditor') || draft.editor.isConnected===false || draft.editor.value===draft.initial)return apply();
+        if(draft.language!==(this.lang || 'sv'))return false;
+        const root=document.getElementById('descriptionLinkDialog'),body=document.getElementById('descriptionLinkBody');body.innerHTML='';
+        const decision={context,valid,apply,draft,text:draft.editor.value,edgeRecords:[...this.edges],inert:[]};this.descriptionLinkDecision=decision;
+        for(const element of [...(document.body?.children || [])])if(element!==root){decision.inert.push([element,element.inert]);element.inert=true;}
+        decision.inert.push([root,root.inert]);root.inert=false;root.style.display='flex';
+        const heading=this.makeElement('h2','Osparad beskrivning');heading.id='descriptionLinkHeading';body.appendChild(heading);
+        const question=this.makeElement('p','Du har ändrat beskrivningen utan att spara. Vill du spara ändringarna innan du fortsätter med länkningen?');question.id='descriptionLinkQuestion';body.appendChild(question);
+        decision.error=this.makeElement('p');decision.error.id='descriptionLinkError';decision.error.setAttribute('role','alert');body.appendChild(decision.error);
+        const actions=this.makeElement('div',undefined,'dialog-actions-stacked');body.appendChild(actions);
+        const controls=['save','discard','cancel'].map((choice,i)=>{const button=this.makeElement('button',['Spara','Kasta','Avbryt'][i]);button.type='button';button.id='descriptionLink-'+choice;button.addEventListener('click',()=>this.resolveDescriptionLink(decision,choice));actions.appendChild(button);return button;});
+        decision.cancel=controls[2];
+        root.onkeydown=event=>{
+          if(this.descriptionLinkDecision!==decision)return;
+          if(event.key==='Escape'){event.preventDefault();event.stopPropagation();this.resolveDescriptionLink(decision,'cancel');}
+          if(event.key==='Tab'){event.preventDefault();event.stopPropagation();const index=controls.indexOf(document.activeElement);controls[(index+(event.shiftKey?-1:1)+controls.length)%controls.length].focus();}
+        };
+        decision.cancel.focus?.();return false;
+      }
+      chainWouldChange(id,text) {
+        // Run the existing parser against detached records; no real record, save or UI is touched.
+        const preview=Object.create(this);
+        preview.nodes=JSON.parse(JSON.stringify(this.nodes));preview.edges=JSON.parse(JSON.stringify(this.edges));preview.categoryState=JSON.parse(JSON.stringify(this.categoryState));
+        preview.parseChain(id,text);return preview.creationSnapshot()!==this.creationSnapshot();
+      }
       finishSmartOperation(context,changed) {
         this.closeSmartDialog(false);this.quickLinkState=null;
         if(changed)this.sync({preserveEdges:true});
@@ -1165,23 +1229,27 @@
         document.getElementById('quickLinkInput')?.focus?.();
       }
       commitQuickLink(state) {
-        if(this.quickLinkState!==state || this.smartDialogContext)return false;
+        if(this.descriptionLinkDecision || this.quickLinkState!==state || this.smartDialogContext)return false;
         if(!this.smartContextValid(state.context)){if(state.status)state.status.textContent='Underlaget har \u00e4ndrats. \u00d6ppna sidan igen.';return false;}
         const resolution=this.quickLinkResolution(state);
         if(resolution.kind==='new')return this.openSmartCategoryPicker(state.context,'create',resolution.title);
         if(resolution.kind!=='existing'||!resolution.node)return false;
         if(resolution.node.id===state.context.id){state.status.textContent='Ett objekt kan inte l\u00e4nkas till sig sj\u00e4lvt.';return false;}
-        if(this.areNeighbors(state.context.id,resolution.node.id)){this.finishSmartOperation(state.context,false);return false;}
-        const changed=this.addRelation(state.context.id,resolution.node.id);
-        this.finishSmartOperation(state.context,changed);return changed;
+        if(this.areNeighbors(state.context.id,resolution.node.id))return false;
+        const value=state.input.value,selected=state.selected,selection=JSON.stringify(state.selected);
+        return this.runDescriptionLink(state.context,()=>this.quickLinkState===state && state.input.value===value && state.selected===selected && JSON.stringify(state.selected)===selection && this.quickLinkResolution(state).node===resolution.node,()=>{
+          const changed=this.addRelation(state.context.id,resolution.node.id);
+          this.finishSmartOperation(state.context,changed);return changed;
+        });
       }
       commitAdvancedChain(state) {
-        if(this.quickLinkState!==state || this.smartDialogContext || !this.smartContextValid(state.context))return false;
+        if(this.descriptionLinkDecision || this.quickLinkState!==state || this.smartDialogContext || !this.smartContextValid(state.context))return false;
         const text=document.getElementById('advancedChainInput').value.trim();if(!text)return false;
         // Explicit secondary workflow only: ordinary quick-link titles never invoke the parser.
-        this.parseChain(state.context.id,text);
-        const changed=this.creationSnapshot()!==state.context.snapshot;
-        this.finishSmartOperation(state.context,changed);return changed;
+        if(!this.chainWouldChange(state.context.id,text))return false;
+        return this.runDescriptionLink(state.context,()=>this.quickLinkState===state && document.getElementById('advancedChainInput').value.trim()===text,()=>{
+          this.parseChain(state.context.id,text);this.finishSmartOperation(state.context,true);return true;
+        });
       }
       openCategoryPicker(id) {
         if(!this.checkCreative() || !this.getNode(id))return false;
@@ -1259,6 +1327,7 @@
         });dialog.list.hidden=false;dialog.input.setAttribute('aria-expanded','true');
       }
       commitSmartCategory(dialog) {
+        if(this.descriptionLinkDecision)return false;
         if(!this.smartDialogValid(dialog)){if(dialog.error)dialog.error.textContent='Underlaget har \u00e4ndrats. \u00d6ppna dialogen igen.';return false;}
         let symbol=dialog.selected,newRecord=null;
         if(dialog.newCategory){
@@ -1273,10 +1342,12 @@
         if(dialog.kind==='create'){
           if(this.quickLinkState?.context!==dialog.context || this.quickLinkState.input.value.trim()!==dialog.title)return false;
           const title=dialog.title.trim();if(!title || this.smartExactNodes(title).length){dialog.error.textContent='Namnet \u00e4r upptaget eller tomt. \u00d6ppna fl\u00f6det igen.';return false;}
-          let id;do{id='n_'+Math.random().toString(36).slice(2,11);}while(this.getNode(id));
-          const node={id,title,icon:symbol,color:'#202122',free_text:{sv:'',en:''}};
-          // All validation precedes mutation; addRelation cannot reject these distinct, current IDs.
-          this.nodes.push(node);this.addRelation(source.id,id);this.finishSmartOperation(dialog.context,true);return true;
+          const input=dialog.input.value,quick=this.quickLinkState;
+          return this.runDescriptionLink(dialog.context,()=>this.smartDialogValid(dialog) && dialog.selected===symbol && !dialog.newCategory && dialog.input.value===input && this.quickLinkState===quick && quick.input.value.trim()===title && dialog.title.trim()===title,()=>{
+            let id;do{id='n_'+Math.random().toString(36).slice(2,11);}while(this.getNode(id));
+            const node={id,title,icon:symbol,color:'#202122',free_text:{sv:'',en:''}};
+            this.nodes.push(node);this.addRelation(source.id,id);this.finishSmartOperation(dialog.context,true);return true;
+          });
         }
         if(this.symbolOf(source)===symbol){this.closeSmartDialog();return false;}
         if(newRecord)this.categoryState.categories.push(newRecord);
@@ -1315,9 +1386,11 @@
       }
 
       requestRestoreRelation(idA, idB) {
-        if (!this.setRelationPaused(idA, idB, false)) return;
-        this.sync();
-        this.renderPage(this.activeNodeId);
+        if(this.descriptionLinkDecision || !this.getNode(idA) || !this.getNode(idB) || !this.edges.some(edge=>edge.paused===true && this.relationMatches(edge,idA,idB)))return false;
+        const context=this.captureSmartContext(idA),target=this.getNode(idB);
+        return this.runDescriptionLink(context,()=>this.getNode(idB)===target,()=>{
+          const changed=this.setRelationPaused(idA,idB,false);this.finishSmartOperation(context,changed);return changed;
+        });
       }
 
       renameNode(nodeId, value) {
@@ -1493,7 +1566,7 @@
             `).join('');
         }).join('');
 
-        const currentText = typeof node.free_text==='string' ? node.free_text : (node.free_text?.sv || '');
+        const currentText = typeof node.free_text==='string' ? node.free_text : (node.free_text?.[this.lang || 'sv'] || '');
         const inputZone = `<div class="creative-only" style="margin-top:24px;">
           <label for="quickLinkInput">Snabblänka objekt</label>
           <div class="quick-link-row"><input id="quickLinkInput" type="text" autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="quickLinkSuggestions"><button id="quickLinkAction" type="button" class="primary" disabled>Länka</button></div>
@@ -1541,6 +1614,7 @@
           onCancel:()=>{if(validDescription()){this.renderPage(node.id,false);document.querySelector('#objectDescriptionSlot .free-text-frame')?.focus?.();}},
           onSave:()=>{if(!validDescription())return false;this.saveFreeText(node.id);return true;}});
         document.getElementById('objectDescriptionSlot').appendChild(description);
+        this.objectDescriptionDraft=isEditingText?{node,language:this.lang || 'sv',editor:document.getElementById('freeTextEditor'),initial:currentText}:null;
         document.getElementById('deleteNode').addEventListener('click',()=>this.requestDeleteNode(node.id));
         const nameControl = document.getElementById('nodeTitle');
         nameControl.textContent = node.title;
@@ -1589,19 +1663,18 @@
       }
 
       /* ACTIONS */
+      updateObjectDescription(node,text,language) {
+        if(!node.free_text || typeof node.free_text==='string')node.free_text={sv:typeof node.free_text==='string'?node.free_text:'',en:''};
+        node.free_text[language]=text;this.touchNodes([node.id]);
+      }
       saveFreeText(nodeId) {
-        if (!this.checkCreative()) return;
-        const node = this.getNode(nodeId);
-        if (node) {
-          const text = document.getElementById('freeTextEditor').value;
-          const language = this.lang || 'sv';
-          const previous = typeof node.free_text === 'string' ? node.free_text : (node.free_text?.[language] || '');
-          if (previous === text) return this.renderPage(nodeId, false);
-          if (!node.free_text || typeof node.free_text === 'string') node.free_text = {sv: typeof node.free_text === 'string' ? node.free_text : '', en:''};
-          node.free_text[language] = text;
-          this.touchNodes([node.id]);
-          this.sync();
-          this.renderPage(nodeId, false);
+        if (!this.checkCreative() || this.descriptionLinkDecision) return;
+        const node=this.getNode(nodeId);
+        if(node){
+          const text=document.getElementById('freeTextEditor').value,language=this.lang || 'sv';
+          const previous=typeof node.free_text==='string'?node.free_text:(node.free_text?.[language] || '');
+          if(previous===text)return this.renderPage(nodeId,false);
+          this.updateObjectDescription(node,text,language);this.sync();this.renderPage(nodeId,false);
         }
       }
 
@@ -1763,6 +1836,7 @@
 
       openLinkDialog(pageId) {
         this.targetPageForLink = pageId;
+        this.legacyLinkContext=this.captureSmartContext(pageId);
         this.pendingLinks = [];
         document.getElementById('linkNodeInput').value = '';
         this.renderPendingLinks();
@@ -1797,18 +1871,20 @@
           }).join('');
       }
       executeLinkNodes() {
-        if (!this.checkCreative() || !this.targetPageForLink || this.pendingLinks.length === 0) return;
-        const pageId = this.targetPageForLink;
-        this.pendingLinks.forEach(name => {
-            let node = this.getOrCreateNode(name);
-            this.addRelation(this.targetPageForLink, node.id);
+        if(this.descriptionLinkDecision || !this.checkCreative() || !this.targetPageForLink || !this.pendingLinks?.length)return false;
+        const context=this.legacyLinkContext || this.captureSmartContext(this.targetPageForLink),names=[...this.pendingLinks],pageId=this.targetPageForLink;
+        if(!names.some(name=>{const node=this.getNodeByTitle(name);return !node || (node.id!==pageId && !this.areNeighbors(pageId,node.id));}))return false;
+        return this.runDescriptionLink(context,()=>this.targetPageForLink===pageId && JSON.stringify(this.pendingLinks)===JSON.stringify(names),()=>{
+          names.forEach(name=>{const node=this.getOrCreateNode(name);this.addRelation(pageId,node.id);});
+          this.closeLinkDialog();this.finishSmartOperation(context,true);return true;
         });
-        this.sync();
-        this.closeLinkDialog();
-        this.renderPage(pageId);
       }
 
       initHeader() {
+        const guard=event=>{const decision=this.descriptionLinkDecision,root=document.getElementById('descriptionLinkDialog');if(decision && !root.contains(event.target)){event.preventDefault();event.stopImmediatePropagation();return false;}return true;};
+        document.addEventListener('click',guard,true);
+        document.addEventListener('pointerdown',event=>{if(!guard(event))this.descriptionLinkDecision?.cancel.focus?.();else if(this.descriptionLinkDecision && !event.target.closest?.('#descriptionLinkBody button')){event.preventDefault();this.descriptionLinkDecision.cancel.focus?.();}},true);
+        document.addEventListener('focusin',event=>{if(!guard(event))this.descriptionLinkDecision?.cancel.focus?.();},true);
         // Creation owns this containment; the existing nested confirmation stays on top.
         document.addEventListener('click',event=>this.guardCreationInteraction(event),true);
         document.addEventListener('pointerdown',event=>this.guardCreationPointer(event),true);
