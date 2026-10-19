@@ -28,7 +28,7 @@ function fixture() {
   function element(tag='div') {
     return {tag,style:{},children:[],listeners:{},attributes:{},textContent:'',value:'',isConnected:true,className:'',
       set innerHTML(v){this.html=v;this.children=[]},get innerHTML(){return this.html||''},
-      appendChild(e){this.children.push(e);return e},setAttribute(k,v){this.attributes[k]=v},
+      appendChild(e){this.children.push(e);e.parentElement=this;return e},replaceWith(e){const parent=this.parentElement;if(parent){parent.children[parent.children.indexOf(this)]=e;e.parentElement=parent;this.isConnected=false}},setAttribute(k,v){this.attributes[k]=v},
       focus(){document.activeElement=this},setPointerCapture(id){this.capture=id},hasPointerCapture(id){return this.capture===id},releasePointerCapture(){this.capture=null},
       addEventListener(type,fn,capture){(this.listeners[type]||=[]).push({fn,capture:!!capture})},
       dispatch(type,fields={}){const e={button:0,isPrimary:true,pointerId:1,clientX:0,clientY:0,...fields,preventDefault(){this.prevented=true},stopImmediatePropagation(){this.stopped=true}};

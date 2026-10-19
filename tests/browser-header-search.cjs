@@ -1,3 +1,4 @@
+// TASK013: legacy single-create/confirmed-transfer setup; new category entry has its own native bulk suite.
 const assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
 const {withBrowser}=require('./support/browser-harness.cjs');
 const {library}=require('./support/task003a-harness.cjs');
@@ -88,7 +89,7 @@ withBrowser(data,async({evaluate,send,click,press,navigate,reload,delay,answers,
  assert.deepEqual(createdState.nodes.slice(0,-1),original.nodes);assert.deepEqual(createdState.edges,original.edges);assert.deepEqual(createdState.state.categories,original.state.categories);assert.deepEqual(createdState.state.modifications.slice(0,-1),original.state.modifications);assert.equal(createdState.state.modifications.at(-1).id,created.id);assert.deepEqual(await metrics(),[1,3,0]);
  assert.equal(await evaluate("document.getElementById('nodeTitle').textContent"),newTitle);assert.equal(await evaluate("document.querySelectorAll('#mainContent img,#mainContent script,#existingNodesList img').length"),0);
  // Category-page origin and saved optional names use exact symbols, never labels as IDs.
- await evaluate('qa.saves=0;qa.writes=0');let before=await get();await navigate('category/'+encodeURIComponent(specialSymbol));await click('#createCategoryNode');assert.equal(await evaluate("document.getElementById('creationCategory').value"),specialSymbol);
+ await evaluate('qa.saves=0;qa.writes=0');let before=await get();await navigate('category/'+encodeURIComponent(specialSymbol));await evaluate('document.getElementById("createCategoryNode").focus();testApp.openCreateDialog("",testApp.activeCategorySymbol)');assert.equal(await evaluate("document.getElementById('creationCategory').value"),specialSymbol);
  await fill('#modalTitle',' ALPHA ');await click('button[onclick="app.saveNewNode()"]');assert.equal(await shown('#createDialog'),true);await unchanged(before);
  // Category-page duplicates now offer transfer; decline before continuing the original tamper check.
  assert.equal(await shown('#existingMoveDialog'),true);await click('#cancelExistingMove');await unchanged(before);
@@ -96,7 +97,7 @@ withBrowser(data,async({evaluate,send,click,press,navigate,reload,delay,answers,
  const categoryName=`Category '" \u96ea <svg onload="qa.payloads++">`;
  answers.push(categoryName);await click('#renameCategory');assert.equal(await evaluate("document.getElementById('categoryDisplayName').textContent"),categoryName);
  const named=JSON.parse(await get()),expected=JSON.parse(before);expected.state.categories.find(c=>c.symbol===specialSymbol).name=categoryName;assert.deepEqual(named,expected);assert.deepEqual(await metrics(),[1,3,0]);
- await evaluate('qa.saves=0;qa.writes=0');before=await get();answers.push(categoryName);await click('#renameCategory');await unchanged(before);await click('#createCategoryNode');assert((await evaluate("[...document.getElementById('creationCategory').options].map(o=>o.textContent)")).includes(specialSymbol+' '+categoryName));await key('Escape');await unchanged(before);
+ await evaluate('qa.saves=0;qa.writes=0');before=await get();answers.push(categoryName);await click('#renameCategory');await unchanged(before);await evaluate('document.getElementById("createCategoryNode").focus();testApp.openCreateDialog("",testApp.activeCategorySymbol)');assert((await evaluate("[...document.getElementById('creationCategory').options].map(o=>o.textContent)")).includes(specialSymbol+' '+categoryName));await key('Escape');await unchanged(before);
  await reload();assert.equal(await get(),before);assert.equal(await evaluate('testApp.mode'),'read');assert.equal(await evaluate("document.getElementById('categoryDisplayName').textContent"),categoryName);await unchanged(before);
  // Current-library suggestions are reset on the existing prompt-based switch.
  const second={nodes:[{id:'second',title:'Unique other library',icon:'s',unknown:{keep:[false]}}],edges:[],state:{version:1,categories:[{symbol:'s',name:'Other category'}],modifications:[],unknown:{keep:1}}};
