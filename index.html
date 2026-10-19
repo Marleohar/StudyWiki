@@ -843,7 +843,7 @@
         if (typeof value !== 'string' || value===previous || value.trim()===previous) return;
         if (!this.checkCreative() || this.currentLibrary!==library || this.libraryLoadRevision!==revision || this.activeCategorySymbol!==symbol) return;
         if ((this.categoryState.categories.find(record=>record.symbol===symbol)?.name || '')!==previous) return;
-        const renew=creation && this.categoryBatchValid(creation.context);
+        const renew=creation && this.categoryCreationBindingValid(creation);
         if (this.saveCategoryName(symbol,value)) {
           document.getElementById('categoryDisplayName').textContent=this.categoryName(symbol);
           if(renew)this.refreshCategoryCreationControl(creation);
@@ -898,7 +898,7 @@
           onEdit:()=>show(true),onCancel:()=>show(false),onSave:text=>{
             if(!valid() || (this.categoryState.categories.find(record=>record.symbol===symbol)?.notes || '')!==value)return false;
             const creation=this.categoryCreationControl;
-            const renew=text!==value && creation && this.categoryBatchValid(creation.context);
+            const renew=text!==value && creation && this.categoryCreationBindingValid(creation);
             if(!this.saveCategoryNotes(symbol,text))return false;
             show(false);if(renew)this.refreshCategoryCreationControl(creation);return true;
           }});
@@ -911,18 +911,34 @@
         const binding=Object.freeze({button,context:this.captureCategoryBatchContext(symbol)});
         this.categoryCreationControl=binding;
         button.addEventListener('click',()=>{
-          if(this.categoryCreationControl!==binding || button.isConnected===false || document.getElementById('createCategoryNode')!==button)return;
+          if(!this.categoryCreationBindingValid(binding))return;
           this.openCategoryBatch(binding.context);
         });
         return button;
+      }
+      categoryAuthorityValid(authority,context,current=true) {
+        // Frozen bindings/batches keep their immutable context; expiry lives outside graph data.
+        const expired=this.expiredCategoryAuthorities ||= new WeakSet();
+        if(!authority || expired.has(authority))return false;
+        if(current && this.categoryBatchValid(context))return true;
+        expired.add(authority);return false;
+      }
+      categoryCreationBindingValid(binding) {
+        if(!binding)return false;
+        const button=binding.button;
+        return this.categoryAuthorityValid(binding,binding.context,this.categoryCreationControl===binding &&
+          button.isConnected!==false && document.getElementById('createCategoryNode')===button);
       }
       refreshCategoryCreationControl(binding) {
         const {button,context}=binding;
         // Only a validated metadata save may renew the current page's control.
         // Old listeners retain their original binding, never the renewed context.
-        if(this.categoryCreationControl!==binding || button.isConnected===false || document.getElementById('createCategoryNode')!==button ||
+        if(this.expiredCategoryAuthorities?.has(binding) || this.categoryCreationControl!==binding || button.isConnected===false || document.getElementById('createCategoryNode')!==button ||
           this.currentLibrary!==context.library || this.libraryLoadRevision!==context.revision || this.pressRevision!==context.view ||
-          this.activeCategorySymbol!==context.symbol || this.activeNodeId!==null || !this.checkCreative())return;
+          this.activeCategorySymbol!==context.symbol || this.activeNodeId!==null || !this.checkCreative()){
+          this.categoryAuthorityValid(binding,context,false);return;
+        }
+        this.categoryAuthorityValid(binding,context,false);
         button.replaceWith(this.makeCategoryCreationControl(context.symbol));
       }
       renderCategory(symbol) {
@@ -1752,7 +1768,7 @@
       categoryBatchError(state,text) {if(this.categoryBatch===state)state.error.textContent=text;return false;}
       addCategoryBatchName(state) {
         if(this.categoryBatch!==state)return false;
-        if(!this.categoryBatchValid(state.context))return this.categoryBatchError(state,'Underlaget har ändrats. Avbryt och öppna kategorin igen.');
+        if(!this.categoryAuthorityValid(state,state.context))return this.categoryBatchError(state,'Underlaget har ändrats. Avbryt och öppna kategorin igen.');
         const title=state.input.value.trim();
         if(!title)return this.categoryBatchError(state,'Skriv ett namn först.');
         if(this.getNodeByTitle(title) || state.pending.some(item=>item.title.toLowerCase()===title.toLowerCase()))return this.categoryBatchError(state,'Namnet är upptaget. Inget befintligt objekt flyttas.');
@@ -1764,13 +1780,14 @@
           const row=this.makeElement('li'),name=this.makeElement('span',item.title),remove=this.makeElement('button','X');remove.type='button';remove.setAttribute('aria-label','Ta bort '+item.title);
           row.style.overflowWrap='anywhere';row.appendChild(name);row.appendChild(remove);state.list.appendChild(row);
           remove.addEventListener('click',()=>{
-            if(this.categoryBatch!==state || !this.categoryBatchValid(state.context))return;
+            if(this.categoryBatch!==state || !this.categoryAuthorityValid(state,state.context))return;
             const index=state.pending.indexOf(item);if(index<0)return;state.pending.splice(index,1);this.renderCategoryBatchNames(state);state.input.focus?.();
           });
         });
       }
       closeCategoryBatch(returnFocus=true) {
         const state=this.categoryBatch;if(!state)return;
+        this.categoryAuthorityValid(state,state.context,false);
         this.categoryBatch=null;state.root.style.display='none';state.root.inert=state.rootInert;state.inert.forEach(([element,value])=>{element.inert=value;});
         const trigger=state.trigger;
         if(returnFocus && trigger?.isConnected!==false && !trigger?.disabled && !trigger?.closest?.('[inert]') && (!trigger?.getClientRects || trigger.getClientRects().length))trigger?.focus?.();
@@ -1788,7 +1805,7 @@
       }
       commitCategoryBatch(state) {
         if(this.categoryBatch!==state)return false;
-        if(!this.categoryBatchValid(state.context))return this.categoryBatchError(state,'Underlaget har ändrats. Avbryt och öppna kategorin igen.');
+        if(!this.categoryAuthorityValid(state,state.context))return this.categoryBatchError(state,'Underlaget har ändrats. Avbryt och öppna kategorin igen.');
         if(state.input.value.trim())return this.categoryBatchError(state,'Lägg till namnet i listan innan du skapar.');
         if(!state.pending.length)return this.categoryBatchError(state,'Lägg till minst ett namn.');
         const names=[],seen=new Set();
@@ -1804,7 +1821,7 @@
           if(!id)return this.categoryBatchError(state,'Kunde inte skapa unika ID:n. Försök igen.');
           used.add(id);created.push({id,title,icon:state.context.symbol,color:'#202122',free_text:{sv:'',en:''}});
         }
-        if(!this.categoryBatchValid(state.context))return this.categoryBatchError(state,'Underlaget har ändrats. Inga objekt skapades.');
+        if(!this.categoryAuthorityValid(state,state.context))return this.categoryBatchError(state,'Underlaget har ändrats. Inga objekt skapades.');
         this.nodes.push(...created);this.touchNodes(created.map(node=>node.id));this.closeCategoryBatch(false);
         this.sync({preserveEdges:true});this.renderCategory(state.context.symbol);document.getElementById('createCategoryNode')?.focus?.();return true;
       }
