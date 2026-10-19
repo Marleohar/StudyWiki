@@ -1,3 +1,109 @@
+# TASK 013 - Q13-2 Permanent Expiry Correction
+
+**READY FOR INDEPENDENT RE-QA — NOT MERGED.**
+
+Existing PR: https://github.com/Marleohar/StudyWiki/pull/13; branch `feat/task013-category-batch-creation`.
+Rejected HEAD: `5d2c25893fde9e434d520ac5576a7a29e5c24c24`.
+Verified unchanged main: `2eb9777e0d281a522c93ab5c7b9cdb1babc61407`.
+Tested implementation commit: `0dd329369c0a337d8f09ef263b340bad9a56817c`.
+The final delivery adds this report only; its exact immutable HEAD is recorded in the PR and `../evidence/q13-2/delivery.json`. Independent QA must approve that final HEAD.
+
+## Reproduced cause and correction
+
+Read the complete independent re-QA report and preserved all previous development, QA and re-QA artifacts. Before production edits, verified exact local/remote rejected HEAD and main, then reproduced both failures using actual native controls, in separate disposable local and mocked-cloud processes:
+
+1. Open category x batch, type a pending name, click Add; change category notes in the existing graph record; click Create and observe rejection; restore the original notes exactly; retry the same native Create. Before fix: a new object and modification entry are persisted.
+2. Retain the current category creation button and original listener, change graph metadata, activate native button/listener and observe rejection; restore original graph values and identities; retry the same button and directly captured listener. Before fix: the rejected binding opens a new batch.
+
+Snapshot/reference equality checks were reversible: neither the error message nor a failed binding check recorded permanent revocation. Frozen outer batch/binding objects prevented adding a simple mutable flag directly to those objects.
+
+The fix stores exact batch and binding objects in a task-local, lazily initialized WeakSet (`expiredCategoryAuthorities`) when observed invalid. The set only gains entries; restoring graph data, category, library, revision, references or view cannot remove expiry. Weak references allow discarded controls/states to be collected. This authority state is UI memory only, never part of the graph or persistence payload/schema.
+
+`categoryAuthorityValid()` first rejects expired authority, then applies the original complete context validator, and records a failed check permanently. Native button listeners validate their exact binding and current connected DOM identity. Add, Remove and Create validate the exact batch authority; Create also rechecks after preparing collision-checked IDs. Closing a batch and replacing a binding explicitly retire those exact authorities. Old callbacks retain their old objects and cannot affect a fresh batch or new current control.
+
+Legitimate name/notes renewal uses binding validity immediately before its authorized save; only a current, unexpired control may be renewed. An expired binding stays expired even when the exact original graph is restored before a later legitimate metadata save. Existing category/library/revision/view/identity guards remain in place. Fresh rendered controls and fresh batches have separate authority and remain usable.
+
+`categoryBatchValid()`, context capture and `categoryBatchError()` remain unchanged. Correctable input errors call the ordinary error renderer without expiring valid authority: blank names, duplicates, existing titles, unfinished input and invalid queue content can be fixed in the same dialog. Expired dialogs remain safely cancellable with their established error and focus containment.
+
+## Identical before/after native reproduction
+
+`../evidence/q13-2/revival-reproduction.cjs before|after` uses the same native procedures and data; only the final expected outcome differs. Full original/captured-context/changed/first-rejection/restored/retried graph and raw-storage snapshots, cloud payloads and screenshots are retained.
+
+| Operation after exact restoration | Before fix | After fix |
+| --- | --- | --- |
+| Previously rejected local batch, same Create | **1 save / 3 local graph writes**, new node + modification | **0 saves / 0 storage / 0 cloud / 0 preference writes**, full graph unchanged |
+| Previously rejected mock-cloud batch, same Create | **1 save / 1 cloud merge**, new node + modification | **All zero**, full graph unchanged |
+| Previously rejected local current button/direct listener | Batch incorrectly opens; opening itself makes zero writes | No batch opens; all zero; snapshots identical |
+| Previously rejected mock-cloud button/direct listener | Same incorrect revival | No batch opens; all zero; snapshots identical |
+
+First stale rejection is zero-write before and after. In the corrected batch case, the original modal remains open with its error and pending names intact, allowing Cancel/Escape; Add/Remove/Create stay revoked through repeated retries and multiple change/restoration cycles.
+
+Evidence: before-reproduction.txt/.json, after-reproduction.txt/.json; before/after-batch/binding-false/true-rejected/retried.png. Before files were produced at the exact rejected HEAD before editing index.html. The initial evidence helper encountered a missing error element in the no-dialog binding case; its optional lookup was corrected before the complete pre-edit reproduction. No application behavior was changed to pass that helper.
+
+## Permanent regression coverage and complete results
+
+Correction changes only four files: index.html, tests/category-authority-expiry.test.cjs, tests/browser-category-authority-expiry.cjs and TASK013-QA.md. No existing tests, assertions, browser harnesses or unrelated functionality changed.
+
+Node: **415 PASS**, 0 failed/cancelled/skipped (326 previous + 89 new).
+
+The 89 new Node cases cover first stale observation through Add/Remove/Create; restoration of category, library, revision, view, notes, unrelated metadata and exact node/edge references; repeated native binding/direct listener retries; fresh-view recovery; stale controls followed by legitimate name/notes saves; authorized one/two/five-object operations; correctable errors; retained callbacks against a fresh batch; and ordinary metadata no-ops.
+
+The new real-Chromium suite passes **96/96 cases**, independently of the existing suites:
+
+- 42 expired batch cases: seven context changes x Add/Remove/Create first rejection x local/cloud. Exact restoration and repeated native/direct callbacks cannot Add, Remove or Create.
+- 14 expired binding cases: seven context changes x local/cloud; three change/restoration cycles, retained native/direct listeners, and a fresh current view recovering normally.
+- 8 stale-binding/metadata-save cases, including restoration of the exact graph before the save attempts renewal.
+- 18 successful one/two/five-object batches after successive native name/notes saves, at 1280/375/320 px in local/cloud modes. Fixed exact symbol/current name, no selector/description, Enter/visible Add/removal, literal hostile-looking names, complete graph comparisons, actual local reload, focus return and repeated-submit rejection.
+- 2 correctable-input recovery cases, 2 expired Add/Remove/Create/Cancel callback cases against a fresh batch, and 10 cancelled/unchanged/invalid metadata cases. No-op controls retain their intended authority without unnecessary replacement.
+
+Forward/reverse Tab visits all active controls; background brand/search/library native and forced activation remains blocked. Prior inert flags restore. Responsive screenshots and expired-dialog error screenshots were visually checked; literal names wrap and controls remain reachable.
+
+| Committed Chromium script | Final observed result |
+| --- | --- |
+| browser-category-authority-expiry.cjs | PASS, 96 cases |
+| browser-category-batch-creation.cjs | PASS, original 71 cases |
+| browser-category-creation-refresh.cjs | PASS, original 44 cases |
+| browser-category-moves.cjs | PASS |
+| browser-category-sort-migration-guard.cjs | PASS |
+| browser-category-sort-preferences.cjs | PASS |
+| browser-confirmed-relation-sorting.cjs | PASS |
+| browser-creation-dialog-containment.cjs | PASS |
+| browser-existing-object-transfer.cjs | PASS |
+| browser-header-search.cjs | PASS |
+| browser-page-ui.cjs | PASS |
+| browser-relation-sorting.cjs | PASS |
+| browser-smart-workflows.cjs | PASS |
+| browser-smoke.cjs | PASS in 5 consecutive ordinary fresh processes; initial matrix failure recorded below |
+| browser-unsaved-description-corrections.cjs | PASS |
+| browser-unsaved-object-description.cjs | PASS |
+
+**Initial smoke failure, retained rather than hidden:** the first complete matrix was 14/15 PASS; browser-smoke ended at interception.drain with `AggregateError: CDP interception failed`, without an application assertion failure being reported. Its existing catch printed the stack but not nested causes. The ordinary unchanged command then passed five consecutive fresh processes. An isolated rejected-HEAD smoke run passed, and a logging-only diagnostic run passed without reproducing the error. No smoke/interception code or security checks changed. Its cause and attribution remain unestablished; this intermittent harness result is a remaining limitation. See browser-smoke.txt (failure), smoke-repeat-1..5.txt, smoke-repeats.json, rejected-head-smoke.txt and diagnostic-smoke.txt. Diagnostic preload exists only in new external evidence and rethrows errors unchanged.
+
+Replay of the original independent re-QA scripts against this fix: **48/48 lifecycle cases PASS**, including all four formerly failing cases; **4/4 native compatibility cases PASS** (object-profile Byt Kategori and general header creation, local/cloud); **4/4 original native name/notes-save entry cases PASS**. Copied scripts and fresh artifacts reside under q13-2/independent-replay; originals remain untouched. These are developer replay results, not fresh independent approval.
+
+## Full data, writes and isolation
+
+Complete expected snapshots preserve all existing nodes/IDs, edges/paused relations, categoryState/category order, unknown fields, legacy and sv/en descriptions, prior timestamps/modification entries and source-array order. Approved graphs append only intended new standard empty-description objects and established modification entries. Local reload preserves every created ID. Mock payloads match complete nodes/edges/symbolCategories with merge=true and contain no authority bookkeeping. Existing collision retry/exhaustion and atomic rejection assertions remain passing.
+
+| Interaction | Logical saves | Local graph writes | Mock-cloud writes | Preference writes |
+| --- | ---: | ---: | ---: | ---: |
+| Expired/stale callbacks, Add/Remove pending, cancelled/Escape/no-op, rejected ordinary input | 0 | 0 | 0 | 0 |
+| Approved local batch | 1 | 3 | 0 | 0 |
+| Approved mock-cloud batch | 1 | 0 | 1 merge | 0 |
+| Repeated old callbacks after success or fresh reopening | 0 additional | 0 additional | 0 additional | 0 |
+
+The strict validator, context capture, ordinary error renderer, smart-context/quick-link methods, sync, relation grouping and category-symbol rename are byte-identical to rejected HEAD. Commit body changes only wrap its two original context checks in monotonic authority validation. Mechanical proof: protected-source.json. No persistence schema, ID rules, transfer shortcut, sorting, language or navigation policy changed. The earlier category-page duplicate-title transfer shortcut remains intentionally absent from batch creation; object-profile transfer/general creation are preserved.
+
+All new evidence is under `C:\dev\Franks projekt\Nordverket\task-013\evidence\q13-2`. TEMP/TMP set to q13-2/tmp before browser runs; synthetic libraries, disposable independent installed Chrome 155 profiles, dependency-free Node 24/CDP tooling, disabled Firebase startup and fail-closed external blocking only. No production services/data, credentials, paid APIs, Digital GM dependencies or unrelated repository changes. No profile-cleanup failure occurred.
+
+Key artifacts: node-tests.txt, focused-node.txt, browser-results.json (initial complete matrix), final-browser-results.json (explicit retries), final-focused-browser.txt; final 96-case snapshots/screenshots at tmp/task013-authority-expiry-sWon80; before/after reproduction records/screenshots; independent-replay artifacts; protected-source.json. `git diff --check` passes including newly added files.
+
+Remaining limitations: live Firebase durability/concurrency, other engines, assistive technology and physical mobile keyboards are not tested. Inherited title-based loader deduplication and the disclosed transfer-entry limitation remain unchanged. Expiry is monotonic after invalidity is observed; no new graph observer/revision system is introduced to detect unobserved transient changes. Final exact HEAD still requires fresh independent QA. No merge, deployment or auto-merge performed.
+
+---
+
+Earlier development/correction reports follow unchanged as historical evidence; the Q13-2 section supersedes their earlier verdicts and totals.
+
 # TASK 013 ? Blocking QA correction
 
 **READY FOR INDEPENDENT RE-QA ? NOT MERGED.**
